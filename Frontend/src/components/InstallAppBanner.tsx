@@ -27,7 +27,10 @@ export const InstallAppBanner: React.FC = () => {
     <>
       {/* ── Desktop & Mobile Install Prompt Banner ── */}
       {showBanner && (
-        <div className="w-full bg-[#111615]/85 dark:bg-[#0f1513]/90 border-b border-emerald-500/20 backdrop-blur-xl px-4 py-2 text-white flex items-center justify-between gap-3 shadow-lg z-50 animate-in slide-in-from-top duration-300">
+        <div
+          className="w-full bg-[#111615]/85 dark:bg-[#0f1513]/90 border-b border-emerald-500/20 backdrop-blur-xl px-4 py-2 text-white flex items-center justify-between gap-3 shadow-lg z-50 animate-in slide-in-from-top duration-300"
+          style={{ paddingTop: 'max(8px, env(safe-area-inset-top, 0px))' }}
+        >
           <div className="flex items-center gap-2.5 min-w-0">
             {/* App Icon */}
             <img

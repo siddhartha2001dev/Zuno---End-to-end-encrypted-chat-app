@@ -48,8 +48,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState<boolean>(false);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState<boolean>(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
@@ -57,7 +59,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
 
   // Auto-scroll to bottom on new messages or active conversation change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, typingUser]);
 
   const containerRef = useRef<HTMLElement>(null);
@@ -70,20 +72,40 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
     if (!vv) return;
 
     const update = () => {
+      // Prevent browser window from scrolling away from (0,0)
+      if (window.scrollY !== 0 || window.scrollX !== 0) {
+        window.scrollTo(0, 0);
+      }
+      if (document.body.scrollTop !== 0) {
+        document.body.scrollTop = 0;
+      }
+
+      // Height of visible viewport (shrinks when keyboard opens)
       if (containerRef.current) {
-        // Height of visible viewport (shrinks when keyboard opens)
         containerRef.current.style.height = `${vv.height}px`;
-        // Offset from top (handles browser chrome changes)
-        containerRef.current.style.top = `${vv.offsetTop}px`;
+      }
+
+      const isKeyboard = vv.height < window.innerHeight - 80;
+      setIsKeyboardOpen(isKeyboard);
+
+      if (isKeyboard) {
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+        }, 80);
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+        }, 280);
       }
     };
 
     update();
     vv.addEventListener('resize', update);
     vv.addEventListener('scroll', update);
+    window.addEventListener('scroll', update);
     return () => {
       vv.removeEventListener('resize', update);
       vv.removeEventListener('scroll', update);
+      window.removeEventListener('scroll', update);
     };
   }, []);
 
@@ -292,14 +314,27 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
     <main
       ref={containerRef}
       className="flex-1 flex flex-col bg-theme-bg overflow-hidden relative"
-      style={{ position: 'relative' }}
+      style={{
+        position: 'relative',
+        height: '100%',
+        maxHeight: '100dvh'
+      }}
     >
       {/* Ambient Liquid Orbs for Chat Area */}
       <div className="absolute top-1/6 right-1/4 w-72 h-72 rounded-full liquid-orb-emerald" />
       <div className="absolute bottom-1/4 left-1/5 w-80 h-80 rounded-full liquid-orb-mint" />
 
       {/* Compact Genie-Style Chat Header */}
-      <header className="px-4 md:px-6 border-b border-theme-border bg-theme-surface/95 backdrop-blur-xl flex items-center justify-between flex-shrink-0 z-20 transition-theme shadow-xs" style={{ height: '64px', position: 'sticky', top: 0 }}>
+      <header
+        className="px-3.5 sm:px-6 border-b border-theme-border bg-theme-surface/95 backdrop-blur-xl flex items-center justify-between flex-shrink-0 z-20 transition-theme shadow-xs"
+        style={{
+          paddingTop: 'max(10px, env(safe-area-inset-top, 0px))',
+          minHeight: 'calc(58px + env(safe-area-inset-top, 0px))',
+          boxSizing: 'border-box',
+          position: 'sticky',
+          top: 0
+        }}
+      >
         <div className="flex items-center gap-2.5 min-w-0">
           {/* Mobile Back Button: Standard mobile navigation, NO hamburger menu */}
           <button
@@ -376,7 +411,11 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
       </header>
 
       {/* Messages Thread Container */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 md:px-8 space-y-1">
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto px-4 py-3 md:px-8 space-y-1"
+        style={{ overscrollBehavior: 'contain' }}
+      >
         {loadingMessages ? (
           <div className="flex flex-col items-center justify-center h-full text-theme-text-muted text-xs gap-2">
             <Loader2 className="w-5 h-5 animate-spin text-theme-accent" />
@@ -435,11 +474,16 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
           </div>
         )}
 
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-1" />
       </div>
 
       {/* Floating Modern Message Composer */}
-      <footer className="p-3 md:p-4 bg-transparent z-10 flex-shrink-0" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+      <footer
+        className="px-3 pt-1 md:p-4 bg-transparent z-10 flex-shrink-0 transition-all duration-150"
+        style={{
+          paddingBottom: isKeyboardOpen ? '4px' : 'max(6px, env(safe-area-inset-bottom, 6px))'
+        }}
+      >
         <div className="max-w-3xl mx-auto relative">
           {/* Interactive Emoji Picker Popup */}
           <EmojiPicker
@@ -552,6 +596,17 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
               value={inputContent}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
+              onFocus={() => {
+                if (window.scrollY !== 0 || window.scrollX !== 0) {
+                  window.scrollTo(0, 0);
+                }
+                setTimeout(() => {
+                  messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+                }, 120);
+                setTimeout(() => {
+                  messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+                }, 320);
+              }}
               placeholder={
                 selectedFile
                   ? "Add a caption (optional)..."
