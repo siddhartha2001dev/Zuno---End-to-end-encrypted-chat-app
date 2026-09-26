@@ -149,14 +149,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Helper to decrypt a single message item locally
   const decryptMessageItem = useCallback(
     async (msg: Message, conversation: Conversation): Promise<Message> => {
-      // Message without ciphertext (or pure media message)
-      if (!msg.ciphertext || !msg.iv) {
+      const isGroup = conversation.type?.toUpperCase() === "GROUP";
+
+      // Group messages and pure media messages are never encrypted — use plain content
+      if (isGroup || !msg.ciphertext || !msg.iv) {
         const fallbackText =
           msg.content ||
           (msg.messageType?.toLowerCase() === "image"
             ? "📷 Image"
             : msg.mediaUrl
-            ? "📎 Attachment"
+            ? `📎 ${msg.fileName || "Attachment"}`
             : "");
         return {
           ...msg,
@@ -166,17 +168,31 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
 
+      // Direct message with ciphertext — attempt E2EE decryption
       const aesKey = await getConversationCryptoKey(conversation);
       if (!aesKey) {
+        // No key available — fall back to plain content if server sent it (legacy/unencrypted msg)
+        const fallback = msg.content || "";
         return {
           ...msg,
           isEncrypted: true,
-          decryptedContent: "🔒 Unable to decrypt this message",
-          content: "🔒 Unable to decrypt this message",
+          decryptedContent: fallback || "🔒 Unable to decrypt this message",
+          content: fallback || "🔒 Unable to decrypt this message",
         };
       }
 
       const result = await decryptMessage(msg.ciphertext, msg.iv, aesKey);
+      if (!result.success) {
+        // Decryption failed (wrong key, corrupted data, old message) — fall back to plain content
+        const fallback = msg.content || "";
+        return {
+          ...msg,
+          isEncrypted: true,
+          decryptedContent: fallback || "🔒 Unable to decrypt this message",
+          content: fallback || "🔒 Unable to decrypt this message",
+        };
+      }
+
       return {
         ...msg,
         isEncrypted: true,
@@ -186,6 +202,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     },
     [getConversationCryptoKey]
   );
+
 
   // 1. Fetch Conversations on Login & Decrypt Latest Messages
   const refreshConversations = useCallback(async () => {
