@@ -43,10 +43,42 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return data;
 }
 
+/** Wraps fetch so that network-level failures ("Load failed", "Failed to fetch", etc.)
+ *  produce a human-readable error instead of a cryptic browser message.
+ *  Also retries once after 1.5 s to handle Render cold-starts. */
+async function apiFetch(url: string, options?: RequestInit, retries = 1): Promise<Response> {
+  try {
+    return await fetch(url, options);
+  } catch (err: any) {
+    const msg: string = err?.message || "";
+    // Network-level errors (no internet, CORS pre-flight failure, Render cold start, etc.)
+    const isNetworkError =
+      msg.includes("Load failed") ||
+      msg.includes("Failed to fetch") ||
+      msg.includes("Network request failed") ||
+      msg.includes("NetworkError") ||
+      err instanceof TypeError;
+
+    if (isNetworkError && retries > 0) {
+      // Wait 1.5 s and try once more (helps with Render cold-start)
+      await new Promise((r) => setTimeout(r, 1500));
+      return apiFetch(url, options, retries - 1);
+    }
+
+    if (isNetworkError) {
+      throw new Error(
+        "Unable to reach the server. Please check your internet connection and try again."
+      );
+    }
+    throw err;
+  }
+}
+
+
 export const api = {
   auth: {
     register: async (input: { name: string; chatId: string; email: string; password: string }) => {
-      const res = await fetch(`${BASE_URL}/auth/register`, {
+      const res = await apiFetch(`${BASE_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
@@ -61,7 +93,7 @@ export const api = {
       }>(res);
     },
     login: async (input: { email: string; password: string }) => {
-      const res = await fetch(`${BASE_URL}/auth/login`, {
+      const res = await apiFetch(`${BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
@@ -69,7 +101,7 @@ export const api = {
       return handleResponse<{ user: any; token: string; accessToken?: string }>(res);
     },
     verifyEmail: async (token: string) => {
-      const res = await fetch(`${BASE_URL}/auth/verify-email`, {
+      const res = await apiFetch(`${BASE_URL}/auth/verify-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token }),
@@ -77,7 +109,7 @@ export const api = {
       return handleResponse<{ user: any; token: string; accessToken?: string; message: string }>(res);
     },
     resendVerification: async (email: string) => {
-      const res = await fetch(`${BASE_URL}/auth/resend-verification`, {
+      const res = await apiFetch(`${BASE_URL}/auth/resend-verification`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -88,7 +120,7 @@ export const api = {
       }>(res);
     },
     getMe: async () => {
-      const res = await fetch(`${BASE_URL}/auth/me`, {
+      const res = await apiFetch(`${BASE_URL}/auth/me`, {
         headers: getAuthHeaders(),
       });
       return handleResponse<{ user: any }>(res);
@@ -98,19 +130,19 @@ export const api = {
   users: {
     search: async (q?: string) => {
       const url = q ? `${BASE_URL}/users/search?q=${encodeURIComponent(q)}` : `${BASE_URL}/users/search`;
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         headers: getAuthHeaders(),
       });
       return handleResponse<{ users: any[] }>(res);
     },
     checkChatId: async (chatId: string) => {
-      const res = await fetch(`${BASE_URL}/users/check-chat-id?chatId=${encodeURIComponent(chatId)}`, {
+      const res = await apiFetch(`${BASE_URL}/users/check-chat-id?chatId=${encodeURIComponent(chatId)}`, {
         headers: { "Content-Type": "application/json" },
       });
       return handleResponse<{ available: boolean; message: string }>(res);
     },
     updateName: async (name: string) => {
-      const res = await fetch(`${BASE_URL}/users/name`, {
+      const res = await apiFetch(`${BASE_URL}/users/name`, {
         method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify({ name }),
@@ -118,7 +150,7 @@ export const api = {
       return handleResponse<{ success: boolean; user: any; message: string }>(res);
     },
     updatePublicKey: async (publicKey: string) => {
-      const res = await fetch(`${BASE_URL}/users/public-key`, {
+      const res = await apiFetch(`${BASE_URL}/users/public-key`, {
         method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify({ publicKey }),
@@ -126,7 +158,7 @@ export const api = {
       return handleResponse<{ success: boolean; id: string; publicKey: string }>(res);
     },
     getPublicKey: async (userId: string) => {
-      const res = await fetch(`${BASE_URL}/users/${userId}/public-key`, {
+      const res = await apiFetch(`${BASE_URL}/users/${userId}/public-key`, {
         headers: getAuthHeaders(),
       });
       return handleResponse<{ userId: string; publicKey: string | null }>(res);
@@ -135,7 +167,7 @@ export const api = {
       const formData = new FormData();
       formData.append("avatar", file);
       const token = getStoredToken();
-      const res = await fetch(`${BASE_URL}/users/avatar`, {
+      const res = await apiFetch(`${BASE_URL}/users/avatar`, {
         method: "POST",
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -145,14 +177,14 @@ export const api = {
       return handleResponse<{ success: boolean; avatar: string; user: any }>(res);
     },
     removeAvatar: async () => {
-      const res = await fetch(`${BASE_URL}/users/avatar`, {
+      const res = await apiFetch(`${BASE_URL}/users/avatar`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       });
       return handleResponse<{ success: boolean; avatar: null; user: any }>(res);
     },
     setAvatarPreset: async (avatar: string) => {
-      const res = await fetch(`${BASE_URL}/users/avatar`, {
+      const res = await apiFetch(`${BASE_URL}/users/avatar`, {
         method: "PUT",
         headers: {
           ...getAuthHeaders(),
@@ -163,7 +195,7 @@ export const api = {
       return handleResponse<{ success: boolean; avatar: string; user: any }>(res);
     },
     deactivateAccount: async () => {
-      const res = await fetch(`${BASE_URL}/users/deactivate`, {
+      const res = await apiFetch(`${BASE_URL}/users/deactivate`, {
         method: "POST",
         headers: getAuthHeaders(),
       });
@@ -176,7 +208,7 @@ export const api = {
       const formData = new FormData();
       formData.append("file", file);
       const token = getStoredToken();
-      const res = await fetch(`${BASE_URL}/upload/media`, {
+      const res = await apiFetch(`${BASE_URL}/upload/media`, {
         method: "POST",
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -197,13 +229,13 @@ export const api = {
 
   conversations: {
     list: async () => {
-      const res = await fetch(`${BASE_URL}/conversations`, {
+      const res = await apiFetch(`${BASE_URL}/conversations`, {
         headers: getAuthHeaders(),
       });
       return handleResponse<{ conversations: any[] }>(res);
     },
     createDirect: async (participantId: string) => {
-      const res = await fetch(`${BASE_URL}/conversations/direct`, {
+      const res = await apiFetch(`${BASE_URL}/conversations/direct`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({ participantId }),
@@ -211,7 +243,7 @@ export const api = {
       return handleResponse<{ conversation: any }>(res);
     },
     createGroup: async (name: string, memberIds: string[]) => {
-      const res = await fetch(`${BASE_URL}/conversations/group`, {
+      const res = await apiFetch(`${BASE_URL}/conversations/group`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({ name, memberIds }),
@@ -219,20 +251,20 @@ export const api = {
       return handleResponse<{ conversation: any }>(res);
     },
     getById: async (id: string) => {
-      const res = await fetch(`${BASE_URL}/conversations/${id}`, {
+      const res = await apiFetch(`${BASE_URL}/conversations/${id}`, {
         headers: getAuthHeaders(),
       });
       return handleResponse<{ conversation: any }>(res);
     },
     delete: async (id: string) => {
-      const res = await fetch(`${BASE_URL}/conversations/${id}`, {
+      const res = await apiFetch(`${BASE_URL}/conversations/${id}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       });
       return handleResponse<{ success: boolean; message: string; action: "deleted" | "left" }>(res);
     },
     deleteAll: async () => {
-      const res = await fetch(`${BASE_URL}/conversations/all`, {
+      const res = await apiFetch(`${BASE_URL}/conversations/all`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       });
@@ -246,13 +278,13 @@ export const api = {
       if (limit) params.set("limit", limit.toString());
       if (cursor) params.set("cursor", cursor);
 
-      const res = await fetch(`${BASE_URL}/conversations/${conversationId}/messages?${params.toString()}`, {
+      const res = await apiFetch(`${BASE_URL}/conversations/${conversationId}/messages?${params.toString()}`, {
         headers: getAuthHeaders(),
       });
       return handleResponse<{ messages: any[] }>(res);
     },
     markRead: async (conversationId: string) => {
-      const res = await fetch(`${BASE_URL}/conversations/${conversationId}/read`, {
+      const res = await apiFetch(`${BASE_URL}/conversations/${conversationId}/read`, {
         method: "POST",
         headers: getAuthHeaders(),
       });
