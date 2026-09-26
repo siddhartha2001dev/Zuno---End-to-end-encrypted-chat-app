@@ -37,7 +37,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
     setPendingVerificationEmail,
     clearPendingVerification,
   } = useAuth();
-  const [isLogin, setIsLogin] = useState<boolean>(true);
+  const [isLogin, setIsLogin] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const mode = params.get("mode");
+      if (mode === "register" || mode === "signup") {
+        return false;
+      }
+    }
+    return true;
+  });
   const [name, setName] = useState<string>("");
   const [chatId, setChatId] = useState<string>("");
   const [chatIdStatus, setChatIdStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
@@ -117,6 +126,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
           return;
         }
 
+        if (name.trim().length < 2) {
+          setError("Name must be at least 2 characters long");
+          setSubmitting(false);
+          return;
+        }
+
         const cleanChatId = chatId.trim().toLowerCase().replace(/^@/, "");
         if (!cleanChatId || cleanChatId.length < 3) {
           setError("Chat ID must be at least 3 characters long");
@@ -127,6 +142,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
         const validFormat = /^[a-z0-9][a-z0-9._]{2,29}$/.test(cleanChatId);
         if (!validFormat) {
           setError("Chat ID must start with a letter or number and contain only lowercase letters, numbers, dots, or underscores (3-30 chars)");
+          setSubmitting(false);
+          return;
+        }
+
+        if (password.length < 6) {
+          setError("Password must be at least 6 characters long");
           setSubmitting(false);
           return;
         }
@@ -158,7 +179,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
         await register(name.trim(), cleanChatId, email.trim(), password);
       }
     } catch (err: any) {
-      setError(err.message || "Authentication failed. Please check your credentials.");
+      const msg = err?.message || (isLogin ? "Invalid email or password" : "Failed to create account. Please try again.");
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -378,6 +400,40 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
             </p>
           </div>
 
+          {/* Prominent Mode Selector Tabs */}
+          <div className="flex p-1 bg-theme-surface/80 border border-theme-border rounded-2xl mb-5 shadow-xs">
+            <button
+              type="button"
+              onClick={() => {
+                setIsLogin(true);
+                setError(null);
+              }}
+              className={`flex-1 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
+                isLogin
+                  ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/20"
+                  : "text-theme-text-secondary hover:text-theme-text hover:bg-theme-bg/60"
+              }`}
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>Sign In</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsLogin(false);
+                setError(null);
+              }}
+              className={`flex-1 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
+                !isLogin
+                  ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/20"
+                  : "text-theme-text-secondary hover:text-theme-text hover:bg-theme-bg/60"
+              }`}
+            >
+              <UserIcon className="w-3.5 h-3.5" />
+              <span>Create Account</span>
+            </button>
+          </div>
+
           {/* Banner Alert (Session expiry, Token deletion, or Account verification) */}
           {successBanner && !error && (
             <div
@@ -402,11 +458,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
 
           {/* Error Alert */}
           {error && (
-            <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium space-y-1.5 animate-in fade-in duration-150">
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
-                <span className="leading-tight">{error}</span>
+            <div className="mb-4 p-3.5 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium space-y-2 animate-in fade-in duration-150">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-500 mt-0.5" />
+                <span className="leading-tight flex-1">{error}</span>
               </div>
+
+              {/* Smart Recovery: If user failed login because account doesn't exist yet */}
+              {isLogin &&
+                (error.toLowerCase().includes("invalid email or password") ||
+                  error.toLowerCase().includes("credentials")) && (
+                  <div className="pt-2 border-t border-red-500/15 flex flex-col gap-1.5">
+                    <span className="text-[11px] text-theme-text-secondary">
+                      Don't have a Zuno account yet?
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsLogin(false);
+                        setError(null);
+                      }}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                    >
+                      <span>Click here to Create Account with this email</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+              {/* Unverified Email Prompt */}
               {error.toLowerCase().includes("verif") && email && (
                 <button
                   type="button"
@@ -553,12 +633,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
 
             {/* Password Field */}
             <div className="space-y-1">
-              <label
-                htmlFor="password"
-                className="block text-xs font-semibold text-theme-text-secondary"
-              >
-                Password
-              </label>
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="password"
+                  className="block text-xs font-semibold text-theme-text-secondary"
+                >
+                  Password
+                </label>
+                {!isLogin && (
+                  <span className="text-[11px] text-theme-text-muted">Min. 6 characters</span>
+                )}
+              </div>
               <div className="group relative flex items-center h-11 sm:h-12 w-full rounded-xl bg-white dark:bg-[#151d1b] border border-theme-border hover:border-emerald-500/50 dark:border-white/10 dark:hover:border-emerald-500/40 focus-within:border-emerald-500 dark:focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/15 dark:focus-within:ring-emerald-500/20 focus-within:hover:border-emerald-500 shadow-xs transition-all duration-150">
                 <span className="pointer-events-none absolute left-3.5 flex items-center justify-center text-theme-text-muted group-focus-within:text-emerald-500 dark:group-focus-within:text-emerald-400 transition-colors">
                   <Lock className="w-4 h-4" />

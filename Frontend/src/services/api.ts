@@ -14,16 +14,31 @@ function getAuthHeaders(): HeadersInit {
 }
 
 async function handleResponse<T>(res: Response): Promise<T> {
-  const data = await res.json();
+  let data: any;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error(`Server returned ${res.status} ${res.statusText}`);
+  }
+
   if (!res.ok) {
-    if (res.status === 401) {
+    const isAuthEndpoint = res.url.includes("/auth/login") || res.url.includes("/auth/register");
+    if (res.status === 401 && !isAuthEndpoint) {
       window.dispatchEvent(
         new CustomEvent("auth:unauthorized", {
-          detail: { message: data.error || "Session expired. Please sign in again." },
+          detail: { message: data?.error || "Session expired. Please sign in again." },
         })
       );
     }
-    throw new Error(data.error || "An error occurred");
+
+    // Extract the most accurate validation or server error message
+    const errorMessage =
+      data?.details?.[0]?.message ||
+      data?.error ||
+      data?.message ||
+      `Request failed with status ${res.status}`;
+
+    throw new Error(errorMessage);
   }
   return data;
 }
