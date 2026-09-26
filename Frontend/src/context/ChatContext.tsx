@@ -57,6 +57,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const conversationsRef = useRef<Conversation[]>([]);
   conversationsRef.current = conversations;
 
+  // Always-fresh ref for e2eeKeyPair — avoids stale closure in async callbacks
+  const e2eeKeyPairRef = useRef<CryptoKeyPair | null>(null);
+  e2eeKeyPairRef.current = e2eeKeyPair;
+
   // Helper to robustly find the peer member in a direct conversation
   const getPeerMember = useCallback(
     (conversation: Conversation) => {
@@ -132,18 +136,19 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Helper to derive AES-GCM conversation key using ECDH
   const getConversationCryptoKey = useCallback(
     async (conversation: Conversation): Promise<CryptoKey | null> => {
-      if (!e2eeKeyPair?.privateKey) return null;
+      const keyPair = e2eeKeyPairRef.current;
+      if (!keyPair?.privateKey) return null;
       const peerPublicKey = await getPeerPublicKey(conversation);
       if (!peerPublicKey) return null;
 
       try {
-        return await deriveConversationKey(e2eeKeyPair.privateKey, peerPublicKey, conversation.id);
+        return await deriveConversationKey(keyPair.privateKey, peerPublicKey, conversation.id);
       } catch (err) {
         console.error("Failed to derive conversation key:", err);
         return null;
       }
     },
-    [e2eeKeyPair, getPeerPublicKey]
+    [getPeerPublicKey]
   );
 
   // Helper to decrypt a single message item locally
@@ -544,11 +549,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Attempt E2EE encryption if text content exists
       if (trimmed) {
         try {
-          if (e2eeKeyPair?.privateKey) {
+          const keyPair = e2eeKeyPairRef.current;
+          if (keyPair?.privateKey) {
             const peerPublicKey = await getPeerPublicKey(activeConversation);
             if (peerPublicKey) {
               const aesKey = await deriveConversationKey(
-                e2eeKeyPair.privateKey,
+                keyPair.privateKey,
                 peerPublicKey,
                 activeConversation.id
               );
