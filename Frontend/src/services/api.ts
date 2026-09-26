@@ -53,8 +53,10 @@ export const api = {
       });
       return handleResponse<{
         user: any;
+        token?: string;
+        accessToken?: string;
         message: string;
-        requiresVerification: boolean;
+        requiresVerification?: boolean;
         emailSent?: boolean;
       }>(res);
     },

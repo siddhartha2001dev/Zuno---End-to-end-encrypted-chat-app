@@ -200,7 +200,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (name: string, chatId: string, email: string, password: string) => {
     const data = await api.auth.register({ name, chatId, email, password });
-    if (data.requiresVerification) {
+    const jwtToken = data.accessToken || data.token;
+    if (jwtToken) {
+      setStoredToken(jwtToken);
+      setUser(data.user);
+      setToken(jwtToken);
+      setSessionMessage(null);
+      setPendingVerificationEmail(null);
+      socketService.connect(jwtToken);
+      await initKeys(data.user);
+    } else if (data.requiresVerification) {
       setPendingVerificationEmail(email);
     }
     return data;

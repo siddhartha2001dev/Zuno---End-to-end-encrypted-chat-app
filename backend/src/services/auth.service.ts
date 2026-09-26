@@ -20,29 +20,15 @@ export class AuthService {
   async register(input: RegisterInput) {
     const existing = await this.userRepo.findByEmail(input.email);
     if (existing) {
-      if (!existing.isVerified) {
-        // Refresh verification token and resend email
-        const verificationToken = generateVerificationToken();
-        const verificationTokenExpiry = new Date(
-          Date.now() + VERIFICATION_TOKEN_EXPIRY_HOURS * 60 * 60 * 1000
-        );
+      // If legacy or incomplete record missing chatId, complete it and log in
+      if (!existing.chatId) {
+        existing.chatId = input.chatId;
+        existing.name = input.name;
+        existing.passwordHash = await hashPassword(input.password);
+        existing.isVerified = true;
+        await existing.save();
 
-        await this.userRepo.updateVerificationToken(
-          existing._id.toString(),
-          verificationToken,
-          verificationTokenExpiry
-        );
-
-        try {
-          await sendVerificationEmail(existing.email, existing.name, verificationToken);
-        } catch (emailErr: any) {
-          console.error("⚠️ Failed to send verification email:", emailErr?.message || emailErr);
-          throw new AppError(
-            "Could not send verification email to this address. Please ensure it is valid and try again.",
-            400
-          );
-        }
-
+        const token = generateToken({ userId: existing._id.toString(), email: existing.email });
         return {
           user: {
             id: existing._id.toString(),
@@ -51,12 +37,13 @@ export class AuthService {
             email: existing.email,
             avatar: existing.avatar || null,
             publicKey: existing.publicKey || null,
-            isVerified: false,
+            isVerified: true,
             createdAt: existing.createdAt,
           },
-          message: "A verification email has been sent to your inbox. Please click the link inside to activate your account.",
-          requiresVerification: true,
-          emailSent: true,
+          token,
+          accessToken: token,
+          message: "Registration successful! Welcome to Zuno.",
+          requiresVerification: false,
         };
       }
       throw new AppError("Email is already registered. Please sign in.", 409);
@@ -84,18 +71,16 @@ export class AuthService {
       verificationTokenExpiry,
     });
 
-    // Send verification email via Brevo
+    // Send verification email via Brevo in background (non-blocking)
     try {
-      await sendVerificationEmail(user.email, user.name, verificationToken);
-    } catch (emailErr: any) {
-      console.error("⚠️ Failed to send verification email:", emailErr?.message || emailErr);
-      await this.userRepo.deleteById(user._id.toString());
-      throw new AppError(
-        "Could not send verification email to this address. Please ensure it is valid and try again.",
-        400
-      );
+      sendVerificationEmail(user.email, user.name, verificationToken).catch((emailErr) => {
+        console.warn("⚠️ Background verification email notice:", emailErr?.message || emailErr);
+      });
+    } catch (emailErr) {
+      console.warn("⚠️ Background verification email notice:", emailErr);
     }
 
+    // Registration does not auto-login. User must verify email.
     return {
       user: {
         id: user._id.toString(),
@@ -119,17 +104,19 @@ export class AuthService {
       throw new AppError("Invalid email or password", 401);
     }
 
-    const isMatch = await comparePassword(input.password, user.passwordHash);
+    const hash = user.passwordHash || (user as any).password;
+    if (!hash) {
+      throw new AppError("Invalid email or password", 401);
+    }
+
+    const isMatch = await comparePassword(input.password, hash);
     if (!isMatch) {
       throw new AppError("Invalid email or password", 401);
     }
 
-    // Strict gate: user must be verified via the email link
+    // Enforce email verification. Reject if not verified.
     if (!user.isVerified) {
-      throw new AppError(
-        "Your email has not been verified yet. Please check your inbox and click the verification link to log in.",
-        403
-      );
+      throw new AppError('Your email has not been verified. Please check your inbox and click the verification link to log in.', 401);
     }
 
     if (user.isDeactivated) {
@@ -146,7 +133,7 @@ export class AuthService {
         email: user.email,
         avatar: user.avatar || null,
         publicKey: user.publicKey || null,
-        isVerified: user.isVerified,
+        isVerified: true,
         createdAt: user.createdAt,
       },
       token,

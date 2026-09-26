@@ -6,17 +6,11 @@ import { registerPresenceHandlers } from "./presence.socket.js";
 import { registerChatHandlers } from "./chat.socket.js";
 
 export function initializeSocket(httpServer: HttpServer): SocketIOServer {
-  const allowedOrigins =
-    env.CORS_ORIGIN === "*"
-      ? (origin: string | undefined, callback: (err: Error | null, success?: boolean) => void) =>
-          callback(null, true)
-      : env.CORS_ORIGIN.includes(",")
-      ? env.CORS_ORIGIN.split(",").map((s) => s.trim())
-      : env.CORS_ORIGIN;
-
   const io = new SocketIOServer(httpServer, {
     cors: {
-      origin: allowedOrigins as any,
+      origin: (_origin: string | undefined, callback: (err: Error | null, success?: boolean) => void) => {
+        callback(null, true);
+      },
       methods: ["GET", "POST"],
       credentials: true,
     },

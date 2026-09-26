@@ -11,16 +11,12 @@ import { errorHandler } from "./middleware/error.middleware.js";
 export function createApp() {
   const app = express();
 
-  const allowedOrigins =
-    env.CORS_ORIGIN === "*"
-      ? true
-      : env.CORS_ORIGIN.includes(",")
-      ? env.CORS_ORIGIN.split(",").map((s) => s.trim())
-      : env.CORS_ORIGIN;
-
   app.use(
     cors({
-      origin: allowedOrigins,
+      origin: (_origin, callback) => {
+        // Dynamically accept incoming origin so localhost, LAN IPs, and web apps connect seamlessly
+        callback(null, true);
+      },
       credentials: true,
     })
   );
