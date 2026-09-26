@@ -92,6 +92,8 @@ class SocketService {
           conversationId: string;
           ciphertext?: string;
           iv?: string;
+          senderPublicKey?: string | null;
+          recipientPublicKey?: string | null;
           content?: string;
           mediaUrl?: string | null;
           fileName?: string | null;

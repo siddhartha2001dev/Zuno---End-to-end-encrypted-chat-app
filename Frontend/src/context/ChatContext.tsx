@@ -6,6 +6,8 @@ import { useAuth } from "./AuthContext";
 import { deriveConversationKey } from "../crypto/keyExchange";
 import { encryptMessage } from "../crypto/encryption";
 import { decryptMessage } from "../crypto/decryption";
+import { getOrInitializeKeyPair } from "../crypto/keyPair";
+import { loadKeyPair } from "../crypto/keyStorage";
 
 interface ChatContextType {
   conversations: Conversation[];
@@ -135,20 +137,28 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Helper to derive AES-GCM conversation key using ECDH
   const getConversationCryptoKey = useCallback(
-    async (conversation: Conversation): Promise<CryptoKey | null> => {
-      const keyPair = e2eeKeyPairRef.current;
+    async (conversation: Conversation, explicitPeerKey?: string): Promise<CryptoKey | null> => {
+      let keyPair = e2eeKeyPairRef.current;
+      if (!keyPair?.privateKey && user) {
+        try {
+          const loaded = await getOrInitializeKeyPair(user.id);
+          keyPair = loaded.keyPair;
+          e2eeKeyPairRef.current = keyPair;
+        } catch (_) {}
+      }
       if (!keyPair?.privateKey) return null;
-      const peerPublicKey = await getPeerPublicKey(conversation);
+
+      const peerPublicKey = explicitPeerKey || (await getPeerPublicKey(conversation));
       if (!peerPublicKey) return null;
 
       try {
-        return await deriveConversationKey(keyPair.privateKey, peerPublicKey, conversation.id);
+        return await deriveConversationKey(keyPair.privateKey, peerPublicKey);
       } catch (err) {
         console.error("Failed to derive conversation key:", err);
         return null;
       }
     },
-    [getPeerPublicKey]
+    [user, getPeerPublicKey]
   );
 
   // Helper to decrypt a single message item locally
@@ -173,39 +183,110 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
 
-      // Direct message with ciphertext — attempt E2EE decryption
-      const aesKey = await getConversationCryptoKey(conversation);
-      if (!aesKey) {
-        // No key available — fall back to plain content if server sent it (legacy/unencrypted msg)
-        const fallback = msg.content || "";
+      // If already decrypted successfully, return as-is
+      if (msg.decryptedContent && !msg.decryptedContent.includes("Unable to decrypt")) {
+        return msg;
+      }
+
+      // Ensure key pair is initialized
+      let keyPair = e2eeKeyPairRef.current;
+      if (!keyPair?.privateKey && user) {
+        try {
+          const loaded = await getOrInitializeKeyPair(user.id);
+          keyPair = loaded.keyPair;
+          e2eeKeyPairRef.current = keyPair;
+        } catch (e) {
+          console.warn("Could not load key pair in decryptMessageItem:", e);
+        }
+      }
+
+      if (!keyPair?.privateKey) {
         return {
           ...msg,
           isEncrypted: true,
-          decryptedContent: fallback || "🔒 Unable to decrypt this message",
-          content: fallback || "🔒 Unable to decrypt this message",
+          decryptedContent: msg.content || "🔒 Unable to decrypt this message",
+          content: msg.content || "🔒 Unable to decrypt this message",
         };
       }
 
-      const result = await decryptMessage(msg.ciphertext, msg.iv, aesKey);
-      if (!result.success) {
-        // Decryption failed (wrong key, corrupted data, old message) — fall back to plain content
-        const fallback = msg.content || "";
+      const isSender =
+        user &&
+        (msg.senderId?.toString() === user.id.toString() ||
+          (msg.sender &&
+            (msg.sender.id?.toString() === user.id.toString() ||
+              (msg.sender as any)._id?.toString() === user.id.toString())));
+
+      // Determine peer public key for ECDH:
+      // If user sent the message, decrypt using recipient's public key (from message or conversation)
+      // If user received the message, decrypt using sender's public key (from message or conversation)
+      let peerKeyJwk = isSender
+        ? (msg.recipientPublicKey || null)
+        : (msg.senderPublicKey || msg.sender?.publicKey || null);
+
+      if (!peerKeyJwk) {
+        peerKeyJwk = await getPeerPublicKey(conversation);
+      }
+
+      if (!peerKeyJwk) {
         return {
           ...msg,
           isEncrypted: true,
-          decryptedContent: fallback || "🔒 Unable to decrypt this message",
-          content: fallback || "🔒 Unable to decrypt this message",
+          decryptedContent: msg.content || "🔒 Unable to decrypt this message",
+          content: msg.content || "🔒 Unable to decrypt this message",
         };
       }
 
-      return {
-        ...msg,
-        isEncrypted: true,
-        decryptedContent: result.plaintext,
-        content: result.plaintext,
-      };
+      try {
+        let aesKey = await deriveConversationKey(keyPair.privateKey, peerKeyJwk);
+        let result = await decryptMessage(msg.ciphertext, msg.iv, aesKey);
+
+        if (result.success) {
+          return {
+            ...msg,
+            isEncrypted: true,
+            decryptedContent: result.plaintext,
+            content: result.plaintext,
+          };
+        }
+
+        // If decryption failed, try fetching fresh public key for the peer (in case peer updated key)
+        const otherMember = getPeerMember(conversation);
+        const peerUserId = getPeerUserId(otherMember) || (isSender ? undefined : msg.senderId);
+        if (peerUserId) {
+          const freshData = await api.users.getPublicKey(peerUserId);
+          if (freshData?.publicKey && freshData.publicKey !== peerKeyJwk) {
+            peerKeyJwk = freshData.publicKey;
+            if (otherMember?.user) otherMember.user.publicKey = freshData.publicKey;
+            aesKey = await deriveConversationKey(keyPair.privateKey, peerKeyJwk);
+            result = await decryptMessage(msg.ciphertext, msg.iv, aesKey);
+            if (result.success) {
+              return {
+                ...msg,
+                isEncrypted: true,
+                decryptedContent: result.plaintext,
+                content: result.plaintext,
+              };
+            }
+          }
+        }
+
+        return {
+          ...msg,
+          isEncrypted: true,
+          decryptedContent: msg.content || "🔒 Unable to decrypt this message",
+          content: msg.content || "🔒 Unable to decrypt this message",
+        };
+      } catch (err) {
+        console.error("Decryption failed:", err);
+        return {
+          ...msg,
+          isEncrypted: true,
+          decryptedContent: msg.content || "🔒 Unable to decrypt this message",
+          content: msg.content || "🔒 Unable to decrypt this message",
+        };
+      }
     },
-    [getConversationCryptoKey]
+    [user, getPeerMember, getPeerPublicKey, getPeerUserId]
   );
 
 
@@ -220,20 +301,26 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const processedConversations = await Promise.all(
         data.conversations.map(async (conv: Conversation) => {
           if (conv.latestMessage?.ciphertext && conv.latestMessage?.iv) {
-            const aesKey = await getConversationCryptoKey(conv);
+            const isSender = user && conv.latestMessage.senderId?.toString() === user.id.toString();
+            const peerKey = isSender
+              ? (conv.latestMessage as any).recipientPublicKey
+              : (conv.latestMessage as any).senderPublicKey;
+            const aesKey = await getConversationCryptoKey(conv, peerKey);
             if (aesKey) {
               const res = await decryptMessage(
                 conv.latestMessage.ciphertext,
                 conv.latestMessage.iv,
                 aesKey
               );
-              return {
-                ...conv,
-                latestMessage: {
-                  ...conv.latestMessage,
-                  content: res.plaintext,
-                },
-              };
+              if (res.success) {
+                return {
+                  ...conv,
+                  latestMessage: {
+                    ...conv.latestMessage,
+                    content: res.plaintext,
+                  },
+                };
+              }
             }
           } else if (conv.latestMessage && !conv.latestMessage.content) {
             let fallback = "";
@@ -275,7 +362,24 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setMessages([]);
       setOnlineUsers(new Set());
     }
-  }, [user, refreshConversations]);
+  }, [user, e2eeKeyPair, refreshConversations]);
+
+  // Auto re-decrypt active conversation messages when keyPair becomes available
+  useEffect(() => {
+    if (!e2eeKeyPair || !activeConversation || messages.length === 0) return;
+    const hasUndecrypted = messages.some(
+      (m) => m.ciphertext && m.iv && (!m.decryptedContent || m.decryptedContent.includes("Unable to decrypt"))
+    );
+    if (hasUndecrypted) {
+      Promise.all(
+        messages.map((m) =>
+          m.ciphertext && m.iv && (!m.decryptedContent || m.decryptedContent.includes("Unable to decrypt"))
+            ? decryptMessageItem(m, activeConversation)
+            : m
+        )
+      ).then((updated) => setMessages(updated));
+    }
+  }, [e2eeKeyPair, activeConversation, decryptMessageItem]);
 
   // 2. Register Socket.IO Listeners
   useEffect(() => {
@@ -338,29 +442,42 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Update conversation list item
-      setConversations((prev) =>
-        prev.map((conv) => {
-          if (conv.id === newMessage.conversationId) {
-            return {
-              ...conv,
-              latestMessage: {
-                id: newMessage.id,
-                content: displayContent,
-                ciphertext: newMessage.ciphertext,
-                iv: newMessage.iv,
-                createdAt: newMessage.createdAt,
-                senderId: newMessage.senderId,
-                senderName: newMessage.sender?.name || "",
-              },
-              isUnread:
-                activeConversationRef.current?.id !== newMessage.conversationId &&
-                newMessage.senderId !== user?.id,
-              updatedAt: newMessage.createdAt,
-            };
-          }
-          return conv;
-        })
-      );
+      setConversations((prev) => {
+        const exists = prev.some((c) => c.id === newMessage.conversationId);
+        if (exists) {
+          return prev.map((conv) => {
+            if (conv.id === newMessage.conversationId) {
+              return {
+                ...conv,
+                latestMessage: {
+                  id: newMessage.id,
+                  content: displayContent,
+                  ciphertext: newMessage.ciphertext,
+                  iv: newMessage.iv,
+                  senderPublicKey: newMessage.senderPublicKey,
+                  recipientPublicKey: newMessage.recipientPublicKey,
+                  mediaUrl: newMessage.mediaUrl,
+                  fileName: newMessage.fileName,
+                  fileSize: newMessage.fileSize,
+                  messageType: newMessage.messageType,
+                  createdAt: newMessage.createdAt,
+                  senderId: newMessage.senderId,
+                  senderName: newMessage.sender?.name || "",
+                },
+                isUnread:
+                  activeConversationRef.current?.id !== newMessage.conversationId &&
+                  newMessage.senderId !== user?.id,
+                updatedAt: newMessage.createdAt,
+              };
+            }
+            return conv;
+          });
+        } else {
+          // If conversation doesn't exist in local list, refresh from server
+          refreshConversations();
+          return prev;
+        }
+      });
     };
 
     // Real-time message read receipt
@@ -545,19 +662,27 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (isDirect) {
       let ciphertext: string | undefined = undefined;
       let iv: string | undefined = undefined;
+      let senderPublicKey: string | undefined = undefined;
+      let recipientPublicKey: string | undefined = undefined;
 
       // Attempt E2EE encryption if text content exists
       if (trimmed) {
         try {
-          const keyPair = e2eeKeyPairRef.current;
-          if (keyPair?.privateKey) {
+          let keyPair = e2eeKeyPairRef.current;
+          if (!keyPair?.privateKey && user) {
+            const initRes = await getOrInitializeKeyPair(user.id);
+            keyPair = initRes.keyPair;
+            e2eeKeyPairRef.current = keyPair;
+          }
+
+          if (keyPair?.privateKey && user) {
             const peerPublicKey = await getPeerPublicKey(activeConversation);
             if (peerPublicKey) {
-              const aesKey = await deriveConversationKey(
-                keyPair.privateKey,
-                peerPublicKey,
-                activeConversation.id
-              );
+              const ownStored = await loadKeyPair(user.id);
+              senderPublicKey = ownStored?.publicKeyJwk;
+              recipientPublicKey = peerPublicKey;
+
+              const aesKey = await deriveConversationKey(keyPair.privateKey, peerPublicKey);
               const encrypted = await encryptMessage(trimmed, aesKey);
               ciphertext = encrypted.ciphertext;
               iv = encrypted.iv;
@@ -575,13 +700,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // 4. Send payload via Socket.IO — always include content as fallback for failed decryption
+      // TRUE E2EE: When encrypted, content is "" so the server NEVER sees plaintext!
       try {
         await socketService.sendMessage({
           conversationId: activeConversation.id,
-          content: trimmed,     // always send plaintext so msg.content is available as fallback
+          content: ciphertext ? "" : trimmed,
           ciphertext,
           iv,
+          senderPublicKey,
+          recipientPublicKey,
           mediaUrl: mediaOptions?.mediaUrl,
           fileName: mediaOptions?.fileName,
           fileSize: mediaOptions?.fileSize,

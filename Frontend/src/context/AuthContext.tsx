@@ -104,13 +104,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       try {
         const data = await api.auth.getMe();
-        setUser(data.user);
         setToken(storedToken);
+
+        // Initialize E2EE key pair before setting user so keys are ready immediately
+        await initKeys(data.user);
+        setUser(data.user);
+
         // Connect Socket.IO on valid user session
         socketService.connect(storedToken);
-
-        // Initialize E2EE key pair
-        await initKeys(data.user);
       } catch (err) {
         console.warn("Session expired or invalid on startup:", err);
         logout("Your session has expired. Please sign in again.");
@@ -188,14 +189,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const data = await api.auth.login({ email, password });
     const jwtToken = data.accessToken || data.token;
     setStoredToken(jwtToken);
-    setUser(data.user);
     setToken(jwtToken);
     setSessionMessage(null);
     setPendingVerificationEmail(null);
-    socketService.connect(jwtToken);
 
-    // Initialize E2EE key pair
+    // Initialize keys before user state triggers chat rendering
     await initKeys(data.user);
+    setUser(data.user);
+    socketService.connect(jwtToken);
   };
 
   const register = async (name: string, chatId: string, email: string, password: string) => {
@@ -203,12 +204,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const jwtToken = data.accessToken || data.token;
     if (jwtToken) {
       setStoredToken(jwtToken);
-      setUser(data.user);
       setToken(jwtToken);
       setSessionMessage(null);
       setPendingVerificationEmail(null);
-      socketService.connect(jwtToken);
       await initKeys(data.user);
+      setUser(data.user);
+      socketService.connect(jwtToken);
     } else if (data.requiresVerification) {
       setPendingVerificationEmail(email);
     }
@@ -219,12 +220,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const data = await api.auth.verifyEmail(verificationToken);
     const jwtToken = data.accessToken || data.token;
     setStoredToken(jwtToken);
-    setUser(data.user);
     setToken(jwtToken);
     setSessionMessage(null);
     setPendingVerificationEmail(null);
-    socketService.connect(jwtToken);
     await initKeys(data.user);
+    setUser(data.user);
+    socketService.connect(jwtToken);
     return data;
   };
 

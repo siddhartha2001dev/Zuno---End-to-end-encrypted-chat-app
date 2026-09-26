@@ -41,54 +41,135 @@ export async function saveKeyPair(
   keyPair: CryptoKeyPair,
   publicKeyJwk: string
 ): Promise<void> {
-  const db = await openDatabase();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    const store = tx.objectStore(STORE_NAME);
+  // 1. Dual-layer storage: backup exported keys to localStorage first
+  try {
+    const privJwk = await window.crypto.subtle.exportKey("jwk", keyPair.privateKey);
+    localStorage.setItem(`zuno_e2ee_priv_${userId}`, JSON.stringify(privJwk));
+    localStorage.setItem(`zuno_e2ee_pub_${userId}`, publicKeyJwk);
+  } catch (backupErr) {
+    console.warn("Could not backup key pair to localStorage:", backupErr);
+  }
 
-    const record: StoredKeyRecord = {
-      userId,
-      privateKey: keyPair.privateKey,
-      publicKey: keyPair.publicKey,
-      publicKeyJwk,
-      createdAt: Date.now(),
-    };
+  // 2. Persist natively in IndexedDB
+  try {
+    const db = await openDatabase();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, "readwrite");
+      const store = tx.objectStore(STORE_NAME);
 
-    const request = store.put(record);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error || new Error("Failed to save keys to IndexedDB"));
-  });
+      const record: StoredKeyRecord = {
+        userId,
+        privateKey: keyPair.privateKey,
+        publicKey: keyPair.publicKey,
+        publicKeyJwk,
+        createdAt: Date.now(),
+      };
+
+      const request = store.put(record);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error || new Error("Failed to save keys to IndexedDB"));
+    });
+  } catch (idbErr) {
+    console.warn("IndexedDB save failed, key saved in localStorage backup:", idbErr);
+  }
 }
 
 export async function loadKeyPair(
   userId: string
 ): Promise<{ keyPair: CryptoKeyPair; publicKeyJwk: string } | null> {
-  const db = await openDatabase();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readonly");
-    const store = tx.objectStore(STORE_NAME);
-    const request = store.get(userId);
+  // 1. Try to load from native IndexedDB
+  try {
+    const db = await openDatabase();
+    const idbResult = await new Promise<{ keyPair: CryptoKeyPair; publicKeyJwk: string } | null>(
+      (resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readonly");
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.get(userId);
 
-    request.onsuccess = () => {
-      const record = request.result as StoredKeyRecord | undefined;
-      if (!record || !record.privateKey || !record.publicKey) {
-        return resolve(null);
+        request.onsuccess = () => {
+          const record = request.result as StoredKeyRecord | undefined;
+          if (!record || !record.privateKey || !record.publicKey) {
+            return resolve(null);
+          }
+
+          resolve({
+            keyPair: {
+              privateKey: record.privateKey,
+              publicKey: record.publicKey,
+            },
+            publicKeyJwk: record.publicKeyJwk,
+          });
+        };
+
+        request.onerror = () => reject(request.error || new Error("Failed to load keys from IndexedDB"));
       }
+    );
 
-      resolve({
-        keyPair: {
-          privateKey: record.privateKey,
-          publicKey: record.publicKey,
-        },
-        publicKeyJwk: record.publicKeyJwk,
-      });
-    };
+    if (idbResult) {
+      return idbResult;
+    }
+  } catch (idbErr) {
+    console.warn("Could not load key from IndexedDB, trying fallback:", idbErr);
+  }
 
-    request.onerror = () => reject(request.error || new Error("Failed to load keys from IndexedDB"));
-  });
+  // 2. Fallback to localStorage backup if IndexedDB was cleared or unavailable
+  try {
+    const privStr = localStorage.getItem(`zuno_e2ee_priv_${userId}`);
+    const pubStr = localStorage.getItem(`zuno_e2ee_pub_${userId}`);
+    if (privStr && pubStr) {
+      const parsedPriv = JSON.parse(privStr);
+      const parsedPub = JSON.parse(pubStr);
+
+      const privateKey = await window.crypto.subtle.importKey(
+        "jwk",
+        parsedPriv,
+        { name: "ECDH", namedCurve: "P-256" },
+        true,
+        ["deriveKey", "deriveBits"]
+      );
+
+      const publicKey = await window.crypto.subtle.importKey(
+        "jwk",
+        parsedPub,
+        { name: "ECDH", namedCurve: "P-256" },
+        true,
+        []
+      );
+
+      const restoredKeyPair = { privateKey, publicKey };
+
+      // Restore back into IndexedDB in background
+      try {
+        const db = await openDatabase();
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
+        store.put({
+          userId,
+          privateKey,
+          publicKey,
+          publicKeyJwk: pubStr,
+          createdAt: Date.now(),
+        });
+      } catch (_) {}
+
+      return {
+        keyPair: restoredKeyPair,
+        publicKeyJwk: pubStr,
+      };
+    }
+  } catch (fallbackErr) {
+    console.warn("localStorage fallback key retrieval failed:", fallbackErr);
+  }
+
+  return null;
 }
 
 export async function clearKeyPair(userId: string): Promise<void> {
+  try {
+    localStorage.removeItem(`zuno_e2ee_priv_${userId}`);
+    localStorage.removeItem(`zuno_e2ee_pub_${userId}`);
+  } catch (_) {}
+
   try {
     const db = await openDatabase();
     return new Promise((resolve, reject) => {

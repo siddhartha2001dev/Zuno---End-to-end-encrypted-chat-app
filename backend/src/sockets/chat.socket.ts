@@ -57,7 +57,7 @@ export function registerChatHandlers(io: Server, socket: Socket) {
   // 3. Send Message
   socket.on("message:send", async (data: any, callback) => {
     try {
-      const { conversationId, content, ciphertext, iv, mediaUrl, fileName, fileSize, messageType } = data;
+      const { conversationId, content, ciphertext, iv, senderPublicKey, recipientPublicKey, mediaUrl, fileName, fileSize, messageType } = data;
       if (!conversationId) {
         if (callback) callback({ success: false, error: "conversationId is required" });
         return;
@@ -68,6 +68,8 @@ export function registerChatHandlers(io: Server, socket: Socket) {
         content,
         ciphertext,
         iv,
+        senderPublicKey,
+        recipientPublicKey,
         mediaUrl,
         fileName,
         fileSize,
@@ -81,6 +83,8 @@ export function registerChatHandlers(io: Server, socket: Socket) {
         content: validated.content,
         ciphertext: validated.ciphertext,
         iv: validated.iv,
+        senderPublicKey: validated.senderPublicKey,
+        recipientPublicKey: validated.recipientPublicKey,
         mediaUrl: validated.mediaUrl,
         fileName: validated.fileName,
         fileSize: validated.fileSize,

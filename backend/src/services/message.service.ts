@@ -17,6 +17,8 @@ export class MessageService {
     content?: string;
     ciphertext?: string;
     iv?: string;
+    senderPublicKey?: string | null;
+    recipientPublicKey?: string | null;
     mediaUrl?: string | null;
     fileName?: string | null;
     fileSize?: number | null;

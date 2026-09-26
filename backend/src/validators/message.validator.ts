@@ -5,6 +5,8 @@ export const sendMessageSchema = z
     content: z.string().max(4000).optional().default(""),
     ciphertext: z.string().min(1).optional(),
     iv: z.string().min(1).optional(),
+    senderPublicKey: z.string().optional(),
+    recipientPublicKey: z.string().optional(),
     mediaUrl: z.string().url().optional(),
     fileName: z.string().max(255).optional(),
     fileSize: z.number().nonnegative().optional(),

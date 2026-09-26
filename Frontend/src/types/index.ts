@@ -36,6 +36,8 @@ export interface Message {
   content: string;
   ciphertext?: string | null;
   iv?: string | null;
+  senderPublicKey?: string | null;
+  recipientPublicKey?: string | null;
   mediaUrl?: string | null;
   fileName?: string | null;
   fileSize?: number | null;

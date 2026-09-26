@@ -7,6 +7,8 @@ export interface IMessage extends Document {
   content?: string;
   ciphertext?: string;
   iv?: string;
+  senderPublicKey?: string | null;
+  recipientPublicKey?: string | null;
   mediaUrl?: string | null;
   fileName?: string | null;
   fileSize?: number | null;
@@ -24,6 +26,8 @@ const MessageSchema = new Schema<IMessage>(
     content: { type: String, default: "" },
     ciphertext: { type: String, default: null },
     iv: { type: String, default: null },
+    senderPublicKey: { type: String, default: null },
+    recipientPublicKey: { type: String, default: null },
     mediaUrl: { type: String, default: null },
     fileName: { type: String, default: null },
     fileSize: { type: Number, default: null },
@@ -38,6 +42,8 @@ const MessageSchema = new Schema<IMessage>(
       transform: (_doc, ret: any) => {
         ret.id = ret._id.toString();
         ret.conversationId = ret.conversationId?.toString();
+        ret.senderPublicKey = ret.senderPublicKey || null;
+        ret.recipientPublicKey = ret.recipientPublicKey || null;
         const sId = ret.senderId;
         if (sId && typeof sId === "object") {
           const actualId = (sId._id || sId.id || sId)?.toString();
@@ -47,6 +53,7 @@ const MessageSchema = new Schema<IMessage>(
               name: sId.name,
               email: sId.email,
               avatar: sId.avatar,
+              publicKey: sId.publicKey || null,
             };
             ret.senderId = actualId;
           } else {
@@ -65,6 +72,8 @@ const MessageSchema = new Schema<IMessage>(
       transform: (_doc, ret: any) => {
         ret.id = ret._id.toString();
         ret.conversationId = ret.conversationId?.toString();
+        ret.senderPublicKey = ret.senderPublicKey || null;
+        ret.recipientPublicKey = ret.recipientPublicKey || null;
         const sId = ret.senderId;
         if (sId && typeof sId === "object") {
           const actualId = (sId._id || sId.id || sId)?.toString();
@@ -74,6 +83,7 @@ const MessageSchema = new Schema<IMessage>(
               name: sId.name,
               email: sId.email,
               avatar: sId.avatar,
+              publicKey: sId.publicKey || null,
             };
             ret.senderId = actualId;
           } else {

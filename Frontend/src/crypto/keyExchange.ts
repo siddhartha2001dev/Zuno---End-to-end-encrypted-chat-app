@@ -47,7 +47,8 @@ export async function deriveConversationKey(
   peerPublicKeyJwk: string,
   cacheIdentifier?: string
 ): Promise<CryptoKey> {
-  const cacheKey = cacheIdentifier || peerPublicKeyJwk;
+  // Ensure cache key ALWAYS includes the peer public key so key rotations never return stale AES keys
+  const cacheKey = cacheIdentifier ? `${cacheIdentifier}:${peerPublicKeyJwk}` : peerPublicKeyJwk;
   if (derivedKeyCache.has(cacheKey)) {
     return derivedKeyCache.get(cacheKey)!;
   }
