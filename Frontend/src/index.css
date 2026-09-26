@@ -318,3 +318,14 @@ textarea,
 select {
   touch-action: manipulation;
 }
+
+/* ── Lift Message Composer on Mobile to Clear Chrome/Safari Bottom Bars & Tabs ── */
+.composer-footer-lift {
+  padding-bottom: max(54px, calc(env(safe-area-inset-bottom, 0px) + 34px));
+}
+
+@media (min-width: 768px) {
+  .composer-footer-lift {
+    padding-bottom: 16px;
+  }
+}

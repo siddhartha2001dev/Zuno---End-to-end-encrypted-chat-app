@@ -540,7 +540,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
 
       {/* User Profile Footer */}
       {user && (
-        <div className="p-3 border-t border-theme-border liquid-glass flex items-center justify-between flex-shrink-0">
+        <div
+          className="p-3 border-t border-theme-border liquid-glass flex items-center justify-between flex-shrink-0"
+          style={{
+            paddingBottom: 'max(12px, calc(env(safe-area-inset-bottom, 0px) + 8px))'
+          }}
+        >
           <div
             className="flex items-center gap-2.5 min-w-0 cursor-pointer group"
             onClick={() => setIsSettingsOpen(true)}

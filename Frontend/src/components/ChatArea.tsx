@@ -479,10 +479,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
 
       {/* Floating Modern Message Composer */}
       <footer
-        className="px-3 pt-1 md:p-4 bg-transparent z-10 flex-shrink-0 transition-all duration-150"
-        style={{
-          paddingBottom: isKeyboardOpen ? '4px' : 'max(6px, env(safe-area-inset-bottom, 6px))'
-        }}
+        className="px-3 pt-1.5 md:p-4 bg-transparent z-10 flex-shrink-0 transition-all duration-150 composer-footer-lift"
+        style={isKeyboardOpen ? { paddingBottom: "8px" } : undefined}
       >
         <div className="max-w-3xl mx-auto relative">
           {/* Interactive Emoji Picker Popup */}
