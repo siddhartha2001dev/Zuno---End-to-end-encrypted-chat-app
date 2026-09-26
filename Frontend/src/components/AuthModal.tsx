@@ -400,39 +400,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
             </p>
           </div>
 
-          {/* Prominent Mode Selector Tabs */}
-          <div className="flex p-1 bg-theme-surface/80 border border-theme-border rounded-2xl mb-5 shadow-xs">
-            <button
-              type="button"
-              onClick={() => {
-                setIsLogin(true);
-                setError(null);
-              }}
-              className={`flex-1 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
-                isLogin
-                  ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/20"
-                  : "text-theme-text-secondary hover:text-theme-text hover:bg-theme-bg/60"
-              }`}
-            >
-              <Lock className="w-3.5 h-3.5" />
-              <span>Sign In</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsLogin(false);
-                setError(null);
-              }}
-              className={`flex-1 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
-                !isLogin
-                  ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/20"
-                  : "text-theme-text-secondary hover:text-theme-text hover:bg-theme-bg/60"
-              }`}
-            >
-              <UserIcon className="w-3.5 h-3.5" />
-              <span>Create Account</span>
-            </button>
-          </div>
+
 
           {/* Banner Alert (Session expiry, Token deletion, or Account verification) */}
           {successBanner && !error && (
