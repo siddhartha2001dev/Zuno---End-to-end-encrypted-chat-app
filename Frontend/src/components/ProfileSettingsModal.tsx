@@ -1,0 +1,541 @@
+import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useChat } from "../context/ChatContext";
+import { AnimatedAvatar } from "./AnimatedAvatar";
+import { AvatarSelectorModal } from "./AvatarSelectorModal";
+import {
+  X,
+  Camera,
+  Sparkles,
+  CheckCircle2,
+  Copy,
+  Check,
+  UserX,
+  Loader2,
+  ShieldCheck,
+  Mail,
+  User,
+  AtSign,
+  Pencil,
+  RotateCcw,
+  Trash2,
+} from "lucide-react";
+
+interface ProfileSettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onOpenCropPicker: () => void;
+}
+
+export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
+  isOpen,
+  onClose,
+  onOpenCropPicker,
+}) => {
+  const { user, removeAvatar, deactivateAccount, updateName } = useAuth();
+  const { deleteAllConversations } = useChat();
+
+  const [copiedChatId, setCopiedChatId] = useState<boolean>(false);
+  const [isRemovingAvatar, setIsRemovingAvatar] = useState<boolean>(false);
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState<boolean>(false);
+
+  // Deactivate & Delete All Modals
+  const [showDeactivateModal, setShowDeactivateModal] = useState<boolean>(false);
+  const [isDeactivating, setIsDeactivating] = useState<boolean>(false);
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState<boolean>(false);
+  const [isDeletingAll, setIsDeletingAll] = useState<boolean>(false);
+  const [deleteAllSuccess, setDeleteAllSuccess] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  // Name Editing State
+  const [isEditingName, setIsEditingName] = useState<boolean>(false);
+  const [nameInput, setNameInput] = useState<string>("");
+  const [isSavingName, setIsSavingName] = useState<boolean>(false);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [nameSuccess, setNameSuccess] = useState<string | null>(null);
+
+  // Sync nameInput when user changes or modal opens
+  React.useEffect(() => {
+    if (user?.name) {
+      setNameInput(user.name);
+    }
+  }, [user?.name, isOpen]);
+
+  if (!isOpen || !user) return null;
+
+  const handleStartEditName = () => {
+    setNameInput(user.name);
+    setIsEditingName(true);
+    setNameError(null);
+    setNameSuccess(null);
+  };
+
+  const handleSaveName = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const trimmed = nameInput.trim();
+    if (!trimmed) {
+      setNameError("Name cannot be empty");
+      return;
+    }
+    if (trimmed.length < 2) {
+      setNameError("Name must be at least 2 characters long");
+      return;
+    }
+    if (trimmed.length > 50) {
+      setNameError("Name cannot exceed 50 characters");
+      return;
+    }
+    if (trimmed === user.name) {
+      setIsEditingName(false);
+      return;
+    }
+
+    try {
+      setIsSavingName(true);
+      setNameError(null);
+      await updateName(trimmed);
+      setNameSuccess("Name updated successfully!");
+      setIsEditingName(false);
+      setTimeout(() => setNameSuccess(null), 3000);
+    } catch (err: any) {
+      setNameError(err.message || "Failed to update name");
+    } finally {
+      setIsSavingName(false);
+    }
+  };
+
+  const handleCopyChatId = () => {
+    if (!user.chatId) return;
+    navigator.clipboard.writeText(`@${user.chatId}`);
+    setCopiedChatId(true);
+    setTimeout(() => setCopiedChatId(false), 2000);
+  };
+
+  const handleRemoveAvatar = async () => {
+    try {
+      setIsRemovingAvatar(true);
+      await removeAvatar();
+    } catch (err: any) {
+      alert(err.message || "Failed to reset avatar");
+    } finally {
+      setIsRemovingAvatar(false);
+    }
+  };
+
+  const handleDeactivate = async () => {
+    try {
+      setIsDeactivating(true);
+      setActionError(null);
+      await deactivateAccount();
+      setShowDeactivateModal(false);
+      onClose();
+    } catch (err: any) {
+      setActionError(err.message || "Failed to deactivate account");
+      setIsDeactivating(false);
+    }
+  };
+
+  const handleDeleteAllChats = async () => {
+    try {
+      setIsDeletingAll(true);
+      setActionError(null);
+      await deleteAllConversations();
+      setDeleteAllSuccess("All chats deleted successfully");
+      setShowDeleteAllModal(false);
+      setTimeout(() => setDeleteAllSuccess(null), 3000);
+    } catch (err: any) {
+      setActionError(err.message || "Failed to delete all chats");
+    } finally {
+      setIsDeletingAll(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200 select-none">
+      <div className="w-full max-w-md bg-theme-surface border border-theme-border rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-theme-border flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-bold text-theme-text">Profile & Settings</h2>
+          </div>
+          <button
+            onClick={() => {
+              setShowDeactivateModal(false);
+              setShowDeleteAllModal(false);
+              onClose();
+            }}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-theme-text-muted hover:text-theme-text hover:bg-theme-bg transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Scrollable Body */}
+        <div className="p-6 overflow-y-auto space-y-6">
+          
+          {/* Avatar & Photo Actions */}
+          <div className="flex flex-col items-center text-center">
+            <div className="relative mb-3.5 inline-flex items-center justify-center group cursor-pointer" onClick={() => setIsAvatarModalOpen(true)}>
+              <div className="rounded-full ring-4 ring-emerald-500/20 dark:ring-emerald-500/25 shadow-[0_8px_24px_rgba(16,185,129,0.18)] group-hover:scale-105 transition-transform">
+                <AnimatedAvatar
+                  src={user.avatar}
+                  name={user.name}
+                  id={user.id}
+                  size="2xl"
+                  showOnline={true}
+                  isOnline={true}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsAvatarModalOpen(true);
+                }}
+                title="Choose or Customize Avatar"
+                className="absolute bottom-0 right-0 p-2.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg border-2 border-theme-surface active:scale-95 transition-all z-10 cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Display Name with inline edit */}
+            {isEditingName ? (
+              <form onSubmit={handleSaveName} className="mt-1 w-full max-w-xs flex flex-col items-center gap-1.5 animate-in fade-in duration-150">
+                <div className="flex items-center gap-1.5 w-full">
+                  <input
+                    type="text"
+                    value={nameInput}
+                    onChange={(e) => {
+                      setNameInput(e.target.value);
+                      setNameError(null);
+                    }}
+                    maxLength={50}
+                    autoFocus
+                    placeholder="Enter your name"
+                    disabled={isSavingName}
+                    className="flex-1 h-9 px-3 text-sm font-semibold bg-theme-bg border border-emerald-500 rounded-xl text-theme-text focus:outline-none ring-2 ring-emerald-500/20 shadow-xs"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSavingName || !nameInput.trim()}
+                    className="h-9 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center justify-center gap-1 transition-all active:scale-95 disabled:opacity-50 shadow-xs cursor-pointer"
+                    title="Save Name"
+                  >
+                    {isSavingName ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Save</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditingName(false);
+                      setNameInput(user.name);
+                      setNameError(null);
+                    }}
+                    disabled={isSavingName}
+                    className="h-9 w-9 rounded-xl bg-theme-bg hover:bg-theme-border border border-theme-border text-theme-text-muted hover:text-theme-text flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                    title="Cancel"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                {nameError && (
+                  <p className="text-[11px] text-red-500 font-medium">{nameError}</p>
+                )}
+              </form>
+            ) : (
+              <div className="flex items-center justify-center gap-2 group">
+                <h3 className="text-lg font-bold text-theme-text leading-tight">{user.name}</h3>
+                <button
+                  type="button"
+                  onClick={handleStartEditName}
+                  className="p-1.5 rounded-lg text-theme-text-muted hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer"
+                  title="Edit Account Name"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            {nameSuccess && (
+              <p className="text-[11px] text-emerald-500 font-medium flex items-center justify-center gap-1 mt-1 animate-in fade-in">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>{nameSuccess}</span>
+              </p>
+            )}
+
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                @{user.chatId}
+              </span>
+              <button
+                type="button"
+                onClick={handleCopyChatId}
+                className="p-1 rounded text-theme-text-muted hover:text-theme-text hover:bg-theme-bg transition-colors"
+                title="Copy Chat ID"
+              >
+                {copiedChatId ? (
+                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
+              </button>
+            </div>
+
+            {/* Avatar Buttons */}
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsAvatarModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Choose Avatar</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onOpenCropPicker}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold border border-emerald-500/20 transition-all active:scale-95 cursor-pointer"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                <span>Upload Photo</span>
+              </button>
+
+              {user.avatar && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAvatar}
+                  disabled={isRemovingAvatar}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-theme-bg hover:bg-theme-border text-theme-text-secondary text-xs font-medium border border-theme-border transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                  title="Switch to default algorithmic character avatar"
+                >
+                  {isRemovingAvatar ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <RotateCcw className="w-3.5 h-3.5 text-theme-text-muted" />
+                  )}
+                  <span>Reset Default</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Account Details Box */}
+          <div className="p-4 rounded-2xl bg-theme-bg/60 border border-theme-border space-y-3">
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-2 text-theme-text-muted">
+                <User className="w-3.5 h-3.5" />
+                <span>Display Name</span>
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-theme-text">{user.name}</span>
+                {!isEditingName && (
+                  <button
+                    type="button"
+                    onClick={handleStartEditName}
+                    className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline font-semibold cursor-pointer"
+                  >
+                    <Pencil className="w-3 h-3" />
+                    <span>Edit</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-2 text-theme-text-muted">
+                <AtSign className="w-3.5 h-3.5" />
+                <span>Chat ID</span>
+              </span>
+              <span className="font-mono font-semibold text-theme-text">@{user.chatId}</span>
+            </div>
+
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-2 text-theme-text-muted">
+                <Mail className="w-3.5 h-3.5" />
+                <span>Email Address</span>
+              </span>
+              <span className="font-semibold text-theme-text truncate max-w-[180px]">{user.email}</span>
+            </div>
+
+            <div className="flex items-center justify-between text-xs pt-1 border-t border-theme-border/60">
+              <span className="flex items-center gap-2 text-theme-text-muted">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Account Status</span>
+              </span>
+              <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="w-3 h-3" />
+                <span>Verified</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Account Actions & Danger Zone */}
+          <div className="space-y-3 pt-2 border-t border-theme-border/60">
+            <h4 className="text-xs font-bold text-theme-text uppercase tracking-wider text-theme-text-muted px-1">
+              Account Management
+            </h4>
+
+            {deleteAllSuccess && (
+              <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-2 animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                <span>{deleteAllSuccess}</span>
+              </div>
+            )}
+
+            {/* Delete All Chats Card */}
+            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-red-500/5 border border-red-500/20 gap-3">
+              <div className="min-w-0">
+                <h5 className="text-xs font-bold text-theme-text flex items-center gap-1.5">
+                  <Trash2 className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
+                  <span>Delete All Chats</span>
+                </h5>
+                <p className="text-[11px] text-theme-text-muted mt-0.5 leading-relaxed">
+                  Permanently wipe all conversation and message history
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setActionError(null);
+                  setShowDeleteAllModal(true);
+                }}
+                className="px-3.5 py-1.5 rounded-xl border border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/10 text-xs font-semibold transition-all active:scale-95 flex-shrink-0 cursor-pointer"
+              >
+                Delete all chats
+              </button>
+            </div>
+
+            {/* Center Deactivate Account Button */}
+            <div className="pt-3 pb-1 flex justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setActionError(null);
+                  setShowDeactivateModal(true);
+                }}
+                className="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <UserX className="w-4 h-4" />
+                <span>Deactivate my account</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* Confirmation Modal: Deactivate Account */}
+      {showDeactivateModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150 select-none">
+          <div className="w-full max-w-sm bg-theme-surface border border-theme-border rounded-3xl p-5 shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-150">
+            <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center mb-3">
+              <UserX className="w-6 h-6" />
+            </div>
+            <h3 className="text-sm sm:text-base font-bold text-theme-text mb-1.5">
+              Do you really want to deactivate your account??
+            </h3>
+            <p className="text-xs text-theme-text-muted leading-relaxed mb-5">
+              You will be signed out and your profile will be hidden from searches. You can sign in anytime to reactivate your account.
+            </p>
+            {actionError && (
+              <p className="text-xs text-red-500 mb-3 font-medium">{actionError}</p>
+            )}
+            <div className="flex items-center gap-2.5 w-full">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeactivateModal(false);
+                  setActionError(null);
+                }}
+                disabled={isDeactivating}
+                className="flex-1 py-2.5 rounded-xl border border-theme-border text-xs font-semibold text-theme-text hover:bg-theme-bg transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeactivate}
+                disabled={isDeactivating}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-md transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                {isDeactivating ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Deactivating...</span>
+                  </>
+                ) : (
+                  <span>Yes, Deactivate</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal: Delete All Chats */}
+      {showDeleteAllModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150 select-none">
+          <div className="w-full max-w-sm bg-theme-surface border border-theme-border rounded-3xl p-5 shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-150">
+            <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center mb-3">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <h3 className="text-sm sm:text-base font-bold text-theme-text mb-1.5">
+              Do you really want to delete all chats?
+            </h3>
+            <p className="text-xs text-theme-text-muted leading-relaxed mb-5">
+              This will permanently delete all your 1-on-1 and group conversations along with all messages and media history. This action cannot be undone.
+            </p>
+            {actionError && (
+              <p className="text-xs text-red-500 mb-3 font-medium">{actionError}</p>
+            )}
+            <div className="flex items-center gap-2.5 w-full">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteAllModal(false);
+                  setActionError(null);
+                }}
+                disabled={isDeletingAll}
+                className="flex-1 py-2.5 rounded-xl border border-theme-border text-xs font-semibold text-theme-text hover:bg-theme-bg transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAllChats}
+                disabled={isDeletingAll}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-md transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                {isDeletingAll ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <span>Delete All</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Avatar Customization Modal */}
+      <AvatarSelectorModal
+        isOpen={isAvatarModalOpen}
+        onClose={() => setIsAvatarModalOpen(false)}
+        onOpenCropPicker={onOpenCropPicker}
+      />
+    </div>
+  );
+};

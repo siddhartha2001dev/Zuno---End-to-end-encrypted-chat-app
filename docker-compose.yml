@@ -1,0 +1,42 @@
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: chatapp-mongo
+    restart: unless-stopped
+    ports:
+      - "27018:27017" # Mapped to 27018 to avoid collision with host native MongoDB on 27017
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chatapp-backend
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - PORT=4000
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongo:27017/chatapp_db}
+      - JWT_SECRET=super-secret-jwt-key-for-realtime-chat-app-development-32chars
+      - CORS_ORIGIN=http://localhost:5173
+      - NODE_ENV=production
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: chatapp-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:

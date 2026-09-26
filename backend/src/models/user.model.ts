@@ -1,0 +1,76 @@
+import mongoose, { Schema, Document } from "mongoose";
+
+export interface IUser extends Document {
+  id: string;
+  name: string;
+  chatId: string;
+  email: string;
+  passwordHash: string;
+  avatar?: string;
+  publicKey?: string;
+  isVerified: boolean;
+  isDeactivated?: boolean;
+  deactivatedAt?: Date;
+  verificationToken?: string;
+  verificationTokenExpiry?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const UserSchema = new Schema<IUser>(
+  {
+    name: { type: String, required: true, trim: true },
+    chatId: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      index: true,
+      match: [/^[a-z][a-z0-9._]{2,29}$/, "Chat ID must start with a letter, be 3-30 chars, and contain only lowercase letters, numbers, dots, or underscores"],
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      index: true,
+    },
+    passwordHash: { type: String, required: true },
+    avatar: { type: String },
+    publicKey: { type: String, default: null },
+    isVerified: { type: Boolean, default: false },
+    isDeactivated: { type: Boolean, default: false },
+    deactivatedAt: { type: Date, default: null },
+    verificationToken: { type: String, default: null },
+    verificationTokenExpiry: { type: Date, default: null },
+  },
+  {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: (_doc, ret: any) => {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        delete ret.passwordHash;
+        delete ret.verificationToken;
+        delete ret.verificationTokenExpiry;
+        return ret;
+      },
+    },
+    toObject: {
+      virtuals: true,
+      transform: (_doc, ret: any) => {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
+  }
+);
+
+export const UserModel = mongoose.model<IUser>("User", UserSchema);
+
