@@ -195,11 +195,11 @@ export class UserService {
     }
 
     const normalized = chatId.toLowerCase().trim().replace(/^@/, "");
-    const validFormat = /^[a-z][a-z0-9._]{2,29}$/.test(normalized);
+    const validFormat = /^[a-z0-9][a-z0-9._]{2,29}$/.test(normalized);
     if (!validFormat) {
       return {
         available: false,
-        message: "Chat ID must start with a letter and contain only lowercase letters, numbers, dots, or underscores",
+        message: "Chat ID must start with a letter or number and contain only lowercase letters, numbers, dots, or underscores",
       };
     }
 

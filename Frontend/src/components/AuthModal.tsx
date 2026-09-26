@@ -52,32 +52,45 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
   const [resendSuccess, setResendSuccess] = useState<string | null>(null);
 
   // Debounced Chat ID availability check
+  // Debounced Chat ID availability check
   React.useEffect(() => {
-    if (isLogin || !chatId || chatId.length < 3) {
+    if (isLogin) {
       setChatIdStatus("idle");
       setChatIdMessage("");
       return;
     }
 
-    const normalized = chatId.toLowerCase();
-    const validFormat = /^[a-z][a-z0-9._]{2,29}$/.test(normalized);
+    const clean = chatId.trim().toLowerCase().replace(/^@/, "");
+    if (!clean) {
+      setChatIdStatus("idle");
+      setChatIdMessage("");
+      return;
+    }
+
+    if (clean.length < 3) {
+      setChatIdStatus("invalid");
+      setChatIdMessage("Must be at least 3 characters");
+      return;
+    }
+
+    const validFormat = /^[a-z0-9][a-z0-9._]{2,29}$/.test(clean);
     if (!validFormat) {
       setChatIdStatus("invalid");
-      setChatIdMessage("Must start with a letter; only lowercase letters, numbers, dots, or underscores");
+      setChatIdMessage("Letters, numbers, dots, or underscores only (3-30 chars)");
       return;
     }
 
     setChatIdStatus("checking");
     const timer = setTimeout(async () => {
       try {
-        const result = await api.users.checkChatId(normalized);
+        const result = await api.users.checkChatId(clean);
         setChatIdStatus(result.available ? "available" : "taken");
         setChatIdMessage(result.message);
       } catch {
         setChatIdStatus("idle");
-        setChatIdMessage("");
+        setChatIdMessage("Checking availability on submit");
       }
-    }, 400);
+    }, 350);
 
     return () => clearTimeout(timer);
   }, [chatId, isLogin]);
@@ -103,12 +116,46 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
           setSubmitting(false);
           return;
         }
-        if (!chatId.trim() || chatIdStatus !== "available") {
-          setError("Please choose a valid and available Chat ID");
+
+        const cleanChatId = chatId.trim().toLowerCase().replace(/^@/, "");
+        if (!cleanChatId || cleanChatId.length < 3) {
+          setError("Chat ID must be at least 3 characters long");
           setSubmitting(false);
           return;
         }
-        await register(name.trim(), chatId.trim().toLowerCase(), email.trim(), password);
+
+        const validFormat = /^[a-z0-9][a-z0-9._]{2,29}$/.test(cleanChatId);
+        if (!validFormat) {
+          setError("Chat ID must start with a letter or number and contain only lowercase letters, numbers, dots, or underscores (3-30 chars)");
+          setSubmitting(false);
+          return;
+        }
+
+        if (chatIdStatus === "taken") {
+          setError("This Chat ID is already taken. Please choose another one.");
+          setSubmitting(false);
+          return;
+        }
+
+        // If not already verified available (e.g. user clicked submit quickly before debounce finished)
+        if (chatIdStatus !== "available") {
+          try {
+            const check = await api.users.checkChatId(cleanChatId);
+            if (!check.available) {
+              setChatIdStatus("taken");
+              setChatIdMessage(check.message || "This Chat ID is already taken");
+              setError("This Chat ID is already taken. Please choose a different one.");
+              setSubmitting(false);
+              return;
+            }
+            setChatIdStatus("available");
+          } catch (e) {
+            // Don't block registration on network check glitch, backend register will validate!
+            console.warn("Could not pre-verify Chat ID, backend will validate:", e);
+          }
+        }
+
+        await register(name.trim(), cleanChatId, email.trim(), password);
       }
     } catch (err: any) {
       setError(err.message || "Authentication failed. Please check your credentials.");

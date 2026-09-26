@@ -11,8 +11,8 @@ export const registerSchema = z.object({
         .min(3, "Chat ID must be at least 3 characters")
         .max(30, "Chat ID must be at most 30 characters")
         .regex(
-          /^[a-z][a-z0-9._]{2,29}$/,
-          "Chat ID must start with a letter and contain only lowercase letters, numbers, dots, or underscores"
+          /^[a-z0-9][a-z0-9._]{2,29}$/,
+          "Chat ID must start with a letter or number and contain only lowercase letters, numbers, dots, or underscores"
         )
     ),
   email: z.string().email("Invalid email address"),
