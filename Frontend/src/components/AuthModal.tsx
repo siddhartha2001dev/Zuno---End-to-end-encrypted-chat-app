@@ -452,7 +452,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                       placeholder="Your full name"
                       autoComplete="name"
                       disabled={submitting}
-                      className="w-full h-full bg-transparent pl-10 pr-3.5 text-xs sm:text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
+                      className="w-full h-full bg-transparent pl-10 pr-3.5 text-base sm:text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
                     />
                   </div>
                 </div>
@@ -494,7 +494,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                       placeholder="username (e.g. alex)"
                       autoComplete="username"
                       disabled={submitting}
-                      className="w-full h-full bg-transparent pl-10 pr-10 text-xs sm:text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
+                      className="w-full h-full bg-transparent pl-10 pr-10 text-base sm:text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
                     />
                     {/* Status indicator */}
                     <span className="absolute right-3.5 flex items-center justify-center">
@@ -546,7 +546,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                   autoComplete="email"
                   spellCheck={false}
                   disabled={submitting}
-                  className="w-full h-full bg-transparent pl-10 pr-3.5 text-xs sm:text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
+                  className="w-full h-full bg-transparent pl-10 pr-3.5 text-base sm:text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
                 />
               </div>
             </div>
@@ -576,7 +576,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                   style={{
                     letterSpacing: showPassword || !password ? "normal" : "0.18em",
                   }}
-                  className="w-full h-full bg-transparent pl-10 pr-11 text-xs sm:text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
+                  className="w-full h-full bg-transparent pl-10 pr-11 text-base sm:text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
                 />
                 <button
                   type="button"

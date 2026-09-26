@@ -526,7 +526,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
                   ? "Add a caption (optional)..."
                   : `Message ${activeConversation.name || "..."}`
               }
-              className="flex-1 bg-transparent border-0 resize-none text-[14px] text-theme-text placeholder-theme-text-muted px-2 py-1.5 focus:outline-none max-h-32 min-h-[28px] leading-relaxed"
+              className="flex-1 bg-transparent border-0 resize-none text-[16px] sm:text-[14px] text-theme-text placeholder-theme-text-muted px-2 py-1.5 focus:outline-none max-h-32 min-h-[28px] leading-relaxed"
             />
 
             {/* Dynamic Send Button */}

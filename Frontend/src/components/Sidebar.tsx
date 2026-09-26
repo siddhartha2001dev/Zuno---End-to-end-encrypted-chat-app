@@ -426,7 +426,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
             placeholder="Search conversations..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-transparent px-2.5 py-2 text-xs text-theme-text placeholder-theme-text-muted focus:outline-none"
+            className="w-full bg-transparent px-2.5 py-2 text-base sm:text-xs text-theme-text placeholder-theme-text-muted focus:outline-none"
           />
           {search && (
             <button
