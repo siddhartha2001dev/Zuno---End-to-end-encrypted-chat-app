@@ -58,7 +58,13 @@ export async function sendVerificationEmail(
   recipientName: string,
   verificationToken: string
 ): Promise<{ verificationUrl: string }> {
-  const verificationUrl = `${env.CORS_ORIGIN}/verify-email?token=${verificationToken}`;
+  // Resolve the frontend base URL for the verification link.
+  // Priority: FRONTEND_URL > CORS_ORIGIN (if not localhost) > hardcoded production URL.
+  const frontendBase =
+    env.FRONTEND_URL ||
+    (env.CORS_ORIGIN && !env.CORS_ORIGIN.includes("localhost") ? env.CORS_ORIGIN : null) ||
+    "https://zuno-liart-chi.vercel.app";
+  const verificationUrl = `${frontendBase.replace(/\/+$/, "")}/verify-email?token=${verificationToken}`;
 
   console.log(`\n======================================================`);
   console.log(`✉️ [ZUNO EMAIL VERIFICATION LINK]`);

@@ -20,7 +20,13 @@ const MainLayout: React.FC = () => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
     const path = window.location.pathname;
-    if (token) return token;
+
+    // Support both /?token=... and /verify-email?token=...
+    if (token && (path === "/" || path === "/verify-email")) {
+      return token;
+    }
+
+    // If someone visits /verify-email without a token, redirect home cleanly
     if (path === "/verify-email") {
       window.history.replaceState({}, document.title, "/");
     }
