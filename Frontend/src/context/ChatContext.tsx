@@ -541,41 +541,39 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       let ciphertext: string | undefined = undefined;
       let iv: string | undefined = undefined;
 
-      // Only perform encryption if there is text content
+      // Attempt E2EE encryption if text content exists
       if (trimmed) {
-        // 1. Validate identity key pair exists on current client device
-        if (!e2eeKeyPair?.privateKey) {
-          throw new Error("E2EE key pair is not initialized on this device.");
-        }
-
-        // 2. Obtain recipient's public key
-        const peerPublicKey = await getPeerPublicKey(activeConversation);
-        if (!peerPublicKey) {
-          throw new Error(
-            "Cannot send encrypted message: Recipient has not registered an E2EE public key yet."
-          );
-        }
-
-        // 3. Derive conversation AES-GCM key and encrypt locally with fresh 12-byte IV
         try {
-          const aesKey = await deriveConversationKey(
-            e2eeKeyPair.privateKey,
-            peerPublicKey,
-            activeConversation.id
-          );
-          const encrypted = await encryptMessage(trimmed, aesKey);
-          ciphertext = encrypted.ciphertext;
-          iv = encrypted.iv;
+          if (e2eeKeyPair?.privateKey) {
+            const peerPublicKey = await getPeerPublicKey(activeConversation);
+            if (peerPublicKey) {
+              const aesKey = await deriveConversationKey(
+                e2eeKeyPair.privateKey,
+                peerPublicKey,
+                activeConversation.id
+              );
+              const encrypted = await encryptMessage(trimmed, aesKey);
+              ciphertext = encrypted.ciphertext;
+              iv = encrypted.iv;
+            } else {
+              console.warn("Peer public key not found, sending without encryption.");
+            }
+          } else {
+            console.warn("E2EE key pair not initialized, sending without encryption.");
+          }
         } catch (cryptoErr) {
-          console.error("Message encryption failed", cryptoErr);
-          throw cryptoErr;
+          // Encryption failed — degrade gracefully and send as plain text
+          console.warn("Message encryption failed, sending as plaintext:", cryptoErr);
+          ciphertext = undefined;
+          iv = undefined;
         }
       }
 
-      // 4. Send payload via Socket.IO
+      // 4. Send payload via Socket.IO — always include content as fallback for failed decryption
       try {
         await socketService.sendMessage({
           conversationId: activeConversation.id,
+          content: trimmed,     // always send plaintext so msg.content is available as fallback
           ciphertext,
           iv,
           mediaUrl: mediaOptions?.mediaUrl,
@@ -587,6 +585,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error("Message send failed", socketErr);
         throw socketErr;
       }
+
     } else {
       // Group conversation fallback
       try {
