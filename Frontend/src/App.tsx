@@ -78,7 +78,7 @@ export default function App() {
     <ThemeProvider>
       <PWAProvider>
         <AuthProvider>
-          <div className="flex flex-col h-screen w-screen overflow-hidden bg-theme-bg text-theme-text">
+          <div className="flex flex-col w-screen overflow-hidden bg-theme-bg text-theme-text" style={{ height: '100dvh' }}>
             <InstallAppBanner />
             <div className="flex-1 overflow-hidden relative h-full w-full">
               <MainLayout />

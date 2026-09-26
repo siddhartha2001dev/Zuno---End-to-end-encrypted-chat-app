@@ -60,6 +60,33 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typingUser]);
 
+  const containerRef = useRef<HTMLElement>(null);
+
+  // Fix mobile keyboard pushing header off-screen.
+  // We listen to visualViewport and update the container height to match
+  // the actual visible area (excludes the software keyboard).
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const update = () => {
+      if (containerRef.current) {
+        // Height of visible viewport (shrinks when keyboard opens)
+        containerRef.current.style.height = `${vv.height}px`;
+        // Offset from top (handles browser chrome changes)
+        containerRef.current.style.top = `${vv.offsetTop}px`;
+      }
+    };
+
+    update();
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+    };
+  }, []);
+
   // Focus textarea when conversation changes
   useEffect(() => {
     if (activeConversation && textareaRef.current) {
@@ -262,13 +289,17 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
 
 
   return (
-    <main className="flex-1 h-full flex flex-col bg-theme-bg overflow-hidden relative">
+    <main
+      ref={containerRef}
+      className="flex-1 flex flex-col bg-theme-bg overflow-hidden relative"
+      style={{ position: 'relative' }}
+    >
       {/* Ambient Liquid Orbs for Chat Area */}
       <div className="absolute top-1/6 right-1/4 w-72 h-72 rounded-full liquid-orb-emerald" />
       <div className="absolute bottom-1/4 left-1/5 w-80 h-80 rounded-full liquid-orb-mint" />
 
       {/* Compact Genie-Style Chat Header */}
-      <header className="h-16 px-4 md:px-6 border-b border-theme-border bg-theme-surface/80 backdrop-blur-xl flex items-center justify-between flex-shrink-0 z-10 transition-theme shadow-xs">
+      <header className="px-4 md:px-6 border-b border-theme-border bg-theme-surface/95 backdrop-blur-xl flex items-center justify-between flex-shrink-0 z-20 transition-theme shadow-xs" style={{ height: '64px', position: 'sticky', top: 0 }}>
         <div className="flex items-center gap-2.5 min-w-0">
           {/* Mobile Back Button: Standard mobile navigation, NO hamburger menu */}
           <button
@@ -408,7 +439,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
       </div>
 
       {/* Floating Modern Message Composer */}
-      <footer className="p-3 md:p-4 bg-transparent z-10">
+      <footer className="p-3 md:p-4 bg-transparent z-10 flex-shrink-0" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
         <div className="max-w-3xl mx-auto relative">
           {/* Interactive Emoji Picker Popup */}
           <EmojiPicker
