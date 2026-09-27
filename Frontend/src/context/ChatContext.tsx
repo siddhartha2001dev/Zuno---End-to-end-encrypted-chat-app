@@ -33,6 +33,8 @@ interface ChatContextType {
   sendTypingStart: () => void;
   sendTypingStop: () => void;
   addReaction: (messageId: string, reaction: string) => Promise<void>;
+  removeReaction: (messageId: string, reaction: string) => Promise<void>;
+  toggleReaction: (messageId: string, reaction: string) => Promise<void>;
   createDirectChat: (participantId: string) => Promise<Conversation>;
   createGroupChat: (name: string, memberIds: string[]) => Promise<Conversation>;
   deleteConversation: (conversationId: string) => Promise<void>;
@@ -530,12 +532,21 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setMessages((prev) =>
           prev.map((msg) => {
             if (msg.id === data.messageId) {
-              const filtered = msg.reactions.filter(
+              const currentReactions = msg.reactions || [];
+              const filtered = currentReactions.filter(
                 (r) => !(r.userId === data.userId && r.reaction === data.reaction)
               );
               return {
                 ...msg,
-                reactions: [...filtered, { messageId: data.messageId, userId: data.userId, reaction: data.reaction }],
+                reactions: [
+                  ...filtered,
+                  {
+                    messageId: data.messageId,
+                    userId: data.userId,
+                    reaction: data.reaction,
+                    createdAt: new Date().toISOString(),
+                  },
+                ],
               };
             }
             return msg;
@@ -556,7 +567,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (msg.id === data.messageId) {
               return {
                 ...msg,
-                reactions: msg.reactions.filter(
+                reactions: (msg.reactions || []).filter(
                   (r) => !(r.userId === data.userId && r.reaction === data.reaction)
                 ),
               };
@@ -752,9 +763,128 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // 6. Reactions
+  // 6. Reactions with Optimistic UI & Socket/REST Fallback
   const addReaction = async (messageId: string, reaction: string) => {
-    await socketService.addReaction(messageId, reaction);
+    if (!user) return;
+    const currentUserId = user.id;
+
+    // 1. Optimistic update
+    setMessages((prev) =>
+      prev.map((msg) => {
+        if (msg.id === messageId) {
+          const currentReactions = msg.reactions || [];
+          const exists = currentReactions.some(
+            (r) => r.userId === currentUserId && r.reaction === reaction
+          );
+          if (exists) return msg;
+          return {
+            ...msg,
+            reactions: [
+              ...currentReactions,
+              {
+                messageId,
+                userId: currentUserId,
+                reaction,
+                createdAt: new Date().toISOString(),
+              },
+            ],
+          };
+        }
+        return msg;
+      })
+    );
+
+    // 2. Network update with Socket primary and REST fallback
+    try {
+      if (socketService.isConnected()) {
+        await socketService.addReaction(messageId, reaction);
+      } else {
+        await api.messages.addReaction(messageId, reaction);
+      }
+    } catch (socketErr) {
+      console.warn("Socket addReaction failed, trying REST fallback:", socketErr);
+      try {
+        await api.messages.addReaction(messageId, reaction);
+      } catch (restErr) {
+        console.error("Failed to add reaction:", restErr);
+        // Rollback optimistic update
+        setMessages((prev) =>
+          prev.map((msg) => {
+            if (msg.id === messageId) {
+              return {
+                ...msg,
+                reactions: (msg.reactions || []).filter(
+                  (r) => !(r.userId === currentUserId && r.reaction === reaction)
+                ),
+              };
+            }
+            return msg;
+          })
+        );
+      }
+    }
+  };
+
+  const removeReaction = async (messageId: string, reaction: string) => {
+    if (!user) return;
+    const currentUserId = user.id;
+
+    // 1. Capture snapshot for rollback
+    const targetMsg = messages.find((m) => m.id === messageId);
+    const originalReactions = targetMsg?.reactions ? [...targetMsg.reactions] : [];
+
+    // 2. Optimistic update
+    setMessages((prev) =>
+      prev.map((msg) => {
+        if (msg.id === messageId) {
+          return {
+            ...msg,
+            reactions: (msg.reactions || []).filter(
+              (r) => !(r.userId === currentUserId && r.reaction === reaction)
+            ),
+          };
+        }
+        return msg;
+      })
+    );
+
+    // 3. Network update with Socket primary and REST fallback
+    try {
+      if (socketService.isConnected()) {
+        await socketService.removeReaction(messageId, reaction);
+      } else {
+        await api.messages.removeReaction(messageId, reaction);
+      }
+    } catch (socketErr) {
+      console.warn("Socket removeReaction failed, trying REST fallback:", socketErr);
+      try {
+        await api.messages.removeReaction(messageId, reaction);
+      } catch (restErr) {
+        console.error("Failed to remove reaction:", restErr);
+        // Rollback optimistic update
+        setMessages((prev) =>
+          prev.map((msg) => {
+            if (msg.id === messageId) {
+              return { ...msg, reactions: originalReactions };
+            }
+            return msg;
+          })
+        );
+      }
+    }
+  };
+
+  const toggleReaction = async (messageId: string, reaction: string) => {
+    if (!user) return;
+    const msg = messages.find((m) => m.id === messageId);
+    const alreadyReacted = (msg?.reactions || []).some(
+      (r) => r.userId === user.id && r.reaction === reaction
+    );
+    if (alreadyReacted) {
+      await removeReaction(messageId, reaction);
+    } else {
+      await addReaction(messageId, reaction);
+    }
   };
 
   // 7. Create Direct Chat
@@ -841,6 +971,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         sendTypingStart,
         sendTypingStop,
         addReaction,
+        removeReaction,
+        toggleReaction,
         createDirectChat,
         createGroupChat,
         deleteConversation,

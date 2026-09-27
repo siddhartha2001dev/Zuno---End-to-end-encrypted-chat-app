@@ -16,6 +16,7 @@ async function bootstrap() {
 
   // 4. Initialize Socket.IO attached to HTTP Server
   const io = initializeSocket(httpServer);
+  app.set("io", io);
 
   // 5. Start listening on configured port
   httpServer.listen(env.PORT, () => {

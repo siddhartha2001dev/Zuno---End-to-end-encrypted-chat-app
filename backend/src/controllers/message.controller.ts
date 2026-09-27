@@ -6,6 +6,7 @@ import {
   editMessageSchema,
   addReactionSchema,
 } from "../validators/message.validator.js";
+import { ConversationModel } from "../models/conversation.model.js";
 
 export class MessageController {
   constructor(private readonly service: MessageService = messageService) {}
@@ -111,6 +112,21 @@ export class MessageController {
         userId: req.user!.id,
         reaction: validated.reaction,
       });
+
+      const io = req.app.get("io");
+      if (io) {
+        const room = `conversation:${reaction.conversationId}`;
+        io.to(room).emit("message:reaction:added", reaction);
+        try {
+          const conv = await ConversationModel.findById(reaction.conversationId);
+          if (conv && conv.members) {
+            for (const memberId of conv.members) {
+              io.to(`user:${memberId.toString()}`).emit("message:reaction:added", reaction);
+            }
+          }
+        } catch {}
+      }
+
       res.status(201).json({ reaction });
     } catch (error) {
       next(error);
@@ -123,12 +139,28 @@ export class MessageController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const validated = addReactionSchema.parse(req.body);
+      const reactionStr = req.body?.reaction || req.query?.reaction;
+      const validated = addReactionSchema.parse({ reaction: reactionStr });
       const reaction = await this.service.removeReaction({
         messageId: req.params.messageId,
         userId: req.user!.id,
         reaction: validated.reaction,
       });
+
+      const io = req.app.get("io");
+      if (io) {
+        const room = `conversation:${reaction.conversationId}`;
+        io.to(room).emit("message:reaction:removed", reaction);
+        try {
+          const conv = await ConversationModel.findById(reaction.conversationId);
+          if (conv && conv.members) {
+            for (const memberId of conv.members) {
+              io.to(`user:${memberId.toString()}`).emit("message:reaction:removed", reaction);
+            }
+          }
+        } catch {}
+      }
+
       res.status(200).json({ reaction });
     } catch (error) {
       next(error);

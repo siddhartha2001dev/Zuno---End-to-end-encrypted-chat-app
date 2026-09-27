@@ -238,6 +238,18 @@ export function registerChatHandlers(io: Server, socket: Socket) {
         const room = `conversation:${reactionResult.conversationId}`;
         io.to(room).emit("message:reaction:added", reactionResult);
 
+        // Also broadcast to user rooms of all conversation members
+        try {
+          const conv = await ConversationModel.findById(reactionResult.conversationId);
+          if (conv && conv.members) {
+            for (const memberId of conv.members) {
+              io.to(`user:${memberId.toString()}`).emit("message:reaction:added", reactionResult);
+            }
+          }
+        } catch (err) {
+          console.warn("Could not broadcast reaction addition to user rooms:", err);
+        }
+
         if (callback) callback({ success: true, reaction: reactionResult });
       } catch (error: any) {
         if (callback) callback({ success: false, error: error.message });
@@ -249,14 +261,27 @@ export function registerChatHandlers(io: Server, socket: Socket) {
     "message:reaction:remove",
     async (data: { messageId: string; reaction: string }, callback) => {
       try {
+        const validated = addReactionSchema.parse({ reaction: data.reaction });
         const reactionResult = await messageService.removeReaction({
           messageId: data.messageId,
           userId: user.id,
-          reaction: data.reaction,
+          reaction: validated.reaction,
         });
 
         const room = `conversation:${reactionResult.conversationId}`;
         io.to(room).emit("message:reaction:removed", reactionResult);
+
+        // Also broadcast to user rooms of all conversation members
+        try {
+          const conv = await ConversationModel.findById(reactionResult.conversationId);
+          if (conv && conv.members) {
+            for (const memberId of conv.members) {
+              io.to(`user:${memberId.toString()}`).emit("message:reaction:removed", reactionResult);
+            }
+          }
+        } catch (err) {
+          console.warn("Could not broadcast reaction removal to user rooms:", err);
+        }
 
         if (callback) callback({ success: true, reaction: reactionResult });
       } catch (error: any) {

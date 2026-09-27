@@ -5,6 +5,7 @@ const SOCKET_URL = (import.meta.env.VITE_API_URL || "https://zuno-jvv6.onrender.
 class SocketService {
   private socket: Socket | null = null;
   private currentToken: string | null = null;
+  private activeConversationId: string | null = null;
 
   connect(token: string): Socket {
     if (this.socket && this.socket.connected && this.currentToken === token) {
@@ -27,6 +28,9 @@ class SocketService {
 
     this.socket.on("connect", () => {
       console.log("⚡ Socket.IO connected:", this.socket?.id);
+      if (this.activeConversationId) {
+        this.socket?.emit("conversation:join", { conversationId: this.activeConversationId });
+      }
     });
 
     this.socket.on("connect_error", (error) => {
@@ -70,6 +74,7 @@ class SocketService {
   }
 
   joinConversation(conversationId: string): Promise<any> {
+    this.activeConversationId = conversationId;
     return new Promise((resolve, reject) => {
       if (!this.socket) return reject(new Error("Socket not connected"));
       this.socket.emit("conversation:join", { conversationId }, (res: any) => {
@@ -80,6 +85,9 @@ class SocketService {
   }
 
   leaveConversation(conversationId: string) {
+    if (this.activeConversationId === conversationId) {
+      this.activeConversationId = null;
+    }
     if (this.socket) {
       this.socket.emit("conversation:leave", { conversationId });
     }

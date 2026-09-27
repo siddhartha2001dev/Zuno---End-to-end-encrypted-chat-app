@@ -290,5 +290,21 @@ export const api = {
       });
       return handleResponse<{ success: boolean; readMessageIds: string[] }>(res);
     },
+    addReaction: async (messageId: string, reaction: string) => {
+      const res = await apiFetch(`${BASE_URL}/messages/${messageId}/reactions`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ reaction }),
+      });
+      return handleResponse<{ reaction: any }>(res);
+    },
+    removeReaction: async (messageId: string, reaction: string) => {
+      const res = await apiFetch(`${BASE_URL}/messages/${messageId}/reactions`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ reaction }),
+      });
+      return handleResponse<{ reaction: any }>(res);
+    },
   },
 };

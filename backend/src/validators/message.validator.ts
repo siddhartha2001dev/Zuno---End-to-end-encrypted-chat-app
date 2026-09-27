@@ -33,7 +33,7 @@ export const editMessageSchema = z.object({
 });
 
 export const addReactionSchema = z.object({
-  reaction: z.string().min(1).max(10, "Invalid reaction emoji"),
+  reaction: z.string().min(1).max(32, "Invalid reaction emoji"),
 });
 
 export const getMessagesQuerySchema = z.object({

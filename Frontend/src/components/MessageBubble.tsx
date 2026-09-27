@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import type { Message } from "../types";
 import { useAuth } from "../context/AuthContext";
 import { useChat } from "../context/ChatContext";
@@ -27,8 +27,11 @@ const formatFileSize = (bytes?: number) => {
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }) => {
   const { user } = useAuth();
-  const { addReaction } = useChat();
+  const { toggleReaction } = useChat();
   const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const isSender = message.senderId === user?.id;
   const isRead = message.reads && message.reads.length > 0;
@@ -53,8 +56,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
       : date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
-  // Group reactions by emoji
-  const groupedReactions = message.reactions?.reduce<Record<string, { count: number; userReacted: boolean }>>(
+  // Group reactions by emoji safely
+  const groupedReactions = (message.reactions || []).reduce<Record<string, { count: number; userReacted: boolean }>>(
     (acc, r) => {
       if (!acc[r.reaction]) {
         acc[r.reaction] = { count: 0, userReacted: false };
@@ -66,11 +69,43 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
       return acc;
     },
     {}
-  ) || {};
+  );
+
+  // Close emoji popover on click outside or Escape
+  useEffect(() => {
+    if (!showEmojiPicker) return;
+
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (
+        pickerRef.current &&
+        !pickerRef.current.contains(target) &&
+        (!triggerRef.current || !triggerRef.current.contains(target))
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [showEmojiPicker]);
 
   const handleSelectReaction = async (emoji: string) => {
     setShowEmojiPicker(false);
-    await addReaction(message.id, emoji);
+    await toggleReaction(message.id, emoji);
   };
 
   return (
@@ -78,7 +113,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
       className={`group relative flex flex-col mb-3 ${
         isSender ? "items-end" : "items-start"
       }`}
-      onMouseLeave={() => setShowEmojiPicker(false)}
     >
       {/* Sender name for group chats */}
       {!isSender && isGroup && (
@@ -93,17 +127,24 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
           isSender ? "animate-bubble-outgoing" : "animate-bubble-incoming"
         }`}
       >
-        {/* Quick Emoji Reaction Action on Hover */}
+        {/* Quick Emoji Reaction Action on Hover / Focus */}
         <div
-          className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center z-20 ${
-            isSender ? "-left-8" : "-right-8"
-          }`}
+          className={`absolute top-1/2 -translate-y-1/2 transition-opacity flex items-center z-20 ${
+            showEmojiPicker
+              ? "opacity-100 pointer-events-auto"
+              : "opacity-0 group-hover:opacity-100 focus-within:opacity-100"
+          } ${isSender ? "-left-8" : "-right-8"}`}
         >
           <button
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            ref={triggerRef}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowEmojiPicker((prev) => !prev);
+            }}
             title="Add reaction"
             aria-label="Add reaction"
-            className="w-6 h-6 rounded-full bg-theme-surface border border-theme-border text-theme-text-muted hover:text-theme-text flex items-center justify-center shadow-subtle transition-theme hover:scale-105"
+            className="w-6 h-6 rounded-full bg-theme-surface border border-theme-border text-theme-text-muted hover:text-theme-text flex items-center justify-center shadow-subtle transition-all hover:scale-110 active:scale-95 cursor-pointer"
           >
             <SmilePlus className="w-3.5 h-3.5" />
           </button>
@@ -112,19 +153,29 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
         {/* Emoji Popover */}
         {showEmojiPicker && (
           <div
-            className={`absolute -top-9 z-30 flex items-center gap-0.5 bg-theme-elevated border border-theme-border px-1.5 py-1 rounded-full shadow-popover animate-in fade-in zoom-in-95 duration-150 ${
+            ref={pickerRef}
+            className={`absolute -top-10 z-30 flex items-center gap-0.5 bg-theme-elevated/95 backdrop-blur-md border border-theme-border px-2 py-1 rounded-full shadow-lg animate-in fade-in zoom-in-95 duration-150 ${
               isSender ? "right-0" : "left-0"
             }`}
           >
-            {QUICK_EMOJIS.map((emoji) => (
-              <button
-                key={emoji}
-                onClick={() => handleSelectReaction(emoji)}
-                className="hover:scale-120 transition-transform p-1 text-sm leading-none"
-              >
-                {emoji}
-              </button>
-            ))}
+            {QUICK_EMOJIS.map((emoji) => {
+              const alreadyReacted = groupedReactions[emoji]?.userReacted;
+              return (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => handleSelectReaction(emoji)}
+                  title={alreadyReacted ? `Remove ${emoji}` : `React ${emoji}`}
+                  className={`hover:scale-125 transition-transform p-1 text-base leading-none rounded-full cursor-pointer ${
+                    alreadyReacted
+                      ? "bg-theme-accent/20 ring-1 ring-theme-accent scale-110"
+                      : "hover:bg-theme-surface"
+                  }`}
+                >
+                  {emoji}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -234,25 +285,38 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
       {/* Reactions Display Pill */}
       {Object.keys(groupedReactions).length > 0 && (
         <div
-          className={`flex flex-wrap gap-1 mt-1 ${
+          className={`flex flex-wrap items-center gap-1 mt-1 ${
             isSender ? "justify-end pr-1" : "justify-start pl-1"
           }`}
         >
           {Object.entries(groupedReactions).map(([emoji, { count, userReacted }]) => (
             <button
               key={emoji}
+              type="button"
               onClick={() => handleSelectReaction(emoji)}
-              aria-label={`Reaction ${emoji}, count ${count}`}
-              className={`animate-reaction-pop flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-theme border ${
+              aria-label={`Reaction ${emoji}, count ${count}${userReacted ? " (Click to remove)" : ""}`}
+              title={userReacted ? `Remove ${emoji}` : `React with ${emoji}`}
+              className={`animate-reaction-pop flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs transition-all border cursor-pointer select-none ${
                 userReacted
-                  ? "bg-theme-accent/10 border-theme-accent/30 text-theme-accent font-medium"
-                  : "bg-theme-surface border-theme-border text-theme-text-secondary hover:bg-theme-elevated"
+                  ? "bg-theme-accent/15 border-theme-accent/40 text-theme-accent font-semibold shadow-xs hover:bg-theme-accent/25"
+                  : "bg-theme-surface border-theme-border text-theme-text-secondary hover:bg-theme-elevated hover:text-theme-text"
               }`}
             >
               <span className="text-xs leading-none">{emoji}</span>
               <span className="font-semibold text-[10px]">{count}</span>
             </button>
           ))}
+
+          {/* Quick add emoji button next to existing reactions */}
+          <button
+            type="button"
+            onClick={() => setShowEmojiPicker((prev) => !prev)}
+            title="Add reaction"
+            aria-label="Add reaction"
+            className="w-5 h-5 rounded-full bg-theme-surface/80 border border-theme-border/80 text-theme-text-muted hover:text-theme-text flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer"
+          >
+            <SmilePlus className="w-3 h-3" />
+          </button>
         </div>
       )}
     </div>

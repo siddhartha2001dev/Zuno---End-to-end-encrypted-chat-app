@@ -137,6 +137,14 @@ export class MessageService {
       throw new AppError("Message not found", 404);
     }
 
+    const isMember = await this.conversationRepo.isUserMember(
+      message.conversationId.toString(),
+      input.userId
+    );
+    if (!isMember) {
+      throw new AppError("Unauthorized: You are not a member of this conversation", 403);
+    }
+
     await this.messageRepo.removeReaction(
       input.messageId,
       input.userId,
