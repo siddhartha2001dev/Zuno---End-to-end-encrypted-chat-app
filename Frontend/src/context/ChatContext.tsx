@@ -533,8 +533,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           prev.map((msg) => {
             if (msg.id === data.messageId) {
               const currentReactions = msg.reactions || [];
+              // A user can only have one reaction per message: remove any prior reaction by this user
               const filtered = currentReactions.filter(
-                (r) => !(r.userId === data.userId && r.reaction === data.reaction)
+                (r) => r.userId !== data.userId
               );
               return {
                 ...msg,
@@ -568,7 +569,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
               return {
                 ...msg,
                 reactions: (msg.reactions || []).filter(
-                  (r) => !(r.userId === data.userId && r.reaction === data.reaction)
+                  (r) => r.userId !== data.userId
                 ),
               };
             }
@@ -763,24 +764,26 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // 6. Reactions with Optimistic UI & Socket/REST Fallback
+  // 6. Reactions with Optimistic UI & Socket/REST Fallback (One reaction per user per message)
   const addReaction = async (messageId: string, reaction: string) => {
     if (!user) return;
     const currentUserId = user.id;
 
-    // 1. Optimistic update
+    const targetMsg = messages.find((m) => m.id === messageId);
+    const originalReactions = targetMsg?.reactions ? [...targetMsg.reactions] : [];
+
+    // 1. Optimistic update: Replace any previous reaction from this user with the new one
     setMessages((prev) =>
       prev.map((msg) => {
         if (msg.id === messageId) {
           const currentReactions = msg.reactions || [];
-          const exists = currentReactions.some(
-            (r) => r.userId === currentUserId && r.reaction === reaction
+          const filtered = currentReactions.filter(
+            (r) => r.userId !== currentUserId
           );
-          if (exists) return msg;
           return {
             ...msg,
             reactions: [
-              ...currentReactions,
+              ...filtered,
               {
                 messageId,
                 userId: currentUserId,
@@ -811,12 +814,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setMessages((prev) =>
           prev.map((msg) => {
             if (msg.id === messageId) {
-              return {
-                ...msg,
-                reactions: (msg.reactions || []).filter(
-                  (r) => !(r.userId === currentUserId && r.reaction === reaction)
-                ),
-              };
+              return { ...msg, reactions: originalReactions };
             }
             return msg;
           })
@@ -833,14 +831,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const targetMsg = messages.find((m) => m.id === messageId);
     const originalReactions = targetMsg?.reactions ? [...targetMsg.reactions] : [];
 
-    // 2. Optimistic update
+    // 2. Optimistic update: remove user's reaction from this message
     setMessages((prev) =>
       prev.map((msg) => {
         if (msg.id === messageId) {
           return {
             ...msg,
             reactions: (msg.reactions || []).filter(
-              (r) => !(r.userId === currentUserId && r.reaction === reaction)
+              (r) => r.userId !== currentUserId
             ),
           };
         }
@@ -877,12 +875,20 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const toggleReaction = async (messageId: string, reaction: string) => {
     if (!user) return;
     const msg = messages.find((m) => m.id === messageId);
-    const alreadyReacted = (msg?.reactions || []).some(
-      (r) => r.userId === user.id && r.reaction === reaction
+    const existingUserReaction = (msg?.reactions || []).find(
+      (r) => r.userId === user.id
     );
-    if (alreadyReacted) {
-      await removeReaction(messageId, reaction);
+
+    if (existingUserReaction) {
+      if (existingUserReaction.reaction === reaction) {
+        // Clicked the exact same emoji -> remove it (toggle off)
+        await removeReaction(messageId, reaction);
+      } else {
+        // Clicked a different emoji -> switch/replace with new emoji
+        await addReaction(messageId, reaction);
+      }
     } else {
+      // First reaction -> add it
       await addReaction(messageId, reaction);
     }
   };

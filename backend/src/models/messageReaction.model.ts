@@ -40,6 +40,6 @@ const MessageReactionSchema = new Schema<IMessageReaction>(
   }
 );
 
-MessageReactionSchema.index({ messageId: 1, userId: 1, reaction: 1 }, { unique: true });
+MessageReactionSchema.index({ messageId: 1, userId: 1 }, { unique: true });
 
 export const MessageReactionModel = mongoose.model<IMessageReaction>("MessageReaction", MessageReactionSchema);

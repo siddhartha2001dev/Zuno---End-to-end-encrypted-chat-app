@@ -176,22 +176,24 @@ export class MessageRepository {
     const mId = new mongoose.Types.ObjectId(messageId);
     const uId = new mongoose.Types.ObjectId(userId);
 
+    // Enforce 1 reaction per user per message: updates existing reaction or creates new one
     return MessageReactionModel.findOneAndUpdate(
-      { messageId: mId, userId: uId, reaction },
+      { messageId: mId, userId: uId },
       { messageId: mId, userId: uId, reaction, createdAt: new Date() },
       { upsert: true, new: true }
     );
   }
 
-  async removeReaction(messageId: string, userId: string, reaction: string) {
+  async removeReaction(messageId: string, userId: string, reaction?: string) {
     const mId = new mongoose.Types.ObjectId(messageId);
     const uId = new mongoose.Types.ObjectId(userId);
 
-    return MessageReactionModel.findOneAndDelete({
-      messageId: mId,
-      userId: uId,
-      reaction,
-    });
+    const filter: any = { messageId: mId, userId: uId };
+    if (reaction) {
+      filter.reaction = reaction;
+    }
+
+    return MessageReactionModel.deleteMany(filter);
   }
 }
 
