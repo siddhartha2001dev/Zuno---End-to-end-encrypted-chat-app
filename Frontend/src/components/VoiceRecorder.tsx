@@ -56,7 +56,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     setIsRecording(false);
     onRecordingStateChange?.(false);
     setRecordingDuration(0);
-  }, []);
+  }, [onRecordingStateChange]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -91,21 +91,26 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       audioChunksRef.current = [];
       isCancelledRef.current = false;
 
-      // Select supported audio mimeType
+      // Select supported audio mimeType across Chrome, Firefox, Safari iOS
       let mimeType = "";
       let ext = "webm";
-      if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
-        mimeType = "audio/webm;codecs=opus";
-        ext = "webm";
-      } else if (MediaRecorder.isTypeSupported("audio/webm")) {
-        mimeType = "audio/webm";
-        ext = "webm";
-      } else if (MediaRecorder.isTypeSupported("audio/ogg;codecs=opus")) {
-        mimeType = "audio/ogg;codecs=opus";
-        ext = "ogg";
-      } else if (MediaRecorder.isTypeSupported("audio/mp4")) {
-        mimeType = "audio/mp4";
-        ext = "mp4";
+      if (typeof MediaRecorder.isTypeSupported === "function") {
+        if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
+          mimeType = "audio/webm;codecs=opus";
+          ext = "webm";
+        } else if (MediaRecorder.isTypeSupported("audio/webm")) {
+          mimeType = "audio/webm";
+          ext = "webm";
+        } else if (MediaRecorder.isTypeSupported("audio/mp4")) {
+          mimeType = "audio/mp4";
+          ext = "mp4";
+        } else if (MediaRecorder.isTypeSupported("audio/aac")) {
+          mimeType = "audio/aac";
+          ext = "aac";
+        } else if (MediaRecorder.isTypeSupported("audio/ogg;codecs=opus")) {
+          mimeType = "audio/ogg;codecs=opus";
+          ext = "ogg";
+        }
       }
 
       const recorder = new MediaRecorder(
@@ -132,27 +137,46 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         if (isCancelledRef.current) {
           audioChunksRef.current = [];
           setIsRecording(false);
+          onRecordingStateChange?.(false);
           setRecordingDuration(0);
           return;
         }
 
         if (audioChunksRef.current.length === 0) {
           setIsRecording(false);
+          onRecordingStateChange?.(false);
           setRecordingDuration(0);
+          setErrorMessage("No audio was recorded. Please try speaking longer.");
+          setTimeout(() => setErrorMessage(null), 3000);
           return;
         }
 
+        const actualMimeType = recorder.mimeType || mimeType || "audio/webm";
         const audioBlob = new Blob(audioChunksRef.current, {
-          type: mimeType || "audio/webm",
+          type: actualMimeType,
         });
         audioChunksRef.current = [];
         setIsRecording(false);
+        onRecordingStateChange?.(false);
         setRecordingDuration(0);
+
+        if (audioBlob.size === 0) {
+          setErrorMessage("Recorded audio was empty. Please try again.");
+          setTimeout(() => setErrorMessage(null), 3000);
+          return;
+        }
+
+        let finalExt = ext;
+        if (actualMimeType.includes("mp4")) finalExt = "mp4";
+        else if (actualMimeType.includes("aac")) finalExt = "aac";
+        else if (actualMimeType.includes("ogg")) finalExt = "ogg";
+        else if (actualMimeType.includes("webm")) finalExt = "webm";
+        else if (actualMimeType.includes("wav")) finalExt = "wav";
 
         const audioFile = new File(
           [audioBlob],
-          `voice_${Date.now()}.${ext}`,
-          { type: audioBlob.type }
+          `voice_${Date.now()}.${finalExt}`,
+          { type: actualMimeType }
         );
 
         try {
@@ -190,8 +214,16 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   // Stop recording and send audio
   const stopAndSendRecording = () => {
     isCancelledRef.current = false;
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-      mediaRecorderRef.current.stop();
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      try {
+        if (recorder.state === "recording") {
+          recorder.requestData();
+        }
+      } catch {
+        // ignore if requestData not supported in current state
+      }
+      recorder.stop();
     }
   };
 

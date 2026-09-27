@@ -42,6 +42,11 @@ export class MessageController {
         content: validated.content,
         ciphertext: validated.ciphertext,
         iv: validated.iv,
+        senderPublicKey: validated.senderPublicKey,
+        recipientPublicKey: validated.recipientPublicKey,
+        mediaUrl: validated.mediaUrl,
+        fileName: validated.fileName,
+        fileSize: validated.fileSize,
         messageType: validated.messageType,
       });
       res.status(201).json({ message });

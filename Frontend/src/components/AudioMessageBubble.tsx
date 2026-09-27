@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, AlertCircle, Loader2 } from "lucide-react";
 
 interface AudioMessageBubbleProps {
   mediaUrl: string;
@@ -8,7 +8,7 @@ interface AudioMessageBubbleProps {
 }
 
 function formatAudioTime(seconds: number): string {
-  if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
+  if (isNaN(seconds) || !isFinite(seconds) || seconds <= 0) return "0:00";
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs.toString().padStart(2, "0")}`;
@@ -26,6 +26,13 @@ export const AudioMessageBubble: React.FC<AudioMessageBubbleProps> = ({
   const [duration, setDuration] = useState<number>(0);
   const [playbackRate, setPlaybackRate] = useState<number>(1);
   const [isBuffering, setIsBuffering] = useState<boolean>(false);
+  const [hasError, setHasError] = useState<boolean>(false);
+
+  // Compute universally compatible MP3 fallback for Cloudinary-hosted webm/ogg files
+  const mp3Url =
+    mediaUrl && mediaUrl.includes("res.cloudinary.com") && /\.(webm|ogg)($|\?)/i.test(mediaUrl)
+      ? mediaUrl.replace(/\.(webm|ogg)($|\?)/i, ".mp3$2")
+      : null;
 
   // Toggle play/pause
   const togglePlayPause = () => {
@@ -34,12 +41,12 @@ export const AudioMessageBubble: React.FC<AudioMessageBubbleProps> = ({
 
     if (isPlaying) {
       audio.pause();
-      setIsPlaying(false);
     } else {
-      audio.play().then(() => {
-        setIsPlaying(true);
-      }).catch((err) => {
+      setHasError(false);
+      audio.play().catch((err) => {
         console.warn("Failed to play audio:", err);
+        setIsPlaying(false);
+        setIsBuffering(false);
       });
     }
   };
@@ -76,23 +83,83 @@ export const AudioMessageBubble: React.FC<AudioMessageBubbleProps> = ({
     const audio = audioRef.current;
     if (!audio) return;
 
-    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
+    setHasError(false);
+    setIsBuffering(false);
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+
+    const updateDuration = () => {
+      const d = audio.duration;
+      if (typeof d === "number" && isFinite(d) && d > 0) {
+        setDuration(d);
+        return true;
+      }
+      return false;
+    };
+
+    const onTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+      if (!isFinite(duration) || duration === 0) {
+        if (isFinite(audio.duration) && audio.duration > 0) {
+          setDuration(audio.duration);
+        } else if (audio.currentTime > duration) {
+          setDuration(audio.currentTime);
+        }
+      }
+    };
+
     const onLoadedMetadata = () => {
-      if (audio.duration && isFinite(audio.duration)) {
-        setDuration(audio.duration);
+      if (!updateDuration()) {
+        // Chromium WebM duration workaround
+        const onTempTimeUpdate = () => {
+          updateDuration();
+          audio.currentTime = 0;
+          audio.removeEventListener("timeupdate", onTempTimeUpdate);
+        };
+        audio.addEventListener("timeupdate", onTempTimeUpdate);
+        audio.currentTime = 1e101;
       }
     };
+
     const onDurationChange = () => {
-      if (audio.duration && isFinite(audio.duration)) {
+      if (audio.duration && isFinite(audio.duration) && audio.duration > 0) {
         setDuration(audio.duration);
       }
     };
+
     const onEnded = () => {
       setIsPlaying(false);
       setCurrentTime(0);
+      if (duration === 0 && audio.currentTime > 0) {
+        setDuration(audio.currentTime);
+      }
     };
+
     const onWaiting = () => setIsBuffering(true);
-    const onCanPlay = () => setIsBuffering(false);
+    const onCanPlay = () => {
+      setIsBuffering(false);
+      updateDuration();
+    };
+    const onPlaying = () => {
+      setIsBuffering(false);
+      setIsPlaying(true);
+    };
+    const onPause = () => {
+      setIsPlaying(false);
+    };
+
+    const onError = () => {
+      // If MP3 transcode failed on Cloudinary, fallback to original mediaUrl
+      if (mp3Url && audio.src === mp3Url && mediaUrl && mediaUrl !== mp3Url) {
+        audio.src = mediaUrl;
+        audio.load();
+        return;
+      }
+      setIsBuffering(false);
+      setIsPlaying(false);
+      setHasError(true);
+    };
 
     audio.addEventListener("timeupdate", onTimeUpdate);
     audio.addEventListener("loadedmetadata", onLoadedMetadata);
@@ -100,6 +167,13 @@ export const AudioMessageBubble: React.FC<AudioMessageBubbleProps> = ({
     audio.addEventListener("ended", onEnded);
     audio.addEventListener("waiting", onWaiting);
     audio.addEventListener("canplay", onCanPlay);
+    audio.addEventListener("playing", onPlaying);
+    audio.addEventListener("pause", onPause);
+    audio.addEventListener("error", onError);
+
+    // Initial load: prefer mp3Url for universal browser support, otherwise mediaUrl
+    audio.src = mp3Url || mediaUrl;
+    audio.load();
 
     return () => {
       audio.removeEventListener("timeupdate", onTimeUpdate);
@@ -108,86 +182,97 @@ export const AudioMessageBubble: React.FC<AudioMessageBubbleProps> = ({
       audio.removeEventListener("ended", onEnded);
       audio.removeEventListener("waiting", onWaiting);
       audio.removeEventListener("canplay", onCanPlay);
+      audio.removeEventListener("playing", onPlaying);
+      audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("error", onError);
       audio.pause();
     };
-  }, [mediaUrl]);
+  }, [mediaUrl, mp3Url]);
 
-  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const progressPercent = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
 
   return (
     <div className="flex flex-col gap-1.5 min-w-[210px] sm:min-w-[260px] py-1 select-none">
-      {/* Hidden audio element */}
-      <audio ref={audioRef} src={mediaUrl} preload="metadata" />
+      {/* Audio element managed via ref */}
+      <audio ref={audioRef} preload="metadata" />
 
-      <div className="flex items-center gap-3">
-        {/* Play/Pause Button */}
-        <button
-          type="button"
-          onClick={togglePlayPause}
-          disabled={isBuffering}
-          aria-label={isPlaying ? "Pause voice message" : "Play voice message"}
-          className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-90 cursor-pointer shadow-md ${
-            isSender
-              ? "bg-white text-emerald-600 hover:bg-emerald-50"
-              : "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500"
-          }`}
-        >
-          {isPlaying ? (
-            <Pause className="w-4 h-4 fill-current" />
-          ) : (
-            <Play className="w-4 h-4 fill-current ml-0.5" />
-          )}
-        </button>
-
-        {/* Audio Waveform / Seeker */}
-        <div className="flex-1 flex flex-col justify-center gap-1.5">
-          {/* Clickable Progress track */}
-          <div
-            ref={progressBarRef}
-            onClick={handleSeek}
-            className={`relative h-2 rounded-full cursor-pointer overflow-hidden transition-all group/bar ${
-              isSender ? "bg-white/30" : "bg-theme-border dark:bg-theme-border/60"
+      {hasError ? (
+        <div className={`flex items-center gap-2 text-xs py-1 ${isSender ? "text-white/80" : "text-red-500"}`}>
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span>Audio could not be loaded</span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-3">
+          {/* Play/Pause Button */}
+          <button
+            type="button"
+            onClick={togglePlayPause}
+            aria-label={isPlaying ? "Pause voice message" : "Play voice message"}
+            className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-90 cursor-pointer shadow-md ${
+              isSender
+                ? "bg-white text-emerald-600 hover:bg-emerald-50"
+                : "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500"
             }`}
           >
-            {/* Progress filled bar */}
+            {isBuffering ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : isPlaying ? (
+              <Pause className="w-4 h-4 fill-current" />
+            ) : (
+              <Play className="w-4 h-4 fill-current ml-0.5" />
+            )}
+          </button>
+
+          {/* Audio Waveform / Seeker */}
+          <div className="flex-1 flex flex-col justify-center gap-1.5">
+            {/* Clickable Progress track */}
             <div
-              className={`absolute top-0 left-0 bottom-0 rounded-full transition-all duration-75 ${
-                isSender
-                  ? "bg-white"
-                  : "bg-gradient-to-r from-emerald-500 to-teal-500"
-              }`}
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-
-          {/* Time & Speed Controls */}
-          <div
-            className={`flex items-center justify-between text-[11px] font-mono leading-none ${
-              isSender ? "text-white/90" : "text-theme-text-secondary"
-            }`}
-          >
-            <span>
-              {isPlaying || currentTime > 0
-                ? formatAudioTime(currentTime)
-                : formatAudioTime(duration)}
-            </span>
-
-            {/* Speed toggle */}
-            <button
-              type="button"
-              onClick={cyclePlaybackRate}
-              title="Playback speed"
-              className={`px-1.5 py-0.5 rounded text-[10px] font-bold tracking-tight transition-colors cursor-pointer ${
-                isSender
-                  ? "bg-white/20 hover:bg-white/30 text-white"
-                  : "bg-theme-bg hover:bg-theme-surface text-theme-text-muted hover:text-theme-text border border-theme-border"
+              ref={progressBarRef}
+              onClick={handleSeek}
+              className={`relative h-2 rounded-full cursor-pointer overflow-hidden transition-all group/bar ${
+                isSender ? "bg-white/30" : "bg-theme-border dark:bg-theme-border/60"
               }`}
             >
-              {playbackRate}x
-            </button>
+              {/* Progress filled bar */}
+              <div
+                className={`absolute top-0 left-0 bottom-0 rounded-full transition-all duration-75 ${
+                  isSender
+                    ? "bg-white"
+                    : "bg-gradient-to-r from-emerald-500 to-teal-500"
+                }`}
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+
+            {/* Time & Speed Controls */}
+            <div
+              className={`flex items-center justify-between text-[11px] font-mono leading-none ${
+                isSender ? "text-white/90" : "text-theme-text-secondary"
+              }`}
+            >
+              <span>
+                {isPlaying || currentTime > 0
+                  ? formatAudioTime(currentTime)
+                  : formatAudioTime(duration)}
+              </span>
+
+              {/* Speed toggle */}
+              <button
+                type="button"
+                onClick={cyclePlaybackRate}
+                title="Playback speed"
+                className={`px-1.5 py-0.5 rounded text-[10px] font-bold tracking-tight transition-colors cursor-pointer ${
+                  isSender
+                    ? "bg-white/20 hover:bg-white/30 text-white"
+                    : "bg-theme-bg hover:bg-theme-surface text-theme-text-muted hover:text-theme-text border border-theme-border"
+                }`}
+              >
+                {playbackRate}x
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

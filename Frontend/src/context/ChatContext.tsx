@@ -174,6 +174,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           msg.content ||
           (msg.messageType?.toLowerCase() === "image"
             ? "📷 Image"
+            : msg.messageType?.toLowerCase() === "audio"
+            ? "🎤 Voice message"
             : msg.mediaUrl
             ? `📎 ${msg.fileName || "Attachment"}`
             : "");

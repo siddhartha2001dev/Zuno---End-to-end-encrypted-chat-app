@@ -254,6 +254,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
   };
 
   const handleSendVoiceMessage = async (audioFile: File) => {
+    if (!audioFile || audioFile.size === 0) {
+      throw new Error("Voice recording is empty. Please try again.");
+    }
     setSending(true);
     setSendError(null);
     try {
@@ -597,14 +600,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
           )}
 
           <div className="flex items-end gap-2 liquid-glass rounded-2xl p-2 shadow-card focus-within:border-emerald-500/60 focus-within:ring-2 focus-within:ring-emerald-500/15 transition-theme">
-            {isRecordingAudio ? (
-              <VoiceRecorder
-                onSendVoiceMessage={handleSendVoiceMessage}
-                isSending={sending}
-                disabled={sending}
-                onRecordingStateChange={setIsRecordingAudio}
-              />
-            ) : (
+            {!isRecordingAudio && (
               <>
                 {/* Quick Emoji Trigger */}
                 <button
@@ -644,15 +640,19 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
                 >
                   <Paperclip className="w-5 h-5" />
                 </button>
+              </>
+            )}
 
-                {/* Voice Message Recorder */}
-                <VoiceRecorder
-                  onSendVoiceMessage={handleSendVoiceMessage}
-                  isSending={sending}
-                  disabled={sending}
-                  onRecordingStateChange={setIsRecordingAudio}
-                />
+            {/* Voice Message Recorder (single persistent instance across recording states) */}
+            <VoiceRecorder
+              onSendVoiceMessage={handleSendVoiceMessage}
+              isSending={sending}
+              disabled={sending}
+              onRecordingStateChange={setIsRecordingAudio}
+            />
 
+            {!isRecordingAudio && (
+              <>
                 {/* Textarea */}
                 <textarea
                   ref={textareaRef}

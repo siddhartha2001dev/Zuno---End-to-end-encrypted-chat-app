@@ -45,7 +45,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
   const isAudio =
     message.messageType?.toLowerCase() === "audio" ||
     (Boolean(message.mediaUrl) &&
-      /\.(webm|ogg|mp3|wav|m4a|aac)($|\?)/i.test(message.mediaUrl || ""));
+      (/\.(webm|ogg|mp3|wav|m4a|aac|opus)($|\?)/i.test(message.mediaUrl || "") ||
+        /\.(webm|ogg|mp3|wav|m4a|aac|opus)$/i.test(message.fileName || "")));
 
   const hasCaption = Boolean(
     message.content &&
@@ -269,6 +270,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
                 </a>
               )}
             </div>
+          )}
+
+          {/* Audio message fallback if mediaUrl is missing */}
+          {!message.mediaUrl && isAudio && !hasCaption && (
+            <p className="text-xs italic opacity-80">🎤 Voice message unavailable</p>
           )}
 
           {/* Text/Caption Content */}

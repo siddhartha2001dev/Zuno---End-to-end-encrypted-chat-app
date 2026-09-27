@@ -16,7 +16,9 @@ export class UploadController {
       const file = req.file;
       const isImage = file.mimetype.startsWith("image/");
       const isVideo = file.mimetype.startsWith("video/");
-      const isAudio = file.mimetype.startsWith("audio/");
+      const isAudio =
+        file.mimetype.startsWith("audio/") ||
+        /\.(webm|ogg|mp3|wav|m4a|aac|opus)$/i.test(file.originalname);
 
       // Choose appropriate folder and options for Cloudinary
       const folder = isImage
@@ -27,10 +29,19 @@ export class UploadController {
         ? "zuno_chat/media/audio"
         : "zuno_chat/media/files";
 
+      // Strip extension from public_id so Cloudinary handles format cleanly without double extension
+      const nameWithoutExt = file.originalname
+        .replace(/\.[^/.]+$/, "")
+        .replace(/[^a-zA-Z0-9_-]/g, "_");
+      const public_id = `${Date.now()}_${nameWithoutExt}`;
+
+      // Audio files in Cloudinary must use resource_type: "video"
+      const resource_type = isAudio || isVideo ? "video" : isImage ? "image" : "auto";
+
       const uploadResult = await uploadToCloudinary(file.buffer, {
         folder,
-        resource_type: "auto",
-        public_id: `${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_")}`,
+        resource_type,
+        public_id,
       });
 
       const messageType: "image" | "file" | "audio" = isImage
