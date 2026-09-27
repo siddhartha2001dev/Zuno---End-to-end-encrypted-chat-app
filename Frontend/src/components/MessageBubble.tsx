@@ -10,6 +10,7 @@ import {
   Download,
   ExternalLink,
 } from "lucide-react";
+import { AudioMessageBubble } from "./AudioMessageBubble";
 
 interface MessageBubbleProps {
   message: Message;
@@ -41,9 +42,15 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
     (Boolean(message.mediaUrl) &&
       /\.(jpg|jpeg|png|webp|gif|svg|avif)($|\?)/i.test(message.mediaUrl || ""));
 
+  const isAudio =
+    message.messageType?.toLowerCase() === "audio" ||
+    (Boolean(message.mediaUrl) &&
+      /\.(webm|ogg|mp3|wav|m4a|aac)($|\?)/i.test(message.mediaUrl || ""));
+
   const hasCaption = Boolean(
     message.content &&
       message.content !== "📷 Image" &&
+      message.content !== "🎤 Voice message" &&
       message.content !== "📎 Attachment" &&
       !message.content.startsWith("📎 ")
   );
@@ -189,8 +196,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
         >
           {/* Media Attachment Rendering */}
           {message.mediaUrl && (
-            <div className="mb-2">
-              {isImage ? (
+            <div className={hasCaption ? "mb-2" : ""}>
+              {isAudio ? (
+                <AudioMessageBubble
+                  mediaUrl={message.mediaUrl}
+                  isSender={isSender}
+                  fileName={message.fileName}
+                />
+              ) : isImage ? (
                 <a
                   href={message.mediaUrl}
                   target="_blank"

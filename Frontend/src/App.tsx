@@ -10,6 +10,9 @@ import { VerifyEmailView } from "./components/VerifyEmailView";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { InstallAppBanner } from "./components/InstallAppBanner";
 
+import { CallProvider } from "./context/CallContext";
+import { AudioCallModal } from "./components/AudioCallModal";
+
 const MainLayout: React.FC = () => {
   const { clearPendingVerification } = useAuth();
   const [isNewChatOpen, setIsNewChatOpen] = useState<boolean>(false);
@@ -62,13 +65,16 @@ const MainLayout: React.FC = () => {
       initialEmail={initialEmail}
       successBanner={successBanner}
     >
-      <ChatProvider>
-        <div className="h-full w-full flex bg-theme-bg text-theme-text overflow-hidden relative">
-          <Sidebar onOpenNewChat={() => setIsNewChatOpen(true)} />
-          <ChatArea onOpenNewChat={() => setIsNewChatOpen(true)} />
-          <NewChatModal isOpen={isNewChatOpen} onClose={() => setIsNewChatOpen(false)} />
-        </div>
-      </ChatProvider>
+      <CallProvider>
+        <ChatProvider>
+          <div className="h-full w-full flex bg-theme-bg text-theme-text overflow-hidden relative">
+            <Sidebar onOpenNewChat={() => setIsNewChatOpen(true)} />
+            <ChatArea onOpenNewChat={() => setIsNewChatOpen(true)} />
+            <NewChatModal isOpen={isNewChatOpen} onClose={() => setIsNewChatOpen(false)} />
+          </div>
+          <AudioCallModal />
+        </ChatProvider>
+      </CallProvider>
     </ProtectedRoute>
   );
 };

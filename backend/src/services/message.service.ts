@@ -22,7 +22,7 @@ export class MessageService {
     mediaUrl?: string | null;
     fileName?: string | null;
     fileSize?: number | null;
-    messageType?: "text" | "image" | "file";
+    messageType?: "text" | "image" | "file" | "audio";
   }) {
     const isMember = await this.conversationRepo.isUserMember(
       input.conversationId,

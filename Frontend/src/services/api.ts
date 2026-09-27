@@ -222,7 +222,7 @@ export const api = {
         fileSize: number;
         format: string;
         resourceType: string;
-        messageType: "image" | "file";
+        messageType: "image" | "file" | "audio";
       }>(res);
     },
   },

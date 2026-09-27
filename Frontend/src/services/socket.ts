@@ -109,7 +109,7 @@ class SocketService {
           messageType?: string;
         },
     content?: string,
-    messageType: "TEXT" | "IMAGE" | "FILE" | "text" | "image" | "file" = "text"
+    messageType: "TEXT" | "IMAGE" | "FILE" | "AUDIO" | "text" | "image" | "file" | "audio" = "text"
   ): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!this.socket) return reject(new Error("Socket not connected"));

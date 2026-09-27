@@ -27,7 +27,7 @@ interface ChatContextType {
       mediaUrl?: string;
       fileName?: string;
       fileSize?: number;
-      messageType?: "image" | "file";
+      messageType?: "image" | "file" | "audio";
     }
   ) => Promise<void>;
   sendTypingStart: () => void;
@@ -328,6 +328,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             let fallback = "";
             if (conv.latestMessage.messageType?.toLowerCase() === "image") {
               fallback = "📷 Image";
+            } else if (conv.latestMessage.messageType?.toLowerCase() === "audio") {
+              fallback = "🎤 Voice message";
             } else if (conv.latestMessage.mediaUrl) {
               fallback = conv.latestMessage.fileName
                 ? `📎 ${conv.latestMessage.fileName}`
@@ -432,7 +434,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const decrypted = await decryptMessageItem(newMessage, targetConv);
           displayContent = decrypted.content;
         } else if (!displayContent) {
-          if (
+          if (newMessage.messageType?.toLowerCase() === "audio") {
+            displayContent = "🎤 Voice message";
+          } else if (
             newMessage.messageType?.toLowerCase() === "image" ||
             (newMessage.mediaUrl && !newMessage.fileName)
           ) {
@@ -660,7 +664,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       mediaUrl?: string;
       fileName?: string;
       fileSize?: number;
-      messageType?: "image" | "file";
+      messageType?: "image" | "file" | "audio";
     }
   ) => {
     if (!activeConversation) return;

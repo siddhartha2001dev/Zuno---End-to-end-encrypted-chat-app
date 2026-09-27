@@ -16,12 +16,15 @@ export class UploadController {
       const file = req.file;
       const isImage = file.mimetype.startsWith("image/");
       const isVideo = file.mimetype.startsWith("video/");
+      const isAudio = file.mimetype.startsWith("audio/");
 
       // Choose appropriate folder and options for Cloudinary
       const folder = isImage
         ? "zuno_chat/media/images"
         : isVideo
         ? "zuno_chat/media/videos"
+        : isAudio
+        ? "zuno_chat/media/audio"
         : "zuno_chat/media/files";
 
       const uploadResult = await uploadToCloudinary(file.buffer, {
@@ -30,7 +33,11 @@ export class UploadController {
         public_id: `${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_")}`,
       });
 
-      const messageType: "image" | "file" = isImage ? "image" : "file";
+      const messageType: "image" | "file" | "audio" = isImage
+        ? "image"
+        : isAudio
+        ? "audio"
+        : "file";
 
       res.status(200).json({
         success: true,

@@ -4,6 +4,7 @@ import { env } from "../config/env.js";
 import { socketAuthMiddleware } from "./socketAuth.js";
 import { registerPresenceHandlers } from "./presence.socket.js";
 import { registerChatHandlers } from "./chat.socket.js";
+import { registerCallHandlers } from "./call.socket.js";
 
 export function initializeSocket(httpServer: HttpServer): SocketIOServer {
   const io = new SocketIOServer(httpServer, {
@@ -43,6 +44,7 @@ export function initializeSocket(httpServer: HttpServer): SocketIOServer {
     // Register module handlers
     registerPresenceHandlers(io, socket);
     registerChatHandlers(io, socket);
+    registerCallHandlers(io, socket);
   });
 
   return io;

@@ -12,7 +12,7 @@ export interface IMessage extends Document {
   mediaUrl?: string | null;
   fileName?: string | null;
   fileSize?: number | null;
-  messageType: "text" | "image" | "file";
+  messageType: "text" | "image" | "file" | "audio";
   replyTo?: Types.ObjectId;
   deletedAt?: Date | null;
   createdAt: Date;
@@ -31,7 +31,7 @@ const MessageSchema = new Schema<IMessage>(
     mediaUrl: { type: String, default: null },
     fileName: { type: String, default: null },
     fileSize: { type: Number, default: null },
-    messageType: { type: String, enum: ["text", "image", "file"], default: "text" },
+    messageType: { type: String, enum: ["text", "image", "file", "audio"], default: "text" },
     replyTo: { type: Schema.Types.ObjectId, ref: "Message" },
     deletedAt: { type: Date, default: null },
   },

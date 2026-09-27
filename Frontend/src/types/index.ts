@@ -43,7 +43,7 @@ export interface Message {
   fileSize?: number | null;
   isEncrypted?: boolean;
   decryptedContent?: string;
-  messageType: "TEXT" | "IMAGE" | "FILE" | "text" | "image" | "file";
+  messageType: "TEXT" | "IMAGE" | "FILE" | "AUDIO" | "text" | "image" | "file" | "audio";
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;

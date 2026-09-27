@@ -13,7 +13,7 @@ export const sendMessageSchema = z
     messageType: z
       .preprocess(
         (val) => (typeof val === "string" ? val.toLowerCase() : val),
-        z.enum(["text", "image", "file"])
+        z.enum(["text", "image", "file", "audio"])
       )
       .default("text"),
   })

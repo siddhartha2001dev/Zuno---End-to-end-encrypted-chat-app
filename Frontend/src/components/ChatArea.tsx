@@ -19,7 +19,10 @@ import {
   FileText,
   X,
   Trash2,
+  Phone,
 } from "lucide-react";
+import { useCall } from "../context/CallContext";
+import { VoiceRecorder } from "./VoiceRecorder";
 
 interface ChatAreaProps {
   onOpenNewChat?: () => void;
@@ -39,6 +42,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
     clearActiveConversation,
     deleteConversation,
   } = useChat();
+  const { startCall } = useCall();
 
   const [inputContent, setInputContent] = useState<string>("");
   const [sending, setSending] = useState<boolean>(false);
@@ -49,6 +53,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState<boolean>(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState<boolean>(false);
+  const [isRecordingAudio, setIsRecordingAudio] = useState<boolean>(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -216,7 +221,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
             mediaUrl: string;
             fileName: string;
             fileSize: number;
-            messageType: "image" | "file";
+            messageType: "image" | "file" | "audio";
           }
         | undefined = undefined;
 
@@ -242,6 +247,31 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
       console.error("Message send failed", err);
       setInputContent(content); // Restore content on send failure
       setSendError(err?.message || "Failed to send message");
+    } finally {
+      setSending(false);
+      setUploadProgress(null);
+    }
+  };
+
+  const handleSendVoiceMessage = async (audioFile: File) => {
+    setSending(true);
+    setSendError(null);
+    try {
+      setUploadProgress("Uploading voice message...");
+      const uploadRes = await api.upload.media(audioFile);
+      if (!uploadRes.success || !uploadRes.mediaUrl) {
+        throw new Error("Failed to upload voice message.");
+      }
+      await sendMessage("", {
+        mediaUrl: uploadRes.mediaUrl,
+        fileName: uploadRes.fileName || audioFile.name,
+        fileSize: uploadRes.fileSize || audioFile.size,
+        messageType: "audio",
+      });
+    } catch (err: any) {
+      console.error("Voice message send failed", err);
+      setSendError(err?.message || "Failed to send voice message");
+      throw err;
     } finally {
       setSending(false);
       setUploadProgress(null);
@@ -392,6 +422,25 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
 
         {/* Header Right Actions */}
         <div className="flex items-center gap-1.5">
+          {/* Audio Call Button for 1-to-1 Direct Chats */}
+          {!isGroup && otherMember && (
+            <button
+              type="button"
+              onClick={() => {
+                startCall(activeConversation.id, {
+                  id: otherMember.user.id,
+                  name: otherMember.user.name,
+                  avatar: otherMember.user.avatar,
+                });
+              }}
+              title={`Call ${otherMember.user.name}`}
+              aria-label={`Call ${otherMember.user.name}`}
+              className="p-2 rounded-xl text-theme-text-muted hover:text-emerald-500 hover:bg-emerald-500/10 active:scale-95 transition-all cursor-pointer"
+            >
+              <Phone className="w-4 h-4" />
+            </button>
+          )}
+
           <div className="hidden sm:flex items-center gap-1 text-[11px] font-semibold text-theme-text-muted bg-theme-bg px-2.5 py-1 rounded-full border border-theme-border">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
             <span>Encrypted</span>
@@ -548,90 +597,109 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
           )}
 
           <div className="flex items-end gap-2 liquid-glass rounded-2xl p-2 shadow-card focus-within:border-emerald-500/60 focus-within:ring-2 focus-within:ring-emerald-500/15 transition-theme">
-            {/* Quick Emoji Trigger */}
-            <button
-              ref={emojiButtonRef}
-              type="button"
-              onClick={() => setIsEmojiPickerOpen((prev) => !prev)}
-              className={`p-2 rounded-xl transition-theme flex-shrink-0 ${
-                isEmojiPickerOpen
-                  ? "text-emerald-500 bg-emerald-500/15"
-                  : "text-theme-text-muted hover:text-theme-text hover:bg-theme-bg"
-              }`}
-              title="Add emoji"
-              aria-label="Add emoji"
-              aria-expanded={isEmojiPickerOpen}
-            >
-              <Smile className="w-5 h-5" />
-            </button>
+            {isRecordingAudio ? (
+              <VoiceRecorder
+                onSendVoiceMessage={handleSendVoiceMessage}
+                isSending={sending}
+                disabled={sending}
+                onRecordingStateChange={setIsRecordingAudio}
+              />
+            ) : (
+              <>
+                {/* Quick Emoji Trigger */}
+                <button
+                  ref={emojiButtonRef}
+                  type="button"
+                  onClick={() => setIsEmojiPickerOpen((prev) => !prev)}
+                  className={`p-2 rounded-xl transition-theme flex-shrink-0 ${
+                    isEmojiPickerOpen
+                      ? "text-emerald-500 bg-emerald-500/15"
+                      : "text-theme-text-muted hover:text-theme-text hover:bg-theme-bg"
+                  }`}
+                  title="Add emoji"
+                  aria-label="Add emoji"
+                  aria-expanded={isEmojiPickerOpen}
+                >
+                  <Smile className="w-5 h-5" />
+                </button>
 
-            {/* Media Attachment Button */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={sending}
-              className={`p-2 rounded-xl transition-theme flex-shrink-0 ${
-                selectedFile
-                  ? "text-emerald-500 bg-emerald-500/10"
-                  : "text-theme-text-muted hover:text-theme-text hover:bg-theme-bg"
-              } disabled:opacity-50`}
-              title="Attach photo or document (max 25MB)"
-              aria-label="Attach file"
-            >
-              <Paperclip className="w-5 h-5" />
-            </button>
+                {/* Media Attachment Button */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={sending}
+                  className={`p-2 rounded-xl transition-theme flex-shrink-0 ${
+                    selectedFile
+                      ? "text-emerald-500 bg-emerald-500/10"
+                      : "text-theme-text-muted hover:text-theme-text hover:bg-theme-bg"
+                  }`}
+                  title="Attach photo or document (max 25MB)"
+                  aria-label="Attach file"
+                >
+                  <Paperclip className="w-5 h-5" />
+                </button>
 
-            {/* Textarea */}
-            <textarea
-              ref={textareaRef}
-              rows={1}
-              value={inputContent}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              onFocus={() => {
-                if (window.scrollY !== 0 || window.scrollX !== 0) {
-                  window.scrollTo(0, 0);
-                }
-                setTimeout(() => {
-                  messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-                }, 120);
-                setTimeout(() => {
-                  messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-                }, 320);
-              }}
-              placeholder={
-                selectedFile
-                  ? "Add a caption (optional)..."
-                  : `Message ${activeConversation.name || "..."}`
-              }
-              className="flex-1 bg-transparent border-0 resize-none text-[16px] sm:text-[14px] text-theme-text placeholder-theme-text-muted px-2 py-1.5 focus:outline-none max-h-32 min-h-[28px] leading-relaxed"
-            />
+                {/* Voice Message Recorder */}
+                <VoiceRecorder
+                  onSendVoiceMessage={handleSendVoiceMessage}
+                  isSending={sending}
+                  disabled={sending}
+                  onRecordingStateChange={setIsRecordingAudio}
+                />
 
-            {/* Dynamic Send Button */}
-            <button
-              type="button"
-              disabled={!canSend}
-              onClick={handleSend}
-              aria-label="Send message"
-              title="Send (Enter)"
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-theme flex-shrink-0 ${
-                canSend
-                  ? "bg-gradient-to-tr from-emerald-500 to-teal-600 text-white shadow-[0_4px_14px_-2px_rgba(16,185,129,0.45)] hover:scale-105 active:scale-95"
-                  : "bg-theme-bg text-theme-text-muted border border-theme-border opacity-50 cursor-not-allowed"
-              }`}
-            >
-              {sending ? (
-                <Loader2 className="w-4 h-4 animate-spin text-white" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-            </button>
+                {/* Textarea */}
+                <textarea
+                  ref={textareaRef}
+                  rows={1}
+                  value={inputContent}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  onFocus={() => {
+                    if (window.scrollY !== 0 || window.scrollX !== 0) {
+                      window.scrollTo(0, 0);
+                    }
+                    setTimeout(() => {
+                      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+                    }, 120);
+                    setTimeout(() => {
+                      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+                    }, 320);
+                  }}
+                  placeholder={
+                    selectedFile
+                      ? "Add a caption (optional)..."
+                      : `Message ${activeConversation.name || "..."}`
+                  }
+                  className="flex-1 bg-transparent border-0 resize-none text-[16px] sm:text-[14px] text-theme-text placeholder-theme-text-muted px-2 py-1.5 focus:outline-none max-h-32 min-h-[28px] leading-relaxed"
+                />
+
+                {/* Dynamic Send Button */}
+                <button
+                  type="button"
+                  disabled={!canSend}
+                  onClick={handleSend}
+                  aria-label="Send message"
+                  title="Send (Enter)"
+                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-theme flex-shrink-0 ${
+                    canSend
+                      ? "bg-gradient-to-tr from-emerald-500 to-teal-600 text-white shadow-[0_4px_14px_-2px_rgba(16,185,129,0.45)] hover:scale-105 active:scale-95"
+                      : "bg-theme-bg text-theme-text-muted border border-theme-border opacity-50 cursor-not-allowed"
+                  }`}
+                >
+                  {sending ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                </button>
+              </>
+            )}
           </div>
 
           <div className="hidden sm:flex items-center justify-between mt-1.5 px-2 text-[10px] text-theme-text-muted">

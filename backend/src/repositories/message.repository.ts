@@ -16,7 +16,7 @@ export class MessageRepository {
     mediaUrl?: string | null;
     fileName?: string | null;
     fileSize?: number | null;
-    messageType?: "text" | "image" | "file";
+    messageType?: "text" | "image" | "file" | "audio";
   }) {
     const doc = await MessageModel.create({
       conversationId: new mongoose.Types.ObjectId(data.conversationId),
