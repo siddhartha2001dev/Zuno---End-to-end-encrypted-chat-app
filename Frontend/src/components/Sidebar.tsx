@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useChat } from "../context/ChatContext";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -18,6 +18,35 @@ import { ImageCropModal } from "./ImageCropModal";
 import { ProfileSettingsModal } from "./ProfileSettingsModal";
 import { DeleteChatModal } from "./DeleteChatModal";
 
+const useIsMobileDevice = () => {
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+    const ua = navigator.userAgent || "";
+    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    const isIPad = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+    const hasCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
+    const isSmallScreen = window.innerWidth < 768;
+    return Boolean(isMobileUA || isIPad || (hasCoarsePointer && isSmallScreen));
+  });
+
+  useEffect(() => {
+    const checkIsMobile = () => {
+      if (typeof window === "undefined" || typeof navigator === "undefined") return;
+      const ua = navigator.userAgent || "";
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+      const isIPad = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+      const hasCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
+      const isSmallScreen = window.innerWidth < 768;
+      setIsMobile(Boolean(isMobileUA || isIPad || (hasCoarsePointer && isSmallScreen)));
+    };
+
+    window.addEventListener("resize", checkIsMobile);
+    return () => window.removeEventListener("resize", checkIsMobile);
+  }, []);
+
+  return isMobile;
+};
+
 interface SwipeableConversationItemProps {
   conv: Conversation;
   isSelected: boolean;
@@ -27,6 +56,7 @@ interface SwipeableConversationItemProps {
   onSelect: () => void;
   onDeleteRequest: () => void;
   formatTime: (dateStr: string) => string;
+  isMobile: boolean;
 }
 
 const SwipeableConversationItem: React.FC<SwipeableConversationItemProps> = ({
@@ -38,6 +68,7 @@ const SwipeableConversationItem: React.FC<SwipeableConversationItemProps> = ({
   onSelect,
   onDeleteRequest,
   formatTime,
+  isMobile,
 }) => {
   const [swipeOffset, setSwipeOffset] = useState<number>(0);
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -47,15 +78,16 @@ const SwipeableConversationItem: React.FC<SwipeableConversationItemProps> = ({
   const THRESHOLD = 75;
   const isPastThreshold = swipeOffset >= THRESHOLD;
 
+  // Swipe delete is only supported on mobile touch devices
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (e.button !== 0) return;
+    if (!isMobile || e.pointerType !== "touch" || e.button !== 0) return;
     pointerStartRef.current = { x: e.clientX, y: e.clientY };
     isHorizontalSwipeRef.current = null;
     setIsDragging(false);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!pointerStartRef.current) return;
+    if (!isMobile || e.pointerType !== "touch" || !pointerStartRef.current) return;
     const diffX = e.clientX - pointerStartRef.current.x;
     const diffY = e.clientY - pointerStartRef.current.y;
 
@@ -91,7 +123,7 @@ const SwipeableConversationItem: React.FC<SwipeableConversationItemProps> = ({
   };
 
   const handlePointerEnd = (e: React.PointerEvent) => {
-    if (!pointerStartRef.current) return;
+    if (!isMobile || !pointerStartRef.current) return;
     const currentOffset = swipeOffset;
     const wasHorizontal = isHorizontalSwipeRef.current === true;
 
@@ -119,6 +151,7 @@ const SwipeableConversationItem: React.FC<SwipeableConversationItemProps> = ({
   };
 
   const handlePointerCancel = (e: React.PointerEvent) => {
+    if (!isMobile || !pointerStartRef.current) return;
     try {
       if ((e.currentTarget as HTMLElement).hasPointerCapture(e.pointerId)) {
         (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
@@ -134,61 +167,63 @@ const SwipeableConversationItem: React.FC<SwipeableConversationItemProps> = ({
 
   return (
     <div className="relative overflow-hidden rounded-2xl select-none my-0.5">
-      {/* Background revealed on swipe right */}
-      <div
-        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-red-500 flex items-center px-4 overflow-hidden z-0 transition-opacity duration-200"
-        style={{
-          opacity: swipeOffset > 4 ? 1 : 0,
-        }}
-      >
+      {/* Background revealed on swipe right (mobile touch devices only) */}
+      {isMobile && (
         <div
-          className="flex items-center gap-3 transition-transform"
+          className="absolute inset-0 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-red-500 flex items-center px-4 overflow-hidden z-0 transition-opacity duration-200"
           style={{
-            transform: `translateX(${Math.min(swipeOffset * 0.4, 28)}px)`,
+            opacity: swipeOffset > 4 ? 1 : 0,
           }}
         >
-          {/* Animated circular badge */}
           <div
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 shadow-md ${
-              isPastThreshold
-                ? "bg-white text-red-600 scale-110 shadow-lg ring-4 ring-white/30"
-                : "bg-white/20 text-white scale-95"
-            }`}
+            className="flex items-center gap-3 transition-transform"
+            style={{
+              transform: `translateX(${Math.min(swipeOffset * 0.4, 28)}px)`,
+            }}
           >
-            <Trash2
-              className={`w-4 h-4 transition-transform duration-200 ${
-                isPastThreshold ? "scale-110 rotate-12" : ""
-              }`}
-            />
-          </div>
-
-          {/* Dynamic label with animation */}
-          <div className="flex flex-col text-left transition-all duration-150">
-            <span
-              className={`text-xs font-bold tracking-wide transition-all ${
-                isPastThreshold ? "text-white scale-105" : "text-white/90"
+            {/* Animated circular badge */}
+            <div
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 shadow-md ${
+                isPastThreshold
+                  ? "bg-white text-red-600 scale-110 shadow-lg ring-4 ring-white/30"
+                  : "bg-white/20 text-white scale-95"
               }`}
             >
-              {isPastThreshold ? "Release to Delete!" : "Slide to Delete"}
-            </span>
-            <span className="text-[10px] text-white/75 font-medium leading-none mt-0.5">
-              {isPastThreshold ? "Quick confirmation" : "Swipe right"}
-            </span>
+              <Trash2
+                className={`w-4 h-4 transition-transform duration-200 ${
+                  isPastThreshold ? "scale-110 rotate-12" : ""
+                }`}
+              />
+            </div>
+
+            {/* Dynamic label with animation */}
+            <div className="flex flex-col text-left transition-all duration-150">
+              <span
+                className={`text-xs font-bold tracking-wide transition-all ${
+                  isPastThreshold ? "text-white scale-105" : "text-white/90"
+                }`}
+              >
+                {isPastThreshold ? "Release to Delete!" : "Slide to Delete"}
+              </span>
+              <span className="text-[10px] text-white/75 font-medium leading-none mt-0.5">
+                {isPastThreshold ? "Quick confirmation" : "Swipe right"}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Conversation Card */}
       <div
         onClick={() => {
-          if (swipeOffset < 8) {
+          if (!isMobile || swipeOffset < 8) {
             onSelect();
           }
         }}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerEnd}
-        onPointerCancel={handlePointerCancel}
+        onPointerDown={isMobile ? handlePointerDown : undefined}
+        onPointerMove={isMobile ? handlePointerMove : undefined}
+        onPointerUp={isMobile ? handlePointerEnd : undefined}
+        onPointerCancel={isMobile ? handlePointerCancel : undefined}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
@@ -196,13 +231,17 @@ const SwipeableConversationItem: React.FC<SwipeableConversationItemProps> = ({
             onSelect();
           }
         }}
-        style={{
-          transform: `translateX(${swipeOffset}px)`,
-          transition: isDragging
-            ? "none"
-            : "transform 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.25)",
-          touchAction: "pan-y",
-        }}
+        style={
+          isMobile
+            ? {
+                transform: `translateX(${swipeOffset}px)`,
+                transition: isDragging
+                  ? "none"
+                  : "transform 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.25)",
+                touchAction: "pan-y",
+              }
+            : undefined
+        }
         className={`group relative z-10 flex items-center gap-3 p-2.5 rounded-2xl cursor-pointer select-none transition-colors duration-200 ${
           isSelected
             ? "bg-emerald-500/10 dark:bg-[#16231e] border border-emerald-500/35 text-theme-text shadow-[0_2px_10px_rgba(16,185,129,0.08)] backdrop-blur-xs"
@@ -286,6 +325,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
+  const isMobile = useIsMobileDevice();
   const { user, logout, uploadAvatar } = useAuth();
   const {
     conversations,
@@ -532,6 +572,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
                 onSelect={() => selectConversation(conv)}
                 onDeleteRequest={() => setConversationToDelete(conv)}
                 formatTime={formatTime}
+                isMobile={isMobile}
               />
             );
           })
