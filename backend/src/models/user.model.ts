@@ -1,5 +1,12 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+export interface IDeviceKey {
+  deviceId: string;
+  publicKey: string;
+  deviceName?: string;
+  lastActive: Date;
+}
+
 export interface IUser extends Document {
   id: string;
   name: string;
@@ -8,6 +15,7 @@ export interface IUser extends Document {
   passwordHash: string;
   avatar?: string;
   publicKey?: string;
+  devices?: IDeviceKey[];
   isVerified: boolean;
   isDeactivated?: boolean;
   deactivatedAt?: Date;
@@ -40,6 +48,14 @@ const UserSchema = new Schema<IUser>(
     passwordHash: { type: String, required: true },
     avatar: { type: String },
     publicKey: { type: String, default: null },
+    devices: [
+      {
+        deviceId: { type: String, required: true },
+        publicKey: { type: String, required: true },
+        deviceName: { type: String, default: "Browser" },
+        lastActive: { type: Date, default: Date.now },
+      },
+    ],
     isVerified: { type: Boolean, default: false },
     isDeactivated: { type: Boolean, default: false },
     deactivatedAt: { type: Date, default: null },
@@ -52,6 +68,12 @@ const UserSchema = new Schema<IUser>(
       virtuals: true,
       transform: (_doc, ret: any) => {
         ret.id = ret._id.toString();
+        ret.devices = (ret.devices || []).map((d: any) => ({
+          deviceId: d.deviceId,
+          publicKey: d.publicKey,
+          deviceName: d.deviceName,
+          lastActive: d.lastActive,
+        }));
         delete ret._id;
         delete ret.__v;
         delete ret.passwordHash;
@@ -64,6 +86,12 @@ const UserSchema = new Schema<IUser>(
       virtuals: true,
       transform: (_doc, ret: any) => {
         ret.id = ret._id.toString();
+        ret.devices = (ret.devices || []).map((d: any) => ({
+          deviceId: d.deviceId,
+          publicKey: d.publicKey,
+          deviceName: d.deviceName,
+          lastActive: d.lastActive,
+        }));
         delete ret._id;
         delete ret.__v;
         return ret;

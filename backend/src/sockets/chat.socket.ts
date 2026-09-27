@@ -57,7 +57,7 @@ export function registerChatHandlers(io: Server, socket: Socket) {
   // 3. Send Message
   socket.on("message:send", async (data: any, callback) => {
     try {
-      const { conversationId, content, ciphertext, iv, senderPublicKey, recipientPublicKey, mediaUrl, fileName, fileSize, messageType } = data;
+      const { conversationId, content, ciphertext, iv, senderPublicKey, recipientPublicKey, deviceKeys, mediaUrl, fileName, fileSize, messageType } = data;
       if (!conversationId) {
         if (callback) callback({ success: false, error: "conversationId is required" });
         return;
@@ -70,6 +70,7 @@ export function registerChatHandlers(io: Server, socket: Socket) {
         iv,
         senderPublicKey,
         recipientPublicKey,
+        deviceKeys,
         mediaUrl,
         fileName,
         fileSize,
@@ -85,27 +86,26 @@ export function registerChatHandlers(io: Server, socket: Socket) {
         iv: validated.iv,
         senderPublicKey: validated.senderPublicKey,
         recipientPublicKey: validated.recipientPublicKey,
+        deviceKeys: validated.deviceKeys,
         mediaUrl: validated.mediaUrl,
         fileName: validated.fileName,
         fileSize: validated.fileSize,
         messageType: validated.messageType,
       });
 
-      // Emit canonical persisted message to everyone in the room (including sender)
-      const room = `conversation:${conversationId}`;
-      io.to(room).emit("message:new", message);
-
-      // Also broadcast to user rooms of all conversation members
+      // Emit canonical persisted message to conversation room and member user rooms (deduplicated by Socket.IO)
+      const targetRooms: string[] = [`conversation:${conversationId}`];
       try {
         const conv = await ConversationModel.findById(conversationId);
         if (conv && conv.members) {
           for (const memberId of conv.members) {
-            io.to(`user:${memberId.toString()}`).emit("message:new", message);
+            targetRooms.push(`user:${memberId.toString()}`);
           }
         }
       } catch (err) {
         console.warn("Could not broadcast message to user rooms:", err);
       }
+      io.to(targetRooms).emit("message:new", message);
 
       if (callback) {
         callback({ success: true, message });

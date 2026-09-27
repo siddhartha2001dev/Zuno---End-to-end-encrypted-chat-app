@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { UserModel, IUser } from "../models/user.model.js";
 
 export class UserRepository {
@@ -74,19 +75,27 @@ export class UserRepository {
 
   async searchUsers(query: string, excludeUserId: string): Promise<IUser[]> {
     const clean = query.trim();
+    if (!clean) return [];
+
     const cleanChatId = clean.replace(/^@/, "");
     const escapedQuery = clean.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const escapedChatId = cleanChatId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    const orConditions: any[] = [
+      { chatId: { $regex: escapedChatId, $options: "i" } },
+      { name: { $regex: escapedQuery, $options: "i" } },
+      { email: { $regex: escapedQuery, $options: "i" } },
+    ];
+
+    if (mongoose.Types.ObjectId.isValid(clean)) {
+      orConditions.push({ _id: clean });
+    }
 
     return UserModel.find({
       _id: { $ne: excludeUserId },
       isDeactivated: { $ne: true },
       isVerified: true,
-      $or: [
-        { chatId: { $regex: escapedChatId, $options: "i" } },
-        { name: { $regex: escapedQuery, $options: "i" } },
-        { email: { $regex: escapedQuery, $options: "i" } },
-      ],
+      $or: orConditions,
     })
       .select("-passwordHash")
       .limit(20);
@@ -102,12 +111,50 @@ export class UserRepository {
       .limit(50);
   }
 
-  async updatePublicKey(userId: string, publicKey: string): Promise<IUser | null> {
-    return UserModel.findByIdAndUpdate(
-      userId,
-      { publicKey },
-      { new: true }
+  async updatePublicKey(
+    userId: string,
+    publicKey: string,
+    deviceId?: string,
+    deviceName?: string
+  ): Promise<IUser | null> {
+    const cleanKey = publicKey.trim();
+    if (!deviceId) {
+      return UserModel.findByIdAndUpdate(
+        userId,
+        { publicKey: cleanKey },
+        { new: true }
+      );
+    }
+
+    const user = await UserModel.findById(userId);
+    if (!user) return null;
+
+    if (!user.devices) {
+      user.devices = [];
+    }
+
+    const existingDeviceIndex = user.devices.findIndex(
+      (d) => d.deviceId === deviceId
     );
+
+    if (existingDeviceIndex >= 0) {
+      user.devices[existingDeviceIndex].publicKey = cleanKey;
+      user.devices[existingDeviceIndex].lastActive = new Date();
+      if (deviceName) {
+        user.devices[existingDeviceIndex].deviceName = deviceName;
+      }
+    } else {
+      user.devices.push({
+        deviceId,
+        publicKey: cleanKey,
+        deviceName: deviceName || "Browser",
+        lastActive: new Date(),
+      });
+    }
+
+    user.publicKey = cleanKey;
+    await user.save();
+    return user;
   }
 
   async updateName(userId: string, name: string): Promise<IUser | null> {

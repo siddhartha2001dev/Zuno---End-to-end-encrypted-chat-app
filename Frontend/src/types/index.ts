@@ -1,3 +1,10 @@
+export interface DeviceInfo {
+  deviceId: string;
+  publicKey: string;
+  deviceName?: string;
+  lastActive: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -5,6 +12,7 @@ export interface User {
   email: string;
   avatar: string | null;
   publicKey?: string | null;
+  devices?: DeviceInfo[];
   createdAt?: string;
 }
 
@@ -38,6 +46,7 @@ export interface Message {
   iv?: string | null;
   senderPublicKey?: string | null;
   recipientPublicKey?: string | null;
+  deviceKeys?: Record<string, { encryptedKey: string; iv: string }> | null;
   mediaUrl?: string | null;
   fileName?: string | null;
   fileSize?: number | null;
@@ -64,6 +73,9 @@ export interface Conversation {
     content?: string;
     ciphertext?: string | null;
     iv?: string | null;
+    senderPublicKey?: string | null;
+    recipientPublicKey?: string | null;
+    deviceKeys?: Record<string, { encryptedKey: string; iv: string }> | null;
     mediaUrl?: string | null;
     fileName?: string | null;
     fileSize?: number | null;

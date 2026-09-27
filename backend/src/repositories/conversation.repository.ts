@@ -35,6 +35,7 @@ export class ConversationRepository {
                 email: m.email,
                 avatar: m.avatar || null,
                 publicKey: m.publicKey || null,
+                devices: m.devices || [],
               }
             : undefined,
         };
@@ -55,7 +56,7 @@ export class ConversationRepository {
     return ConversationModel.findOne({
       type: "direct",
       members: { $all: [u1, u2], $size: 2 },
-    }).populate("members", "name chatId email avatar publicKey");
+    }).populate("members", "name chatId email avatar publicKey devices");
   }
 
   async createDirectConversation(user1: string, user2: string): Promise<IConversation> {
@@ -68,7 +69,7 @@ export class ConversationRepository {
       createdBy: u1,
     });
 
-    return (await doc.populate("members", "name chatId email avatar publicKey"));
+    return (await doc.populate("members", "name chatId email avatar publicKey devices"));
   }
 
   async createGroupConversation(
@@ -87,14 +88,14 @@ export class ConversationRepository {
       createdBy: new mongoose.Types.ObjectId(creatorId),
     });
 
-    return (await doc.populate("members", "name chatId email avatar publicKey"));
+    return (await doc.populate("members", "name chatId email avatar publicKey devices"));
   }
 
   async getUserConversations(userId: string) {
     const uId = new mongoose.Types.ObjectId(userId);
     const conversations = await ConversationModel.find({ members: uId })
       .sort({ updatedAt: -1 })
-      .populate("members", "name chatId email avatar publicKey");
+      .populate("members", "name chatId email avatar publicKey devices");
 
     // Enhance each conversation with latest message and unread indicator
     const results = await Promise.all(
@@ -149,6 +150,7 @@ export class ConversationRepository {
               email: m.email,
               avatar: m.avatar,
               publicKey: m.publicKey || null,
+              devices: m.devices || [],
             },
           })),
           latestMessage: latestMessage
@@ -157,6 +159,9 @@ export class ConversationRepository {
                 content: latestMessage.content,
                 ciphertext: latestMessage.ciphertext || null,
                 iv: latestMessage.iv || null,
+                senderPublicKey: latestMessage.senderPublicKey || null,
+                recipientPublicKey: latestMessage.recipientPublicKey || null,
+                deviceKeys: (latestMessage as any).deviceKeys || null,
                 createdAt: latestMessage.createdAt.toISOString(),
                 senderId: (
                   (latestMessage.senderId as any)?._id ||
@@ -177,7 +182,7 @@ export class ConversationRepository {
 
   async findById(conversationId: string): Promise<IConversation | null> {
     if (!mongoose.Types.ObjectId.isValid(conversationId)) return null;
-    return ConversationModel.findById(conversationId).populate("members", "name chatId email avatar publicKey");
+    return ConversationModel.findById(conversationId).populate("members", "name chatId email avatar publicKey devices");
   }
 
   async isUserMember(conversationId: string, userId: string): Promise<boolean> {

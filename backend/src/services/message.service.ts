@@ -19,6 +19,7 @@ export class MessageService {
     iv?: string;
     senderPublicKey?: string | null;
     recipientPublicKey?: string | null;
+    deviceKeys?: Record<string, { encryptedKey: string; iv: string }> | null;
     mediaUrl?: string | null;
     fileName?: string | null;
     fileSize?: number | null;

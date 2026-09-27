@@ -44,6 +44,7 @@ export class MessageController {
         iv: validated.iv,
         senderPublicKey: validated.senderPublicKey,
         recipientPublicKey: validated.recipientPublicKey,
+        deviceKeys: validated.deviceKeys,
         mediaUrl: validated.mediaUrl,
         fileName: validated.fileName,
         fileSize: validated.fileSize,

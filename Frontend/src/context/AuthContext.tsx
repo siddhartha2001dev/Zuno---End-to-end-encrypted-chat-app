@@ -4,6 +4,7 @@ import { api } from "../services/api";
 import { socketService } from "../services/socket";
 import { getOrInitializeKeyPair } from "../crypto/keyPair";
 import { clearDerivedKeyCache } from "../crypto/keyExchange";
+import { getOrCreateDeviceId } from "../crypto/device";
 import {
   getStoredToken,
   setStoredToken,
@@ -77,14 +78,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const initKeys = async (currentUser: User) => {
     try {
-      const { keyPair, publicKeyJwk, isNew } = await getOrInitializeKeyPair(currentUser.id);
+      const { keyPair, publicKeyJwk } = await getOrInitializeKeyPair(currentUser.id);
       setE2eeKeyPair(keyPair);
 
-      // If key is freshly generated or server has no record of it, upload public key to server
-      if (isNew || !currentUser.publicKey || currentUser.publicKey !== publicKeyJwk) {
-        await api.users.updatePublicKey(publicKeyJwk);
-        currentUser.publicKey = publicKeyJwk;
+      const deviceId = getOrCreateDeviceId();
+      const deviceName = typeof navigator !== "undefined" && navigator.userAgent
+        ? (navigator.userAgent.includes("Mobile") ? "Mobile" : "Desktop")
+        : "Browser";
+
+      // Register or refresh this device's public key with the backend
+      const res = await api.users.updatePublicKey(publicKeyJwk, deviceId, deviceName);
+      if (res?.devices) {
+        currentUser.devices = res.devices;
       }
+      currentUser.publicKey = publicKeyJwk;
     } catch (cryptoErr) {
       console.error("Failed to initialize E2EE keys:", cryptoErr);
     }

@@ -40,8 +40,13 @@ export class UserController {
 
   updatePublicKey = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { publicKey } = req.body;
-      const result = await this.service.updatePublicKey(req.user!.id, publicKey);
+      const { publicKey, deviceId, deviceName } = req.body;
+      const result = await this.service.updatePublicKey(
+        req.user!.id,
+        publicKey,
+        deviceId,
+        deviceName
+      );
       res.status(200).json({ success: true, ...result });
     } catch (error) {
       next(error);

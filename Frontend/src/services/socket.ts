@@ -102,6 +102,7 @@ class SocketService {
           iv?: string;
           senderPublicKey?: string | null;
           recipientPublicKey?: string | null;
+          deviceKeys?: Record<string, { encryptedKey: string; iv: string }> | null;
           content?: string;
           mediaUrl?: string | null;
           fileName?: string | null;

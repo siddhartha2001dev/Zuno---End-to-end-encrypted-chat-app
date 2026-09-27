@@ -149,19 +149,23 @@ export const api = {
       });
       return handleResponse<{ success: boolean; user: any; message: string }>(res);
     },
-    updatePublicKey: async (publicKey: string) => {
+    updatePublicKey: async (publicKey: string, deviceId?: string, deviceName?: string) => {
       const res = await apiFetch(`${BASE_URL}/users/public-key`, {
         method: "PUT",
         headers: getAuthHeaders(),
-        body: JSON.stringify({ publicKey }),
+        body: JSON.stringify({ publicKey, deviceId, deviceName }),
       });
-      return handleResponse<{ success: boolean; id: string; publicKey: string }>(res);
+      return handleResponse<{ success: boolean; id: string; publicKey: string; devices?: any[] }>(res);
     },
     getPublicKey: async (userId: string) => {
       const res = await apiFetch(`${BASE_URL}/users/${userId}/public-key`, {
         headers: getAuthHeaders(),
       });
-      return handleResponse<{ userId: string; publicKey: string | null }>(res);
+      return handleResponse<{
+        userId: string;
+        publicKey: string | null;
+        devices?: Array<{ deviceId: string; publicKey: string; deviceName?: string; lastActive: string }>;
+      }>(res);
     },
     uploadAvatar: async (file: File) => {
       const formData = new FormData();

@@ -9,6 +9,7 @@ export interface IMessage extends Document {
   iv?: string;
   senderPublicKey?: string | null;
   recipientPublicKey?: string | null;
+  deviceKeys?: Record<string, { encryptedKey: string; iv: string }> | null;
   mediaUrl?: string | null;
   fileName?: string | null;
   fileSize?: number | null;
@@ -28,6 +29,7 @@ const MessageSchema = new Schema<IMessage>(
     iv: { type: String, default: null },
     senderPublicKey: { type: String, default: null },
     recipientPublicKey: { type: String, default: null },
+    deviceKeys: { type: Schema.Types.Mixed, default: null },
     mediaUrl: { type: String, default: null },
     fileName: { type: String, default: null },
     fileSize: { type: Number, default: null },
@@ -44,6 +46,7 @@ const MessageSchema = new Schema<IMessage>(
         ret.conversationId = ret.conversationId?.toString();
         ret.senderPublicKey = ret.senderPublicKey || null;
         ret.recipientPublicKey = ret.recipientPublicKey || null;
+        ret.deviceKeys = ret.deviceKeys || null;
         const sId = ret.senderId;
         if (sId && typeof sId === "object") {
           const actualId = (sId._id || sId.id || sId)?.toString();
@@ -74,6 +77,7 @@ const MessageSchema = new Schema<IMessage>(
         ret.conversationId = ret.conversationId?.toString();
         ret.senderPublicKey = ret.senderPublicKey || null;
         ret.recipientPublicKey = ret.recipientPublicKey || null;
+        ret.deviceKeys = ret.deviceKeys || null;
         const sId = ret.senderId;
         if (sId && typeof sId === "object") {
           const actualId = (sId._id || sId.id || sId)?.toString();

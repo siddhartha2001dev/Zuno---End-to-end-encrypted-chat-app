@@ -32,24 +32,54 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({ isOpen, onClose }) =
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Search users debounce
+  // Search users debounce & empty handling
   useEffect(() => {
     if (!isOpen) return;
 
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setUsers([]);
+      setLoading(false);
+      return;
+    }
+
+    let isCurrent = true;
+    setLoading(true);
+
     const delayDebounceFn = setTimeout(async () => {
-      setLoading(true);
       try {
-        const res = await api.users.search(query);
-        setUsers(res.users);
+        const res = await api.users.search(trimmed);
+        if (isCurrent) {
+          setUsers(res.users || []);
+        }
       } catch (err) {
-        console.error("Error searching users:", err);
+        if (isCurrent) {
+          console.error("Error searching users:", err);
+          setUsers([]);
+        }
       } finally {
-        setLoading(false);
+        if (isCurrent) {
+          setLoading(false);
+        }
       }
     }, 250);
 
-    return () => clearTimeout(delayDebounceFn);
+    return () => {
+      isCurrent = false;
+      clearTimeout(delayDebounceFn);
+    };
   }, [query, isOpen]);
+
+  // Reset modal state on close
+  useEffect(() => {
+    if (!isOpen) {
+      setQuery("");
+      setUsers([]);
+      setLoading(false);
+      setSelectedUserIds([]);
+      setGroupName("");
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -191,6 +221,8 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({ isOpen, onClose }) =
                 <Loader2 className="w-4 h-4 animate-spin text-theme-accent" />
                 <span>Searching contacts...</span>
               </div>
+            ) : !query.trim() ? (
+              null
             ) : users.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center text-theme-text-muted">
                 <UserIcon className="w-6 h-6 mb-1 opacity-50" />

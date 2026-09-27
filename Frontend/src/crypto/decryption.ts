@@ -1,7 +1,8 @@
 import { base64ToArrayBuffer, utf8Decode } from "./cryptoUtils";
+import { importPeerPublicKey } from "./keyExchange";
 import type { DecryptionResult } from "../types/crypto";
 
-const DECRYPTION_FAILED_PLACEHOLDER = "🔒 Unable to decrypt this message";
+export const DECRYPTION_FAILED_PLACEHOLDER = "🔒 Unable to decrypt this message";
 
 /**
  * Decrypts an AES-GCM encrypted payload using the provided CryptoKey.
@@ -56,3 +57,105 @@ export async function decryptMessage(
     };
   }
 }
+
+/**
+ * Multi-device decryption:
+ * Extracts the message key for this specific device from msg.deviceKeys,
+ * decrypts it using ECDH(myPrivateKey, senderPublicKey), and uses the recovered
+ * message key to decrypt the ciphertext.
+ */
+export async function decryptMessageMultiDevice(
+  msg: {
+    ciphertext?: string | null;
+    iv?: string | null;
+    senderPublicKey?: string | null;
+    recipientPublicKey?: string | null;
+    deviceKeys?: Record<string, { encryptedKey: string; iv: string }> | null;
+  },
+  myPrivateKey: CryptoKey,
+  myDeviceId: string,
+  senderPublicKeyJwk?: string | null
+): Promise<DecryptionResult> {
+  if (!msg.ciphertext || !msg.iv) {
+    return {
+      plaintext: DECRYPTION_FAILED_PLACEHOLDER,
+      success: false,
+      error: "Missing ciphertext or IV",
+    };
+  }
+
+  const effectiveSenderPubKey = senderPublicKeyJwk || msg.senderPublicKey;
+
+  if (msg.deviceKeys && effectiveSenderPubKey) {
+    try {
+      const senderPub = await importPeerPublicKey(effectiveSenderPubKey);
+      const sharedKey = await window.crypto.subtle.deriveKey(
+        {
+          name: "ECDH",
+          public: senderPub,
+        },
+        myPrivateKey,
+        {
+          name: "AES-GCM",
+          length: 256,
+        },
+        false,
+        ["decrypt"]
+      );
+
+      // Prioritize entry matching this device's deviceId
+      const targetEntries: Array<{ encryptedKey: string; iv: string }> = [];
+      if (myDeviceId && msg.deviceKeys[myDeviceId]) {
+        targetEntries.push(msg.deviceKeys[myDeviceId]);
+      }
+      // Also iterate through remaining entries in case deviceId changed or was generated anew
+      for (const [key, val] of Object.entries(msg.deviceKeys)) {
+        if (key !== myDeviceId && val) {
+          targetEntries.push(val);
+        }
+      }
+
+      for (const entry of targetEntries) {
+        try {
+          const encKeyBuffer = base64ToArrayBuffer(entry.encryptedKey);
+          const devIvBuffer = base64ToArrayBuffer(entry.iv);
+
+          const decRawKey = await window.crypto.subtle.decrypt(
+            {
+              name: "AES-GCM",
+              iv: new Uint8Array(devIvBuffer),
+            },
+            sharedKey,
+            encKeyBuffer
+          );
+
+          // Import recovered raw 256-bit AES-GCM message key
+          const importedMsgKey = await window.crypto.subtle.importKey(
+            "raw",
+            decRawKey,
+            { name: "AES-GCM", length: 256 },
+            false,
+            ["decrypt"]
+          );
+
+          // Decrypt payload ciphertext
+          const result = await decryptMessage(msg.ciphertext, msg.iv, importedMsgKey);
+          if (result.success) {
+            return result;
+          }
+        } catch (_) {
+          // Authentication tag mismatch for this key entry — continue trying
+        }
+      }
+    } catch (err: any) {
+      console.warn("Multi-device decryption error:", err);
+    }
+  }
+
+  return {
+    plaintext: DECRYPTION_FAILED_PLACEHOLDER,
+    success: false,
+    error: "Multi-device decryption failed",
+  };
+}
+

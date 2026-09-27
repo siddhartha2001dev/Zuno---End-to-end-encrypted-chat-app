@@ -118,15 +118,7 @@ export class UserService {
 
   async searchUsers(query: string | undefined, currentUserId: string) {
     if (!query || query.trim() === "") {
-      const users = await this.userRepo.getAllExcept(currentUserId);
-      return users.map((u) => ({
-        id: u._id.toString(),
-        name: u.name,
-        chatId: u.chatId,
-        email: u.email,
-        avatar: u.avatar || null,
-        publicKey: u.publicKey || null,
-      }));
+      return [];
     }
 
     const users = await this.userRepo.searchUsers(query.trim(), currentUserId);
@@ -157,12 +149,22 @@ export class UserService {
     };
   }
 
-  async updatePublicKey(userId: string, publicKey: string) {
+  async updatePublicKey(
+    userId: string,
+    publicKey: string,
+    deviceId?: string,
+    deviceName?: string
+  ) {
     if (!publicKey || typeof publicKey !== "string" || publicKey.trim().length === 0) {
       throw new AppError("A valid public key string is required", 400);
     }
 
-    const updated = await this.userRepo.updatePublicKey(userId, publicKey.trim());
+    const updated = await this.userRepo.updatePublicKey(
+      userId,
+      publicKey.trim(),
+      deviceId,
+      deviceName
+    );
     if (!updated) {
       throw new AppError("User not found", 404);
     }
@@ -170,6 +172,7 @@ export class UserService {
     return {
       id: updated._id.toString(),
       publicKey: updated.publicKey,
+      devices: updated.devices || [],
     };
   }
 
@@ -186,6 +189,7 @@ export class UserService {
     return {
       userId: user._id.toString(),
       publicKey: user.publicKey || null,
+      devices: user.devices || [],
     };
   }
 

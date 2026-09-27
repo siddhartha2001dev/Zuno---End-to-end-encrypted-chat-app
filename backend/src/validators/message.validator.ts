@@ -7,6 +7,7 @@ export const sendMessageSchema = z
     iv: z.string().min(1).optional(),
     senderPublicKey: z.string().optional(),
     recipientPublicKey: z.string().optional(),
+    deviceKeys: z.record(z.any()).optional().nullable(),
     mediaUrl: z.string().url().optional(),
     fileName: z.string().max(255).optional(),
     fileSize: z.number().nonnegative().optional(),

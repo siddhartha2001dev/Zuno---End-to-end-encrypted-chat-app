@@ -4,10 +4,12 @@ import { api } from "../services/api";
 import { socketService } from "../services/socket";
 import { useAuth } from "./AuthContext";
 import { deriveConversationKey } from "../crypto/keyExchange";
-import { encryptMessage } from "../crypto/encryption";
-import { decryptMessage } from "../crypto/decryption";
+import { encryptMessageMultiDevice } from "../crypto/encryption";
+import type { TargetDevice } from "../crypto/encryption";
+import { decryptMessage, decryptMessageMultiDevice } from "../crypto/decryption";
 import { getOrInitializeKeyPair } from "../crypto/keyPair";
 import { loadKeyPair } from "../crypto/keyStorage";
+import { getOrCreateDeviceId } from "../crypto/device";
 
 interface ChatContextType {
   conversations: Conversation[];
@@ -213,6 +215,43 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
 
+      const myDeviceId = getOrCreateDeviceId();
+
+      // 1. Multi-device decryption (when msg.deviceKeys is present)
+      if (msg.deviceKeys && typeof msg.deviceKeys === "object" && Object.keys(msg.deviceKeys).length > 0) {
+        let senderPubKey = msg.senderPublicKey || msg.sender?.publicKey || null;
+        if (!senderPubKey) {
+          const senderMember = conversation.members?.find(
+            (m) => (m.userId || m.id) === (msg.senderId || (msg.sender as any)?.id)
+          );
+          senderPubKey = senderMember?.user?.publicKey || null;
+        }
+        if (!senderPubKey && msg.senderId) {
+          try {
+            const freshSender = await api.users.getPublicKey(msg.senderId);
+            senderPubKey = freshSender?.publicKey || null;
+          } catch (_) {}
+        }
+
+        if (senderPubKey) {
+          const multiRes = await decryptMessageMultiDevice(
+            msg,
+            keyPair.privateKey,
+            myDeviceId,
+            senderPubKey
+          );
+          if (multiRes.success) {
+            return {
+              ...msg,
+              isEncrypted: true,
+              decryptedContent: multiRes.plaintext,
+              content: multiRes.plaintext,
+            };
+          }
+        }
+      }
+
+      // 2. Fallback: Legacy 1-to-1 ECDH decryption
       const isSender =
         user &&
         (msg.senderId?.toString() === user.id.toString() ||
@@ -220,9 +259,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             (msg.sender.id?.toString() === user.id.toString() ||
               (msg.sender as any)._id?.toString() === user.id.toString())));
 
-      // Determine peer public key for ECDH:
-      // If user sent the message, decrypt using recipient's public key (from message or conversation)
-      // If user received the message, decrypt using sender's public key (from message or conversation)
       let peerKeyJwk = isSender
         ? (msg.recipientPublicKey || null)
         : (msg.senderPublicKey || msg.sender?.publicKey || null);
@@ -305,25 +341,60 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const processedConversations = await Promise.all(
         data.conversations.map(async (conv: Conversation) => {
           if (conv.latestMessage?.ciphertext && conv.latestMessage?.iv) {
-            const isSender = user && conv.latestMessage.senderId?.toString() === user.id.toString();
-            const peerKey = isSender
-              ? (conv.latestMessage as any).recipientPublicKey
-              : (conv.latestMessage as any).senderPublicKey;
-            const aesKey = await getConversationCryptoKey(conv, peerKey);
-            if (aesKey) {
-              const res = await decryptMessage(
-                conv.latestMessage.ciphertext,
-                conv.latestMessage.iv,
-                aesKey
-              );
-              if (res.success) {
-                return {
-                  ...conv,
-                  latestMessage: {
-                    ...conv.latestMessage,
-                    content: res.plaintext,
-                  },
-                };
+            let keyPair = e2eeKeyPairRef.current;
+            if (!keyPair?.privateKey && user) {
+              try {
+                const loaded = await getOrInitializeKeyPair(user.id);
+                keyPair = loaded.keyPair;
+                e2eeKeyPairRef.current = keyPair;
+              } catch (_) {}
+            }
+
+            if (keyPair?.privateKey) {
+              const myDeviceId = getOrCreateDeviceId();
+              // 1. Try multi-device decryption first
+              if (conv.latestMessage.deviceKeys) {
+                const senderKey = conv.latestMessage.senderPublicKey;
+                if (senderKey) {
+                  const mRes = await decryptMessageMultiDevice(
+                    conv.latestMessage,
+                    keyPair.privateKey,
+                    myDeviceId,
+                    senderKey
+                  );
+                  if (mRes.success) {
+                    return {
+                      ...conv,
+                      latestMessage: {
+                        ...conv.latestMessage,
+                        content: mRes.plaintext,
+                      },
+                    };
+                  }
+                }
+              }
+
+              // 2. Fallback to legacy decryption
+              const isSender = user && conv.latestMessage.senderId?.toString() === user.id.toString();
+              const peerKey = isSender
+                ? (conv.latestMessage as any).recipientPublicKey
+                : (conv.latestMessage as any).senderPublicKey;
+              const aesKey = await getConversationCryptoKey(conv, peerKey);
+              if (aesKey) {
+                const res = await decryptMessage(
+                  conv.latestMessage.ciphertext,
+                  conv.latestMessage.iv,
+                  aesKey
+                );
+                if (res.success) {
+                  return {
+                    ...conv,
+                    latestMessage: {
+                      ...conv.latestMessage,
+                      content: res.plaintext,
+                    },
+                  };
+                }
               }
             }
           } else if (conv.latestMessage && !conv.latestMessage.content) {
@@ -682,6 +753,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       let iv: string | undefined = undefined;
       let senderPublicKey: string | undefined = undefined;
       let recipientPublicKey: string | undefined = undefined;
+      let deviceKeys: Record<string, { encryptedKey: string; iv: string }> | undefined = undefined;
 
       // Attempt E2EE encryption if text content exists
       if (trimmed) {
@@ -694,18 +766,89 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           if (keyPair?.privateKey && user) {
-            const peerPublicKey = await getPeerPublicKey(activeConversation);
-            if (peerPublicKey) {
-              const ownStored = await loadKeyPair(user.id);
-              senderPublicKey = ownStored?.publicKeyJwk;
-              recipientPublicKey = peerPublicKey;
+            const myDeviceId = getOrCreateDeviceId();
+            const ownStored = await loadKeyPair(user.id);
+            senderPublicKey = ownStored?.publicKeyJwk;
 
-              const aesKey = await deriveConversationKey(keyPair.privateKey, peerPublicKey);
-              const encrypted = await encryptMessage(trimmed, aesKey);
-              ciphertext = encrypted.ciphertext;
-              iv = encrypted.iv;
+            if (senderPublicKey) {
+              const otherMember = getPeerMember(activeConversation);
+              const peerUserId = getPeerUserId(otherMember);
+
+              const targetDevices: TargetDevice[] = [];
+              const seenDevices = new Set<string>();
+
+              // 1. Current sender device (for self-decryption on reload/echo)
+              targetDevices.push({ deviceId: myDeviceId, publicKeyJwk: senderPublicKey });
+              seenDevices.add(myDeviceId);
+
+              // 2. Sender's other registered devices (so Device A2, etc. can decrypt)
+              let myDevices = user.devices;
+              if (!myDevices || myDevices.length <= 1) {
+                try {
+                  const meData = await api.users.getPublicKey(user.id);
+                  if (meData?.devices) {
+                    myDevices = meData.devices;
+                    user.devices = meData.devices;
+                  }
+                } catch (_) {}
+              }
+              if (myDevices) {
+                for (const dev of myDevices) {
+                  if (dev.deviceId && dev.publicKey && !seenDevices.has(dev.deviceId)) {
+                    targetDevices.push({ deviceId: dev.deviceId, publicKeyJwk: dev.publicKey });
+                    seenDevices.add(dev.deviceId);
+                  }
+                }
+              }
+
+              // 3. Peer user's devices
+              let peerDevices = otherMember?.user?.devices;
+              let peerPrimaryPubKey = otherMember?.user?.publicKey;
+              if (peerUserId && (!peerDevices || peerDevices.length === 0)) {
+                try {
+                  const peerData = await api.users.getPublicKey(peerUserId);
+                  if (peerData?.devices && peerData.devices.length > 0) {
+                    peerDevices = peerData.devices;
+                  }
+                  if (peerData?.publicKey) {
+                    peerPrimaryPubKey = peerData.publicKey;
+                  }
+                } catch (_) {}
+              }
+
+              if (peerDevices && peerDevices.length > 0) {
+                for (const dev of peerDevices) {
+                  if (dev.deviceId && dev.publicKey && !seenDevices.has(dev.deviceId)) {
+                    targetDevices.push({ deviceId: dev.deviceId, publicKeyJwk: dev.publicKey });
+                    seenDevices.add(dev.deviceId);
+                  }
+                }
+              } else if (peerPrimaryPubKey) {
+                const legacyPeerDevId = `legacy_${peerUserId || "peer"}`;
+                if (!seenDevices.has(legacyPeerDevId)) {
+                  targetDevices.push({ deviceId: legacyPeerDevId, publicKeyJwk: peerPrimaryPubKey });
+                  seenDevices.add(legacyPeerDevId);
+                }
+              }
+
+              recipientPublicKey = peerPrimaryPubKey || undefined;
+
+              // Encrypt for all target devices
+              const multiEnc = await encryptMessageMultiDevice(
+                trimmed,
+                keyPair.privateKey,
+                senderPublicKey,
+                targetDevices,
+                recipientPublicKey
+              );
+
+              ciphertext = multiEnc.ciphertext;
+              iv = multiEnc.iv;
+              senderPublicKey = multiEnc.senderPublicKey;
+              recipientPublicKey = multiEnc.recipientPublicKey;
+              deviceKeys = multiEnc.deviceKeys;
             } else {
-              console.warn("Peer public key not found, sending without encryption.");
+              console.warn("Sender public key not found, sending without encryption.");
             }
           } else {
             console.warn("E2EE key pair not initialized, sending without encryption.");
@@ -715,6 +858,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.warn("Message encryption failed, sending as plaintext:", cryptoErr);
           ciphertext = undefined;
           iv = undefined;
+          deviceKeys = undefined;
         }
       }
 
@@ -727,6 +871,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           iv,
           senderPublicKey,
           recipientPublicKey,
+          deviceKeys,
           mediaUrl: mediaOptions?.mediaUrl,
           fileName: mediaOptions?.fileName,
           fileSize: mediaOptions?.fileSize,

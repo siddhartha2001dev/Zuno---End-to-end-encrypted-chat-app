@@ -13,6 +13,7 @@ export class MessageRepository {
     iv?: string;
     senderPublicKey?: string | null;
     recipientPublicKey?: string | null;
+    deviceKeys?: Record<string, { encryptedKey: string; iv: string }> | null;
     mediaUrl?: string | null;
     fileName?: string | null;
     fileSize?: number | null;
@@ -26,6 +27,7 @@ export class MessageRepository {
       iv: data.iv || null,
       senderPublicKey: data.senderPublicKey || null,
       recipientPublicKey: data.recipientPublicKey || null,
+      deviceKeys: data.deviceKeys || null,
       mediaUrl: data.mediaUrl || null,
       fileName: data.fileName || null,
       fileSize: data.fileSize || null,
@@ -37,7 +39,7 @@ export class MessageRepository {
       updatedAt: new Date(),
     });
 
-    const populated = await doc.populate("senderId", "name chatId email avatar publicKey");
+    const populated = await doc.populate("senderId", "name chatId email avatar publicKey devices");
     const json = populated.toJSON() as any;
 
     return {
@@ -64,7 +66,7 @@ export class MessageRepository {
     const messages = await MessageModel.find(query)
       .sort({ createdAt: 1 })
       .limit(limit)
-      .populate("senderId", "name chatId email avatar publicKey");
+      .populate("senderId", "name chatId email avatar publicKey devices");
 
     const messageIds = messages.map((m) => m._id);
 
