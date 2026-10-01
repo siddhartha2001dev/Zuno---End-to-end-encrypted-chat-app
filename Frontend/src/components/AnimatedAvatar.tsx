@@ -34,14 +34,14 @@ function hashString(str: string): number {
   return Math.abs(hash);
 }
 
-// 6 Color Schemes
+// 6 Refined Palettes: Restrained emerald, slate teal, subtle indigo, warm amber, muted rose, forest jade
 export const AVATAR_PALETTES = [
-  { id: "emerald", index: 0, name: "Emerald Glow", color: "#10b981", bg: "from-emerald-500 to-teal-700", ring: "from-emerald-400 via-teal-300 to-emerald-500", accent: "#34d399" },
-  { id: "cyan", index: 1, name: "Cyber Cyan", color: "#06b6d4", bg: "from-cyan-500 to-blue-700", ring: "from-cyan-400 via-sky-300 to-blue-500", accent: "#38bdf8" },
-  { id: "violet", index: 2, name: "Royal Violet", color: "#8b5cf6", bg: "from-violet-500 to-purple-800", ring: "from-violet-400 via-fuchsia-300 to-purple-500", accent: "#c084fc" },
-  { id: "amber", index: 3, name: "Sunset Amber", color: "#f59e0b", bg: "from-amber-500 to-rose-600", ring: "from-amber-400 via-orange-300 to-rose-500", accent: "#fb923c" },
-  { id: "pink", index: 4, name: "Neon Pink", color: "#ec4899", bg: "from-pink-500 to-rose-700", ring: "from-pink-400 via-rose-300 to-pink-600", accent: "#f472b6" },
-  { id: "mint", index: 5, name: "Forest Mint", color: "#059669", bg: "from-teal-600 to-emerald-900", ring: "from-emerald-300 via-teal-200 to-emerald-400", accent: "#6ee7b7" },
+  { id: "emerald", index: 0, name: "Emerald", color: "#0f766e", bg: "from-teal-700 to-emerald-800", ring: "border-teal-600/30", accent: "#2dd4bf" },
+  { id: "cyan", index: 1, name: "Slate Teal", color: "#0284c7", bg: "from-slate-700 to-teal-800", ring: "border-cyan-600/30", accent: "#38bdf8" },
+  { id: "violet", index: 2, name: "Indigo", color: "#6366f1", bg: "from-indigo-800 to-slate-800", ring: "border-indigo-600/30", accent: "#a5b4fc" },
+  { id: "amber", index: 3, name: "Amber", color: "#d97706", bg: "from-amber-700 to-stone-800", ring: "border-amber-600/30", accent: "#fcd34d" },
+  { id: "pink", index: 4, name: "Rose", color: "#be185d", bg: "from-rose-800 to-slate-800", ring: "border-rose-600/30", accent: "#fda4af" },
+  { id: "mint", index: 5, name: "Jade Forest", color: "#065f46", bg: "from-emerald-800 to-teal-900", ring: "border-emerald-600/30", accent: "#6ee7b7" },
 ];
 
 export const AVATAR_ARCHETYPES = [
@@ -123,56 +123,44 @@ export const AnimatedAvatar: React.FC<AnimatedAvatarProps> = ({
           className="w-full h-full rounded-full object-cover border border-theme-border shadow-xs"
         />
       ) : isGroup ? (
-        /* Animated Group Icon */
-        <div className={`w-full h-full rounded-full bg-gradient-to-br from-emerald-600 to-teal-800 p-0.5 shadow-xs overflow-hidden relative flex items-center justify-center`}>
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 rounded-full animate-avatar-aura opacity-40 blur-[1px]" />
-          <div className="relative w-full h-full rounded-full bg-[#111c18] flex items-center justify-center overflow-hidden">
-            <svg viewBox="0 0 36 36" fill="none" className="w-4/5 h-4/5 text-emerald-400">
-              <path
-                d="M18 15a4.5 4.5 0 100-9 4.5 4.5 0 000 9zM10.5 17a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM25.5 17a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"
-                fill="currentColor"
-                className="opacity-90"
-              />
-              <path
-                d="M18 18c-4.4 0-9 2.2-9 5.5V26h18v-2.5c0-3.3-4.6-5.5-9-5.5z"
-                fill="currentColor"
-              />
-              <path
-                d="M6 21.5c-2.2 1-3 2.5-3 4.5V28h6v-2.5c0-1.8.8-3.1 2.2-4zM30 21.5c2.2 1 3 2.5 3 4.5V28h-6v-2.5c0-1.8-.8-3.1-2.2-4z"
-                fill="currentColor"
-                className="opacity-60"
-              />
-            </svg>
-          </div>
+        /* Group Icon */
+        <div className="w-full h-full rounded-full bg-theme-elevated border border-theme-border shadow-xs overflow-hidden relative flex items-center justify-center">
+          <svg viewBox="0 0 36 36" fill="none" className="w-3/5 h-3/5 text-theme-accent">
+            <path
+              d="M18 15a4.5 4.5 0 100-9 4.5 4.5 0 000 9zM10.5 17a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM25.5 17a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"
+              fill="currentColor"
+              className="opacity-90"
+            />
+            <path
+              d="M18 18c-4.4 0-9 2.2-9 5.5V26h18v-2.5c0-3.3-4.6-5.5-9-5.5z"
+              fill="currentColor"
+            />
+            <path
+              d="M6 21.5c-2.2 1-3 2.5-3 4.5V28h6v-2.5c0-1.8.8-3.1 2.2-4zM30 21.5c2.2 1 3 2.5 3 4.5V28h-6v-2.5c0-1.8-.8-3.1-2.2-4z"
+              fill="currentColor"
+              className="opacity-60"
+            />
+          </svg>
         </div>
       ) : isEmblem ? (
-        /* Emblem Avatar with radiant glow */
-        <div className="w-full h-full rounded-full p-[1.5px] relative group overflow-hidden shadow-xs">
-          <div className={`absolute inset-[-50%] bg-gradient-to-tr ${palette.ring} rounded-full animate-avatar-aura opacity-70`} />
+        /* Emblem Avatar */
+        <div className="w-full h-full rounded-full border border-theme-border shadow-xs overflow-hidden relative flex items-center justify-center">
           <div className={`relative w-full h-full rounded-full bg-gradient-to-br ${palette.bg} flex items-center justify-center overflow-hidden`}>
-            <div className="absolute top-0 left-1/4 right-1/4 h-1/3 bg-white/20 rounded-full blur-[1px] pointer-events-none" />
-            <span className={`${size === "2xl" ? "text-4xl" : size === "xl" ? "text-3xl" : size === "lg" ? "text-2xl" : "text-base"} animate-avatar-float select-none`}>
+            <span className={`${size === "2xl" ? "text-4xl" : size === "xl" ? "text-3xl" : size === "lg" ? "text-2xl" : "text-base"} select-none`}>
               {emblemEmoji}
             </span>
           </div>
         </div>
       ) : (
-        /* Animated Default Avatar (Vector character with blinking eyes & floating) */
-        <div className="w-full h-full rounded-full p-[1.5px] relative group overflow-hidden shadow-xs">
-          {/* Rotating ambient aura ring */}
-          <div
-            className={`absolute inset-[-50%] bg-gradient-to-tr ${palette.ring} rounded-full animate-avatar-aura opacity-70`}
-          />
-
+        /* Algorithmic Avatar with Clean Vector Art */
+        <div className="w-full h-full rounded-full border border-theme-border/60 shadow-xs overflow-hidden relative flex items-center justify-center">
           {/* Avatar Base Surface */}
           <div
             className={`relative w-full h-full rounded-full bg-gradient-to-br ${palette.bg} flex items-center justify-center overflow-hidden`}
           >
-            {/* Subtle inner highlight */}
-            <div className="absolute top-0 left-1/4 right-1/4 h-1/3 bg-white/20 rounded-full blur-[1px] pointer-events-none" />
+            {/* Vector Character Body */}
+            <div className="w-full h-full flex items-center justify-center">
 
-            {/* Animated Character Body */}
-            <div className="w-full h-full flex items-center justify-center animate-avatar-float">
               {archetype === 0 && (
                 /* Cute Cyber Bot */
                 <svg viewBox="0 0 40 40" className="w-[82%] h-[82%]" fill="none">
@@ -366,12 +354,12 @@ export const AnimatedAvatar: React.FC<AnimatedAvatarProps> = ({
         </div>
       )}
 
-      {/* Online Status Beacon */}
+      {/* Online Status Indicator */}
       {showOnline && (
         <span
           className={`absolute rounded-full ${sizeConfig.onlineBadge} ${
             isOnline
-              ? "bg-emerald-500 ring-2 ring-theme-bg shadow-[0_0_8px_rgba(16,185,129,0.8)]"
+              ? "bg-emerald-500 ring-2 ring-theme-bg"
               : "bg-slate-400 dark:bg-slate-600 ring-2 ring-theme-bg"
           }`}
         />

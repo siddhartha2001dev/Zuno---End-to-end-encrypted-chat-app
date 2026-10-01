@@ -34,95 +34,84 @@ export const AudioCallModal: React.FC = () => {
   const { peer, isCaller } = activeCall;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 select-none">
-      <div className="w-full max-w-sm bg-theme-surface border border-theme-border rounded-3xl shadow-2xl p-6 sm:p-8 text-theme-text overflow-hidden relative flex flex-col items-center animate-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs select-none">
+      <div className="w-full max-w-sm bg-theme-surface border border-theme-border rounded-2xl shadow-modal p-6 sm:p-8 text-theme-text overflow-hidden relative flex flex-col items-center">
         
-        {/* Glow ambient background effect */}
-        <div
-          className={`absolute -top-16 -left-16 w-44 h-44 rounded-full blur-3xl opacity-20 pointer-events-none transition-colors duration-500 ${
-            callState === "connected"
-              ? "bg-emerald-500"
-              : callState === "failed" || callState === "rejected"
-              ? "bg-red-500"
-              : "bg-primary-500"
-          }`}
-        />
-
-        {/* Peer Avatar with animated ringing pulse */}
-        <div className="relative mt-2 mb-5">
-          {(callState === "calling" || callState === "ringing" || callState === "connecting") && (
-            <>
-              <span className="absolute inset-0 rounded-full bg-primary-500/30 animate-ping duration-1000 pointer-events-none" />
-              <span className="absolute -inset-2 rounded-full border-2 border-primary-500/40 animate-pulse pointer-events-none" />
-            </>
-          )}
-          <AnimatedAvatar
-            id={peer.id}
-            src={peer.avatar}
-            name={peer.name}
-            size="2xl"
-          />
+        {/* Peer Avatar */}
+        <div className="relative mt-2 mb-4">
+          <div className={`rounded-full ${
+            callState === "calling" || callState === "ringing" || callState === "connecting"
+              ? "ring-2 ring-theme-accent/40"
+              : ""
+          }`}>
+            <AnimatedAvatar
+              id={peer.id}
+              src={peer.avatar}
+              name={peer.name}
+              size="2xl"
+            />
+          </div>
         </div>
 
         {/* Peer Name */}
-        <h3 className="text-xl font-bold text-theme-text text-center truncate max-w-full px-2">
+        <h3 className="text-lg font-semibold text-theme-text text-center truncate max-w-full px-2">
           {peer.name}
         </h3>
 
         {/* Call State / Duration / Subtitle */}
-        <div className="mt-1.5 mb-6 text-center">
+        <div className="mt-1 mb-6 text-center">
           {callState === "calling" && (
-            <p className="text-sm font-medium text-theme-text-secondary flex items-center justify-center gap-1.5 animate-pulse">
-              <span>Calling...</span>
+            <p className="text-xs font-medium text-theme-text-muted">
+              Calling...
             </p>
           )}
 
           {callState === "ringing" && (
-            <p className="text-sm font-medium text-primary-400 flex items-center justify-center gap-1.5 animate-bounce">
-              <span>Incoming audio call...</span>
+            <p className="text-xs font-medium text-theme-accent">
+              Incoming audio call...
             </p>
           )}
 
           {callState === "connecting" && (
-            <p className="text-sm font-medium text-theme-text-secondary flex items-center justify-center gap-1.5 animate-pulse">
-              <span>Connecting...</span>
+            <p className="text-xs font-medium text-theme-text-muted">
+              Connecting...
             </p>
           )}
 
           {callState === "connected" && (
             <div className="flex flex-col items-center">
-              <span className="text-xs font-semibold uppercase tracking-wider text-emerald-500 mb-0.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-theme-accent mb-0.5">
                 Connected
               </span>
-              <span className="text-lg font-mono font-bold text-theme-text">
+              <span className="text-base font-mono font-semibold text-theme-text">
                 {formatDuration(callDuration)}
               </span>
             </div>
           )}
 
           {callState === "rejected" && (
-            <p className="text-sm font-medium text-red-400 flex items-center justify-center gap-1">
-              <AlertCircle className="w-4 h-4" />
+            <p className="text-xs font-medium text-red-500 flex items-center justify-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5" />
               <span>{errorMessage || "Call declined"}</span>
             </p>
           )}
 
           {callState === "ended" && (
-            <p className="text-sm font-medium text-theme-text-muted">
+            <p className="text-xs font-medium text-theme-text-muted">
               {errorMessage || "Call ended"}
             </p>
           )}
 
           {callState === "failed" && (
-            <p className="text-sm font-medium text-red-400 text-center max-w-xs px-2 flex items-center justify-center gap-1">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <p className="text-xs font-medium text-red-500 text-center max-w-xs px-2 flex items-center justify-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
               <span>{errorMessage || "Connection failed"}</span>
             </p>
           )}
         </div>
 
         {/* Call Controls */}
-        <div className="w-full flex items-center justify-center gap-6 mt-2">
+        <div className="w-full flex items-center justify-center gap-6">
           {/* Callee Incoming State: Accept / Reject */}
           {callState === "ringing" && !isCaller && (
             <div className="flex items-center justify-around w-full px-4">
@@ -131,12 +120,12 @@ export const AudioCallModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => rejectCall("declined")}
-                  className="w-14 h-14 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-lg shadow-red-600/30 active:scale-95 transition-all cursor-pointer"
+                  className="w-12 h-12 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-subtle active:scale-95 transition-all cursor-pointer"
                   title="Decline"
                 >
-                  <PhoneOff className="w-6 h-6" />
+                  <PhoneOff className="w-5 h-5" />
                 </button>
-                <span className="text-xs text-theme-text-secondary font-medium">Decline</span>
+                <span className="text-[11px] text-theme-text-muted font-medium">Decline</span>
               </div>
 
               {/* Accept */}
@@ -144,12 +133,12 @@ export const AudioCallModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={acceptCall}
-                  className="w-14 h-14 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center shadow-lg shadow-emerald-600/30 active:scale-95 animate-pulse transition-all cursor-pointer"
+                  className="w-12 h-12 rounded-full bg-theme-accent hover:opacity-90 text-white flex items-center justify-center shadow-subtle active:scale-95 transition-all cursor-pointer"
                   title="Accept"
                 >
-                  <Phone className="w-6 h-6" />
+                  <Phone className="w-5 h-5" />
                 </button>
-                <span className="text-xs text-theme-text-secondary font-medium">Accept</span>
+                <span className="text-[11px] text-theme-text-muted font-medium">Accept</span>
               </div>
             </div>
           )}
@@ -160,12 +149,12 @@ export const AudioCallModal: React.FC = () => {
               <button
                 type="button"
                 onClick={endCall}
-                className="w-14 h-14 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-lg shadow-red-600/30 active:scale-95 transition-all cursor-pointer"
+                className="w-12 h-12 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-subtle active:scale-95 transition-all cursor-pointer"
                 title="Cancel Call"
               >
-                <PhoneOff className="w-6 h-6" />
+                <PhoneOff className="w-5 h-5" />
               </button>
-              <span className="text-xs text-theme-text-secondary font-medium">Cancel</span>
+              <span className="text-[11px] text-theme-text-muted font-medium">Cancel</span>
             </div>
           )}
 
@@ -177,16 +166,16 @@ export const AudioCallModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={toggleMute}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center border transition-all active:scale-95 cursor-pointer ${
+                  className={`w-11 h-11 rounded-full flex items-center justify-center border transition-all active:scale-95 cursor-pointer ${
                     isMuted
-                      ? "bg-red-500/15 border-red-500/40 text-red-500"
+                      ? "bg-red-500/10 border-red-500/30 text-red-500"
                       : "bg-theme-bg border-theme-border text-theme-text hover:bg-theme-border"
                   }`}
                   title={isMuted ? "Unmute" : "Mute"}
                 >
-                  {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                  {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                 </button>
-                <span className="text-xs text-theme-text-secondary font-medium">
+                <span className="text-[11px] text-theme-text-muted font-medium">
                   {isMuted ? "Unmute" : "Mute"}
                 </span>
               </div>
@@ -196,12 +185,12 @@ export const AudioCallModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={endCall}
-                  className="w-14 h-14 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-lg shadow-red-600/30 active:scale-95 transition-all cursor-pointer"
+                  className="w-12 h-12 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-subtle active:scale-95 transition-all cursor-pointer"
                   title="End Call"
                 >
-                  <PhoneOff className="w-6 h-6" />
+                  <PhoneOff className="w-5 h-5" />
                 </button>
-                <span className="text-xs text-theme-text-secondary font-medium">End</span>
+                <span className="text-[11px] text-theme-text-muted font-medium">End</span>
               </div>
             </div>
           )}

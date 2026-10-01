@@ -208,10 +208,10 @@ export const AudioMessageBubble: React.FC<AudioMessageBubbleProps> = ({
             type="button"
             onClick={togglePlayPause}
             aria-label={isPlaying ? "Pause voice message" : "Play voice message"}
-            className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-90 cursor-pointer shadow-md ${
+            className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-95 cursor-pointer shadow-subtle ${
               isSender
-                ? "bg-white text-emerald-600 hover:bg-emerald-50"
-                : "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500"
+                ? "bg-white text-emerald-900 hover:bg-white/95"
+                : "bg-theme-accent text-white hover:bg-theme-accent-hover"
             }`}
           >
             {isBuffering ? (
@@ -229,8 +229,8 @@ export const AudioMessageBubble: React.FC<AudioMessageBubbleProps> = ({
             <div
               ref={progressBarRef}
               onClick={handleSeek}
-              className={`relative h-2 rounded-full cursor-pointer overflow-hidden transition-all group/bar ${
-                isSender ? "bg-white/30" : "bg-theme-border dark:bg-theme-border/60"
+              className={`relative h-1.5 rounded-full cursor-pointer overflow-hidden transition-all ${
+                isSender ? "bg-white/25" : "bg-theme-border"
               }`}
             >
               {/* Progress filled bar */}
@@ -238,11 +238,12 @@ export const AudioMessageBubble: React.FC<AudioMessageBubbleProps> = ({
                 className={`absolute top-0 left-0 bottom-0 rounded-full transition-all duration-75 ${
                   isSender
                     ? "bg-white"
-                    : "bg-gradient-to-r from-emerald-500 to-teal-500"
+                    : "bg-theme-accent"
                 }`}
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
+
 
             {/* Time & Speed Controls */}
             <div

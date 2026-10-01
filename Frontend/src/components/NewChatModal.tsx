@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useChat } from "../context/ChatContext";
 import { api } from "../services/api";
 import type { User } from "../types";
-import { X, Search, Users, MessageSquarePlus, Check, Loader2, User as UserIcon } from "lucide-react";
+import { X, Search, Users, Check, Loader2, User as UserIcon } from "lucide-react";
 import { AnimatedAvatar } from "./AnimatedAvatar";
 
 interface NewChatModalProps {
@@ -118,7 +118,7 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({ isOpen, onClose }) =
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-120"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -126,47 +126,44 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({ isOpen, onClose }) =
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className="w-full max-w-md liquid-glass-elevated rounded-2xl shadow-elevated overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-98 duration-150 transition-theme border border-theme-border">
+      <div className="w-full max-w-md bg-theme-surface rounded-2xl shadow-modal overflow-hidden flex flex-col max-h-[85vh] border border-theme-border">
         {/* Modal Header */}
-        <div className="px-5 py-4 border-b border-theme-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-              <MessageSquarePlus className="w-4 h-4" />
-            </div>
-            <h2 id="modal-title" className="font-semibold text-sm text-theme-text">New Conversation</h2>
-          </div>
+        <div className="px-5 py-3.5 border-b border-theme-border flex items-center justify-between">
+          <h2 id="modal-title" className="font-semibold text-sm text-theme-text">New conversation</h2>
           <button
             onClick={onClose}
             aria-label="Close dialog"
-            className="text-theme-text-muted hover:text-theme-text p-1 rounded-lg hover:bg-theme-elevated transition-theme"
+            className="text-theme-text-muted hover:text-theme-text p-1 rounded-md hover:bg-theme-bg transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex px-5 pt-2 border-b border-theme-border bg-theme-sidebar/40">
-          <button
-            onClick={() => setTab("direct")}
-            className={`pb-2.5 text-xs font-semibold uppercase tracking-wider transition-theme mr-6 border-b-2 ${
-              tab === "direct"
-                ? "border-theme-accent text-theme-accent"
-                : "border-transparent text-theme-text-muted hover:text-theme-text"
-            }`}
-          >
-            Direct Chat
-          </button>
-          <button
-            onClick={() => setTab("group")}
-            className={`pb-2.5 text-xs font-semibold uppercase tracking-wider transition-theme border-b-2 flex items-center gap-1.5 ${
-              tab === "group"
-                ? "border-theme-accent text-theme-accent"
-                : "border-transparent text-theme-text-muted hover:text-theme-text"
-            }`}
-          >
-            <Users className="w-3.5 h-3.5" />
-            Group Chat
-          </button>
+        {/* Tab Switcher (Segmented Control) */}
+        <div className="px-5 pt-3 pb-2 border-b border-theme-border-subtle">
+          <div className="grid grid-cols-2 p-0.5 rounded-lg bg-theme-bg border border-theme-border-subtle">
+            <button
+              onClick={() => setTab("direct")}
+              className={`py-1.5 text-xs font-medium rounded-md transition-colors text-center ${
+                tab === "direct"
+                  ? "bg-theme-surface text-theme-text shadow-subtle font-semibold"
+                  : "text-theme-text-muted hover:text-theme-text"
+              }`}
+            >
+              Direct chat
+            </button>
+            <button
+              onClick={() => setTab("group")}
+              className={`py-1.5 text-xs font-medium rounded-md transition-colors text-center flex items-center justify-center gap-1.5 ${
+                tab === "group"
+                  ? "bg-theme-surface text-theme-text shadow-subtle font-semibold"
+                  : "text-theme-text-muted hover:text-theme-text"
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Group chat</span>
+            </button>
+          </div>
         </div>
 
         {/* Body */}
@@ -310,13 +307,14 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({ isOpen, onClose }) =
               type="button"
               disabled={creating || !groupName.trim() || selectedUserIds.length === 0}
               onClick={handleCreateGroup}
-              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-lg transition-all shadow-[0_2px_10px_-2px_rgba(16,185,129,0.35)] disabled:opacity-40 flex items-center gap-1.5 active:scale-97"
+              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-theme-accent hover:bg-theme-accent-hover rounded-lg transition-colors shadow-xs disabled:opacity-40 flex items-center gap-1.5 active:scale-95"
             >
               {creating && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               Create Group ({selectedUserIds.length})
             </button>
           </div>
         )}
+
       </div>
     </div>
   );

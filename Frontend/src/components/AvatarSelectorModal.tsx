@@ -147,33 +147,33 @@ export const AvatarSelectorModal: React.FC<AvatarSelectorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200 select-none">
-      <div className="w-full max-w-lg bg-theme-surface border border-theme-border rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs select-none">
+      <div className="w-full max-w-lg bg-theme-surface border border-theme-border rounded-2xl shadow-modal overflow-hidden flex flex-col max-h-[92vh]">
         
         {/* Header */}
         <div className="px-5 py-4 border-b border-theme-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-theme-accent/10 border border-theme-accent/20 flex items-center justify-center text-theme-accent">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-theme-text leading-tight">Choose Your Avatar</h2>
-              <p className="text-[11px] text-theme-text-muted">Customize your persona & color aura</p>
+              <h2 className="text-sm font-semibold text-theme-text leading-tight">Choose Your Avatar</h2>
+              <p className="text-[11px] text-theme-text-muted">Select an archetype or emblem for your profile</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-theme-text-muted hover:text-theme-text hover:bg-theme-bg transition-colors cursor-pointer"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-theme-text-muted hover:text-theme-text hover:bg-theme-bg transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Live Preview Banner */}
-        <div className="p-4 bg-gradient-to-b from-theme-bg/90 to-theme-surface border-b border-theme-border/60 flex items-center justify-center gap-4">
+        <div className="p-4 bg-theme-bg/50 border-b border-theme-border/60 flex items-center justify-center gap-4">
           <div className="relative">
-            <div className="rounded-full ring-4 ring-emerald-500/25 shadow-lg">
+            <div className="rounded-full ring-2 ring-theme-border">
               <AnimatedAvatar
                 src={previewAvatarSrc}
                 name={user.name}
@@ -185,10 +185,10 @@ export const AvatarSelectorModal: React.FC<AvatarSelectorModalProps> = ({
             </div>
           </div>
           <div className="text-left">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-theme-accent">
               Live Preview
             </span>
-            <h3 className="text-sm font-bold text-theme-text leading-tight">
+            <h3 className="text-sm font-semibold text-theme-text leading-tight">
               {previewTitle}
             </h3>
             <p className="text-xs text-theme-text-muted mt-0.5">
@@ -198,13 +198,13 @@ export const AvatarSelectorModal: React.FC<AvatarSelectorModalProps> = ({
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex items-center px-4 pt-3 border-b border-theme-border/40 gap-1 bg-theme-surface">
+        <div className="flex items-center px-4 pt-2.5 border-b border-theme-border/40 gap-1 bg-theme-surface">
           <button
             type="button"
             onClick={() => setActiveTab("characters")}
-            className={`flex-1 py-2 text-xs font-semibold rounded-t-xl border-b-2 flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            className={`flex-1 py-2 text-xs font-medium rounded-t-lg border-b-2 flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
               activeTab === "characters"
-                ? "border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5"
+                ? "border-theme-accent text-theme-accent bg-theme-accent/5"
                 : "border-transparent text-theme-text-muted hover:text-theme-text"
             }`}
           >
@@ -215,9 +215,9 @@ export const AvatarSelectorModal: React.FC<AvatarSelectorModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab("emblems")}
-            className={`flex-1 py-2 text-xs font-semibold rounded-t-xl border-b-2 flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            className={`flex-1 py-2 text-xs font-medium rounded-t-lg border-b-2 flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
               activeTab === "emblems"
-                ? "border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5"
+                ? "border-theme-accent text-theme-accent bg-theme-accent/5"
                 : "border-transparent text-theme-text-muted hover:text-theme-text"
             }`}
           >
@@ -251,8 +251,8 @@ export const AvatarSelectorModal: React.FC<AvatarSelectorModalProps> = ({
           {activeTab === "characters" && (
             <div className="space-y-4">
               <div>
-                <h4 className="text-xs font-bold text-theme-text mb-2.5 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+                <h4 className="text-xs font-semibold text-theme-text mb-2.5 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-theme-accent" />
                   <span>Choose Character Archetype</span>
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -264,14 +264,14 @@ export const AvatarSelectorModal: React.FC<AvatarSelectorModalProps> = ({
                         key={arch.id}
                         type="button"
                         onClick={() => setSelectedArchetypeId(arch.id)}
-                        className={`p-2.5 rounded-2xl border text-center transition-all flex flex-col items-center gap-1.5 relative cursor-pointer ${
+                        className={`p-2.5 rounded-xl border text-center transition-all flex flex-col items-center gap-1.5 relative cursor-pointer ${
                           isSelected
-                            ? "border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/20 scale-[1.02]"
-                            : "border-theme-border bg-theme-bg/60 hover:border-emerald-500/40 hover:bg-theme-bg"
+                            ? "border-theme-accent bg-theme-accent/5 ring-1 ring-theme-accent/30"
+                            : "border-theme-border bg-theme-bg/60 hover:border-theme-accent/40 hover:bg-theme-bg"
                         }`}
                       >
                         {isSelected && (
-                          <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center">
+                          <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-theme-accent text-white flex items-center justify-center">
                             <Check className="w-2.5 h-2.5" />
                           </div>
                         )}
@@ -280,7 +280,7 @@ export const AvatarSelectorModal: React.FC<AvatarSelectorModalProps> = ({
                           name={arch.name}
                           size="lg"
                         />
-                        <span className="text-xs font-bold text-theme-text mt-0.5">
+                        <span className="text-xs font-medium text-theme-text mt-0.5">
                           {arch.name}
                         </span>
                         <span className="text-[10px] text-theme-text-muted leading-tight line-clamp-1">
@@ -292,11 +292,11 @@ export const AvatarSelectorModal: React.FC<AvatarSelectorModalProps> = ({
                 </div>
               </div>
 
-              {/* Glowing Aura Color Theme */}
+              {/* Color Theme Palette */}
               <div>
-                <h4 className="text-xs font-bold text-theme-text mb-2.5 flex items-center gap-1.5">
-                  <Palette className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>Select Glowing Color Theme</span>
+                <h4 className="text-xs font-semibold text-theme-text mb-2.5 flex items-center gap-1.5">
+                  <Palette className="w-3.5 h-3.5 text-theme-accent" />
+                  <span>Select Color Theme</span>
                 </h4>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                   {AVATAR_PALETTES.map((pal) => {
@@ -306,17 +306,17 @@ export const AvatarSelectorModal: React.FC<AvatarSelectorModalProps> = ({
                         key={pal.id}
                         type="button"
                         onClick={() => setSelectedPaletteId(pal.id)}
-                        className={`p-2 rounded-xl border flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
+                        className={`p-2 rounded-lg border flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
                           isSelected
-                            ? "border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/20 scale-105"
-                            : "border-theme-border bg-theme-bg hover:border-emerald-500/30"
+                            ? "border-theme-accent bg-theme-accent/10 ring-1 ring-theme-accent/30"
+                            : "border-theme-border bg-theme-bg hover:border-theme-accent/30"
                         }`}
                       >
                         <div
-                          className="w-6 h-6 rounded-full shadow-xs border border-white/20"
+                          className="w-5 h-5 rounded-full border border-white/20"
                           style={{ backgroundColor: pal.color }}
                         />
-                        <span className="text-[10px] font-semibold text-theme-text truncate w-full text-center">
+                        <span className="text-[10px] font-medium text-theme-text truncate w-full text-center">
                           {pal.name.split(" ")[0]}
                         </span>
                       </button>
@@ -331,8 +331,8 @@ export const AvatarSelectorModal: React.FC<AvatarSelectorModalProps> = ({
           {activeTab === "emblems" && (
             <div className="space-y-4">
               <div>
-                <h4 className="text-xs font-bold text-theme-text mb-2.5 flex items-center gap-1.5">
-                  <Smile className="w-3.5 h-3.5 text-emerald-500" />
+                <h4 className="text-xs font-semibold text-theme-text mb-2.5 flex items-center gap-1.5">
+                  <Smile className="w-3.5 h-3.5 text-theme-accent" />
                   <span>Pick an Emblem Icon</span>
                 </h4>
                 <div className="grid grid-cols-6 sm:grid-cols-8 gap-2">
@@ -343,10 +343,10 @@ export const AvatarSelectorModal: React.FC<AvatarSelectorModalProps> = ({
                         key={emb.emoji}
                         type="button"
                         onClick={() => setSelectedEmblem(emb.emoji)}
-                        className={`h-11 flex items-center justify-center text-2xl rounded-2xl border transition-all cursor-pointer ${
+                        className={`h-10 flex items-center justify-center text-xl rounded-xl border transition-all cursor-pointer ${
                           isSelected
-                            ? "border-emerald-500 bg-emerald-500/15 ring-2 ring-emerald-500/25 scale-110"
-                            : "border-theme-border bg-theme-bg hover:bg-theme-surface hover:scale-105"
+                            ? "border-theme-accent bg-theme-accent/15 ring-1 ring-theme-accent/30"
+                            : "border-theme-border bg-theme-bg hover:bg-theme-surface"
                         }`}
                         title={emb.name}
                       >
@@ -357,11 +357,11 @@ export const AvatarSelectorModal: React.FC<AvatarSelectorModalProps> = ({
                 </div>
               </div>
 
-              {/* Glowing Aura Color Theme for Emblem */}
+              {/* Color Theme for Emblem */}
               <div>
-                <h4 className="text-xs font-bold text-theme-text mb-2.5 flex items-center gap-1.5">
-                  <Palette className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>Emblem Aura Color</span>
+                <h4 className="text-xs font-semibold text-theme-text mb-2.5 flex items-center gap-1.5">
+                  <Palette className="w-3.5 h-3.5 text-theme-accent" />
+                  <span>Emblem Color</span>
                 </h4>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                   {AVATAR_PALETTES.map((pal) => {
@@ -371,17 +371,17 @@ export const AvatarSelectorModal: React.FC<AvatarSelectorModalProps> = ({
                         key={pal.id}
                         type="button"
                         onClick={() => setSelectedPaletteId(pal.id)}
-                        className={`p-2 rounded-xl border flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
+                        className={`p-2 rounded-lg border flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
                           isSelected
-                            ? "border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/20 scale-105"
-                            : "border-theme-border bg-theme-bg hover:border-emerald-500/30"
+                            ? "border-theme-accent bg-theme-accent/10 ring-1 ring-theme-accent/30"
+                            : "border-theme-border bg-theme-bg hover:border-theme-accent/30"
                         }`}
                       >
                         <div
-                          className="w-6 h-6 rounded-full shadow-xs border border-white/20"
+                          className="w-5 h-5 rounded-full border border-white/20"
                           style={{ backgroundColor: pal.color }}
                         />
-                        <span className="text-[10px] font-semibold text-theme-text truncate w-full text-center">
+                        <span className="text-[10px] font-medium text-theme-text truncate w-full text-center">
                           {pal.name.split(" ")[0]}
                         </span>
                       </button>
@@ -399,7 +399,7 @@ export const AvatarSelectorModal: React.FC<AvatarSelectorModalProps> = ({
             type="button"
             onClick={handleResetToDefault}
             disabled={isSaving}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-theme-text-muted hover:text-theme-text hover:bg-theme-bg transition-colors disabled:opacity-50 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-theme-text-muted hover:text-theme-text hover:bg-theme-bg transition-colors disabled:opacity-50 cursor-pointer"
             title="Reset to algorithmic seed avatar"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -411,7 +411,7 @@ export const AvatarSelectorModal: React.FC<AvatarSelectorModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={isSaving}
-              className="px-4 py-2 rounded-xl border border-theme-border text-xs font-semibold text-theme-text hover:bg-theme-bg transition-colors disabled:opacity-50 cursor-pointer"
+              className="px-3.5 py-2 rounded-lg border border-theme-border text-xs font-medium text-theme-text hover:bg-theme-bg transition-colors disabled:opacity-50 cursor-pointer"
             >
               Cancel
             </button>
@@ -419,7 +419,7 @@ export const AvatarSelectorModal: React.FC<AvatarSelectorModalProps> = ({
               type="button"
               onClick={handleSave}
               disabled={isSaving}
-              className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md hover:shadow-emerald-500/25 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-theme-accent hover:opacity-90 text-white text-xs font-medium shadow-subtle active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
             >
               {isSaving ? (
                 <>

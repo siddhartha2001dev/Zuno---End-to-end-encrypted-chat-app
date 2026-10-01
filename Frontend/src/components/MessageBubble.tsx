@@ -15,6 +15,8 @@ import { AudioMessageBubble } from "./AudioMessageBubble";
 interface MessageBubbleProps {
   message: Message;
   isGroup: boolean;
+  isFirstInGroup?: boolean;
+  isLastInGroup?: boolean;
 }
 
 const QUICK_EMOJIS = ["👍", "❤️", "😂", "🔥", "🎉", "😮"];
@@ -26,7 +28,12 @@ const formatFileSize = (bytes?: number) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }) => {
+export const MessageBubble: React.FC<MessageBubbleProps> = ({
+  message,
+  isGroup,
+  isFirstInGroup = true,
+  isLastInGroup = true,
+}) => {
   const { user } = useAuth();
   const { toggleReaction } = useChat();
   const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
@@ -116,22 +123,27 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
     await toggleReaction(message.id, emoji);
   };
 
+  // Corner rounding for visual message grouping
+  const borderRadiusClasses = isSender
+    ? `rounded-2xl ${!isLastInGroup ? "rounded-br-xs" : ""} ${!isFirstInGroup ? "rounded-tr-xs" : ""}`
+    : `rounded-2xl ${!isLastInGroup ? "rounded-bl-xs" : ""} ${!isFirstInGroup ? "rounded-tl-xs" : ""}`;
+
   return (
     <div
-      className={`group relative flex flex-col mb-3 ${
-        isSender ? "items-end" : "items-start"
-      }`}
+      className={`group relative flex flex-col ${
+        isFirstInGroup ? "mt-2.5 sm:mt-3" : "mt-0.5"
+      } ${isSender ? "items-end" : "items-start"}`}
     >
-      {/* Sender name for group chats */}
-      {!isSender && isGroup && (
-        <span className="text-[11px] font-semibold text-theme-accent ml-1.5 mb-1 tracking-wide">
+      {/* Sender name for group chats - shown only on the first message of consecutive run */}
+      {!isSender && isGroup && isFirstInGroup && (
+        <span className="text-[11px] font-semibold text-theme-accent ml-2 mb-1 tracking-wide">
           {message.sender?.name || "Member"}
         </span>
       )}
 
       {/* Bubble Container */}
       <div
-        className={`relative max-w-[85%] sm:max-w-[75%] md:max-w-[68%] ${
+        className={`relative max-w-[85%] sm:max-w-[75%] md:max-w-[65%] ${
           isSender ? "animate-bubble-outgoing" : "animate-bubble-incoming"
         }`}
       >
@@ -152,7 +164,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
             }}
             title="Add reaction"
             aria-label="Add reaction"
-            className="w-6 h-6 rounded-full bg-theme-surface border border-theme-border text-theme-text-muted hover:text-theme-text flex items-center justify-center shadow-subtle transition-all hover:scale-110 active:scale-95 cursor-pointer"
+            className="w-6 h-6 rounded-full bg-theme-surface border border-theme-border text-theme-text-muted hover:text-theme-text flex items-center justify-center shadow-subtle transition-all hover:scale-105 active:scale-95 cursor-pointer"
           >
             <SmilePlus className="w-3.5 h-3.5" />
           </button>
@@ -162,7 +174,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
         {showEmojiPicker && (
           <div
             ref={pickerRef}
-            className={`absolute -top-10 z-30 flex items-center gap-0.5 bg-theme-elevated/95 backdrop-blur-md border border-theme-border px-2 py-1 rounded-full shadow-lg animate-in fade-in zoom-in-95 duration-150 ${
+            className={`absolute -top-10 z-30 flex items-center gap-0.5 bg-theme-elevated border border-theme-border px-2 py-1 rounded-full shadow-popover animate-in fade-in zoom-in-95 duration-120 ${
               isSender ? "right-0" : "left-0"
             }`}
           >
@@ -174,9 +186,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
                   type="button"
                   onClick={() => handleSelectReaction(emoji)}
                   title={alreadyReacted ? `Remove ${emoji}` : `React ${emoji}`}
-                  className={`hover:scale-125 transition-transform p-1 text-base leading-none rounded-full cursor-pointer ${
+                  className={`hover:scale-120 transition-transform p-1 text-base leading-none rounded-full cursor-pointer ${
                     alreadyReacted
-                      ? "bg-theme-accent/20 ring-1 ring-theme-accent scale-110"
+                      ? "bg-theme-accent/20 ring-1 ring-theme-accent"
                       : "hover:bg-theme-surface"
                   }`}
                 >
@@ -189,10 +201,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
 
         {/* Message Surface */}
         <div
-          className={`px-3.5 py-2.5 text-[14px] leading-relaxed break-words transition-all ${
+          className={`px-3.5 py-2 text-[13.5px] sm:text-[14px] leading-relaxed break-words transition-colors shadow-subtle ${borderRadiusClasses} ${
             isSender
-              ? "bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-500 text-white rounded-2xl rounded-tr-xs shadow-[0_4px_16px_-2px_rgba(16,185,129,0.38),inset_0_1px_1px_rgba(255,255,255,0.35)] border border-emerald-400/30 backdrop-blur-md"
-              : "bg-white/90 dark:bg-[#182320]/80 backdrop-blur-md text-theme-text border border-emerald-900/10 dark:border-emerald-500/20 rounded-2xl rounded-tl-xs shadow-[0_2px_12px_rgba(0,0,0,0.03),inset_0_1px_1px_rgba(255,255,255,0.5)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.08)]"
+              ? "bg-theme-outgoing-bg text-theme-outgoing-text"
+              : "bg-theme-incoming-bg text-theme-incoming-text border border-theme-incoming-border"
           }`}
         >
           {/* Media Attachment Rendering */}
@@ -214,11 +226,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
                   <img
                     src={message.mediaUrl}
                     alt={message.fileName || "Shared image"}
-                    className="max-h-72 w-full object-cover rounded-xl hover:scale-[1.01] transition-transform duration-200"
+                    className="max-h-72 w-full object-cover rounded-xl"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors rounded-xl flex items-end justify-end p-2 opacity-0 group-hover/img:opacity-100">
-                    <span className="p-1.5 rounded-lg bg-black/60 text-white text-xs backdrop-blur-xs flex items-center gap-1">
+                  <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/15 transition-colors rounded-xl flex items-end justify-end p-2 opacity-0 group-hover/img:opacity-100">
+                    <span className="p-1 rounded-md bg-black/70 text-white text-xs flex items-center gap-1">
                       <ExternalLink className="w-3.5 h-3.5" />
                     </span>
                   </div>
@@ -229,20 +241,20 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
                   target="_blank"
                   rel="noopener noreferrer"
                   download={message.fileName || "download"}
-                  className={`flex items-center gap-3 p-2.5 rounded-xl border transition-colors ${
+                  className={`flex items-center gap-2.5 p-2 rounded-lg border transition-colors ${
                     isSender
-                      ? "bg-white/10 hover:bg-white/20 border-white/20 text-white"
-                      : "bg-theme-bg/80 hover:bg-theme-bg border-theme-border text-theme-text"
+                      ? "bg-white/10 hover:bg-white/15 border-white/15 text-white"
+                      : "bg-theme-bg/60 hover:bg-theme-bg border-theme-border text-theme-text"
                   }`}
                 >
                   <div
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${
                       isSender
                         ? "bg-white/20 text-white"
                         : "bg-theme-surface text-theme-accent border border-theme-border"
                     }`}
                   >
-                    <FileText className="w-5 h-5" />
+                    <FileText className="w-4 h-4" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold truncate leading-tight">
@@ -259,13 +271,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
                     )}
                   </div>
                   <div
-                    className={`p-1.5 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    className={`p-1 rounded-md flex items-center justify-center flex-shrink-0 ${
                       isSender
                         ? "hover:bg-white/20 text-white/90"
                         : "hover:bg-theme-surface text-theme-text-muted"
                     }`}
                   >
-                    <Download className="w-4 h-4" />
+                    <Download className="w-3.5 h-3.5" />
                   </div>
                 </a>
               )}
@@ -274,7 +286,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
 
           {/* Audio message fallback if mediaUrl is missing */}
           {!message.mediaUrl && isAudio && !hasCaption && (
-            <p className="text-xs italic opacity-80">🎤 Voice message unavailable</p>
+            <p className="text-xs italic opacity-75">Voice message unavailable</p>
           )}
 
           {/* Text/Caption Content */}
@@ -283,7 +295,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
           {/* Time & Delivery Checkmarks */}
           <div
             className={`flex items-center gap-1 mt-1 text-[10px] select-none ${
-              isSender ? "justify-end text-white/80" : "justify-start text-theme-text-muted"
+              isSender ? "justify-end text-white/70" : "justify-start text-theme-text-muted"
             }`}
           >
             <span>{formatTime(message.createdAt)}</span>
@@ -291,15 +303,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isGroup }
             {isSender && (
               <span title={isRead ? "Read" : "Delivered"} className="flex items-center ml-0.5">
                 {isRead ? (
-                  <CheckCheck className="w-3.5 h-3.5 text-emerald-200" />
+                  <CheckCheck className="w-3.5 h-3.5 text-white/90" />
                 ) : (
-                  <Check className="w-3.5 h-3.5 text-white/70" />
+                  <Check className="w-3.5 h-3.5 text-white/60" />
                 )}
               </span>
             )}
           </div>
         </div>
       </div>
+
 
       {/* Reactions Display Pill */}
       {Object.keys(groupedReactions).length > 0 && (

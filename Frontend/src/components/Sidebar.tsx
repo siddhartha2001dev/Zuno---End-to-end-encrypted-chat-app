@@ -6,7 +6,6 @@ import {
   Search,
   LogOut,
   X,
-  MessageCircle,
   Camera,
   Loader2,
   Trash2,
@@ -52,7 +51,6 @@ interface SwipeableConversationItemProps {
   isSelected: boolean;
   online: boolean;
   isGroup: boolean;
-  otherMember: any;
   onSelect: () => void;
   onDeleteRequest: () => void;
   formatTime: (dateStr: string) => string;
@@ -64,12 +62,12 @@ const SwipeableConversationItem: React.FC<SwipeableConversationItemProps> = ({
   isSelected,
   online,
   isGroup,
-  otherMember,
   onSelect,
   onDeleteRequest,
   formatTime,
   isMobile,
 }) => {
+
   const [swipeOffset, setSwipeOffset] = useState<number>(0);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -166,49 +164,31 @@ const SwipeableConversationItem: React.FC<SwipeableConversationItemProps> = ({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl select-none my-0.5">
+    <div className="relative overflow-hidden rounded-xl select-none my-0.5">
       {/* Background revealed on swipe right (mobile touch devices only) */}
       {isMobile && (
         <div
-          className="absolute inset-0 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-red-500 flex items-center px-4 overflow-hidden z-0 transition-opacity duration-200"
+          className="absolute inset-0 rounded-xl bg-red-600 flex items-center px-4 overflow-hidden z-0 transition-opacity duration-200"
           style={{
             opacity: swipeOffset > 4 ? 1 : 0,
           }}
         >
           <div
-            className="flex items-center gap-3 transition-transform"
+            className="flex items-center gap-2.5 transition-transform"
             style={{
               transform: `translateX(${Math.min(swipeOffset * 0.4, 28)}px)`,
             }}
           >
-            {/* Animated circular badge */}
             <div
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 shadow-md ${
-                isPastThreshold
-                  ? "bg-white text-red-600 scale-110 shadow-lg ring-4 ring-white/30"
-                  : "bg-white/20 text-white scale-95"
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150 ${
+                isPastThreshold ? "bg-white text-red-600 scale-105" : "bg-white/20 text-white"
               }`}
             >
-              <Trash2
-                className={`w-4 h-4 transition-transform duration-200 ${
-                  isPastThreshold ? "scale-110 rotate-12" : ""
-                }`}
-              />
+              <Trash2 className="w-4 h-4" />
             </div>
-
-            {/* Dynamic label with animation */}
-            <div className="flex flex-col text-left transition-all duration-150">
-              <span
-                className={`text-xs font-bold tracking-wide transition-all ${
-                  isPastThreshold ? "text-white scale-105" : "text-white/90"
-                }`}
-              >
-                {isPastThreshold ? "Release to Delete!" : "Slide to Delete"}
-              </span>
-              <span className="text-[10px] text-white/75 font-medium leading-none mt-0.5">
-                {isPastThreshold ? "Quick confirmation" : "Swipe right"}
-              </span>
-            </div>
+            <span className="text-xs font-semibold text-white">
+              {isPastThreshold ? "Release to delete" : "Slide to delete"}
+            </span>
           </div>
         </div>
       )}
@@ -237,17 +217,17 @@ const SwipeableConversationItem: React.FC<SwipeableConversationItemProps> = ({
                 transform: `translateX(${swipeOffset}px)`,
                 transition: isDragging
                   ? "none"
-                  : "transform 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.25)",
+                  : "transform 0.24s cubic-bezier(0.2, 0, 0, 1)",
                 touchAction: "pan-y",
               }
             : undefined
         }
-        className={`group relative z-10 flex items-center gap-3 p-2.5 rounded-2xl cursor-pointer select-none transition-colors duration-200 ${
+        className={`group relative z-10 flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer select-none transition-colors duration-150 ${
           isSelected
-            ? "bg-emerald-500/10 dark:bg-[#16231e] border border-emerald-500/35 text-theme-text shadow-[0_2px_10px_rgba(16,185,129,0.08)] backdrop-blur-xs"
+            ? "bg-theme-active-item text-theme-text font-medium"
             : isDragging && swipeOffset > 10
-            ? "bg-white dark:bg-[#1a2320] border border-red-500/30 shadow-lg"
-            : "bg-white/95 dark:bg-[#151d1b] hover:bg-theme-bg/80 border border-theme-border/40 text-theme-text-secondary shadow-xs"
+            ? "bg-theme-surface border border-red-500/30"
+            : "hover:bg-theme-surface/70 text-theme-text-secondary"
         }`}
       >
         {/* Avatar with Status */}
@@ -265,28 +245,27 @@ const SwipeableConversationItem: React.FC<SwipeableConversationItemProps> = ({
 
         {/* Info & Last message */}
         <div className="flex-1 min-w-0 pointer-events-none">
-          <div className="flex items-center justify-between mb-0.5">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span
-                className={`text-xs truncate ${
-                  isSelected ? "font-bold text-theme-text" : "font-semibold text-theme-text"
-                }`}
-              >
-                {conv.name}
-              </span>
-              {!isGroup && otherMember?.user?.chatId && (
-                <span className="text-[10px] text-theme-accent font-medium truncate flex-shrink-0">
-                  @{otherMember.user.chatId}
-                </span>
-              )}
-            </div>
-            <span className="text-[10px] text-theme-text-muted flex-shrink-0 ml-1">
+          {/* Top row: Contact Name + Time */}
+          <div className="flex items-center justify-between gap-1 mb-0.5">
+            <span
+              className={`text-[13px] truncate ${
+                isSelected || conv.isUnread ? "font-semibold text-theme-text" : "font-medium text-theme-text"
+              }`}
+            >
+              {conv.name}
+            </span>
+            <span className="text-[11px] text-theme-text-muted flex-shrink-0 ml-1.5 font-normal">
               {formatTime(conv.latestMessage?.createdAt || conv.updatedAt)}
             </span>
           </div>
 
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] text-theme-text-muted truncate pr-2 leading-relaxed">
+          {/* Bottom row: Latest message preview + Unread indicator / Actions */}
+          <div className="flex items-center justify-between gap-2">
+            <p
+              className={`text-[12px] truncate leading-normal ${
+                conv.isUnread ? "text-theme-text font-medium" : "text-theme-text-muted"
+              }`}
+            >
               {conv.latestMessage
                 ? `${
                     isGroup
@@ -308,7 +287,7 @@ const SwipeableConversationItem: React.FC<SwipeableConversationItemProps> = ({
                 }}
                 title={isGroup ? "Leave & Delete Group" : "Delete Chat"}
                 aria-label="Delete Chat"
-                className="opacity-0 group-hover:opacity-100 p-1 rounded-md text-theme-text-muted hover:text-red-500 hover:bg-red-500/10 transition-all cursor-pointer"
+                className="opacity-0 group-hover:opacity-100 p-1 rounded text-theme-text-muted hover:text-red-500 hover:bg-red-500/10 transition-opacity cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -319,6 +298,7 @@ const SwipeableConversationItem: React.FC<SwipeableConversationItemProps> = ({
     </div>
   );
 };
+
 
 interface SidebarProps {
   onOpenNewChat: () => void;
@@ -439,25 +419,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
     >
       {/* Top Header */}
       <div
-        className="px-4 border-b border-theme-border flex items-center justify-between flex-shrink-0"
+        className="px-4 py-3.5 border-b border-theme-border flex items-center justify-between flex-shrink-0"
         style={{
-          paddingTop: 'max(8px, env(safe-area-inset-top, 0px))',
-          minHeight: 'calc(58px + env(safe-area-inset-top, 0px))',
+          paddingTop: 'max(12px, env(safe-area-inset-top, 0px))',
           boxSizing: 'border-box'
         }}
       >
-        <div className="flex items-center gap-2">
-          <h1 className="text-xl font-bold tracking-tight text-theme-text">
-            Chats
-          </h1>
-        </div>
+        <h1 className="text-base font-bold tracking-tight text-theme-text">
+          Chats
+        </h1>
 
         {/* New Chat Button */}
         <button
           onClick={onOpenNewChat}
           aria-label="New Conversation"
           title="New Conversation"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-semibold shadow-[0_2px_10px_-2px_rgba(16,185,129,0.35)] transition-all active:scale-97"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-theme-accent hover:bg-theme-accent-hover text-white text-xs font-semibold shadow-xs transition-colors active:scale-95"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>New Chat</span>
@@ -465,21 +442,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
       </div>
 
       {/* Search Bar */}
-      <div className="px-3 pt-3 pb-2">
-        <div className="relative flex items-center bg-theme-bg border border-theme-border rounded-xl focus-within:border-theme-accent focus-within:ring-2 focus-within:ring-theme-accent/15 transition-theme shadow-subtle">
+      <div className="px-3 pt-2.5 pb-2">
+        <div className="relative flex items-center bg-theme-bg border border-theme-border rounded-lg focus-within:border-theme-accent focus-within:ring-1 focus-within:ring-theme-accent/20 transition-theme">
           <Search className="w-3.5 h-3.5 text-theme-text-muted ml-3 flex-shrink-0" />
           <input
             type="text"
             placeholder="Search conversations..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-transparent px-2.5 py-2 text-base sm:text-xs text-theme-text placeholder-theme-text-muted focus:outline-none"
+            className="w-full bg-transparent px-2.5 py-1.5 text-xs text-theme-text placeholder-theme-text-muted focus:outline-none"
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch("")}
-              className="mr-2 text-theme-text-muted hover:text-theme-text p-0.5 rounded-md hover:bg-theme-surface"
+              className="mr-2 text-theme-text-muted hover:text-theme-text p-0.5 rounded"
               aria-label="Clear search"
             >
               <X className="w-3 h-3" />
@@ -488,54 +465,48 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
         </div>
       </div>
 
-      {/* Filter Tabs (All / Direct / Groups) */}
-      <div className="px-3 pb-2 flex items-center gap-1.5 border-b border-theme-border-subtle">
-        <button
-          onClick={() => setActiveTab("all")}
-          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-theme flex items-center gap-1 ${
-            activeTab === "all"
-              ? "bg-theme-accent/10 text-theme-accent font-semibold"
-              : "text-theme-text-muted hover:text-theme-text hover:bg-theme-surface"
-          }`}
-        >
-          <span>All</span>
-          <span className="text-[10px] opacity-75">({conversations.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("direct")}
-          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-theme flex items-center gap-1 ${
-            activeTab === "direct"
-              ? "bg-theme-accent/10 text-theme-accent font-semibold"
-              : "text-theme-text-muted hover:text-theme-text hover:bg-theme-surface"
-          }`}
-        >
-          <span>Direct</span>
-          <span className="text-[10px] opacity-75">({directCount})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("groups")}
-          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-theme flex items-center gap-1 ${
-            activeTab === "groups"
-              ? "bg-theme-accent/10 text-theme-accent font-semibold"
-              : "text-theme-text-muted hover:text-theme-text hover:bg-theme-surface"
-          }`}
-        >
-          <span>Groups</span>
-          <span className="text-[10px] opacity-75">({groupCount})</span>
-        </button>
+      {/* Filter Tabs (Segmented control) */}
+      <div className="px-3 pb-2 border-b border-theme-border-subtle">
+        <div className="grid grid-cols-3 p-0.5 rounded-lg bg-theme-bg border border-theme-border-subtle">
+          <button
+            onClick={() => setActiveTab("all")}
+            className={`py-1 rounded-md text-[11px] font-medium transition-colors text-center ${
+              activeTab === "all"
+                ? "bg-theme-surface text-theme-text shadow-subtle font-semibold"
+                : "text-theme-text-muted hover:text-theme-text"
+            }`}
+          >
+            All {conversations.length > 0 && `(${conversations.length})`}
+          </button>
+          <button
+            onClick={() => setActiveTab("direct")}
+            className={`py-1 rounded-md text-[11px] font-medium transition-colors text-center ${
+              activeTab === "direct"
+                ? "bg-theme-surface text-theme-text shadow-subtle font-semibold"
+                : "text-theme-text-muted hover:text-theme-text"
+            }`}
+          >
+            Direct {directCount > 0 && `(${directCount})`}
+          </button>
+          <button
+            onClick={() => setActiveTab("groups")}
+            className={`py-1 rounded-md text-[11px] font-medium transition-colors text-center ${
+              activeTab === "groups"
+                ? "bg-theme-surface text-theme-text shadow-subtle font-semibold"
+                : "text-theme-text-muted hover:text-theme-text"
+            }`}
+          >
+            Groups {groupCount > 0 && `(${groupCount})`}
+          </button>
+        </div>
       </div>
 
       {/* Conversation List */}
-      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
+      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
         {filteredConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-center p-4">
-            <div className="w-10 h-10 rounded-2xl bg-theme-bg border border-theme-border flex items-center justify-center text-theme-text-muted mb-2 shadow-subtle">
-              <MessageCircle className="w-5 h-5 text-theme-accent/60" />
-            </div>
-            <p className="text-xs text-theme-text font-semibold">No chats found</p>
-            <p className="text-[11px] text-theme-text-muted mt-0.5 max-w-[190px]">
+            <p className="text-xs text-theme-text font-medium">No conversations found</p>
+            <p className="text-[11px] text-theme-text-muted mt-1 max-w-[190px]">
               {search ? "No conversations match your search." : "Start a direct conversation or group."}
             </p>
             <button
@@ -550,16 +521,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
             const isSelected = activeConversation?.id === conv.id;
             const online = isOtherUserOnline(conv);
             const isGroup = conv.type?.toUpperCase() === "GROUP";
-            const otherMember = !isGroup
-              ? conv.members?.find((m) => {
-                  const mId =
-                    (typeof m === "string" ? m : null) ||
-                    m.userId ||
-                    m.user?.id ||
-                    (m as any).id;
-                  return mId && mId.toString() !== user?.id.toString();
-                })
-              : null;
 
             return (
               <SwipeableConversationItem
@@ -568,7 +529,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
                 isSelected={isSelected}
                 online={online}
                 isGroup={isGroup}
-                otherMember={otherMember}
                 onSelect={() => selectConversation(conv)}
                 onDeleteRequest={() => setConversationToDelete(conv)}
                 formatTime={formatTime}
@@ -582,13 +542,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
       {/* User Profile Footer */}
       {user && (
         <div
-          className="p-3 border-t border-theme-border liquid-glass flex items-center justify-between flex-shrink-0"
+          className="p-2.5 px-3 border-t border-theme-border bg-theme-surface/80 flex items-center justify-between flex-shrink-0"
           style={{
-            paddingBottom: 'max(12px, calc(env(safe-area-inset-bottom, 0px) + 8px))'
+            paddingBottom: 'max(10px, calc(env(safe-area-inset-bottom, 0px) + 8px))'
           }}
         >
           <div
-            className="flex items-center gap-2.5 min-w-0 cursor-pointer group"
+            className="flex items-center gap-2.5 min-w-0 cursor-pointer p-1 -m-1 rounded-lg hover:bg-theme-bg/60 transition-colors"
             onClick={() => setIsSettingsOpen(true)}
             title="Open Profile & Settings"
           >
@@ -600,9 +560,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
                 size="sm"
                 showOnline={true}
                 isOnline={true}
-                className={isUploadingAvatar ? "opacity-40" : "group-hover:scale-105 transition-transform"}
+                className={isUploadingAvatar ? "opacity-40" : ""}
               />
-              <div className="absolute inset-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 text-white transition-opacity">
+              <div className="absolute inset-0 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 text-white transition-opacity">
                 {isUploadingAvatar ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
@@ -611,10 +571,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
               </div>
             </div>
             <div className="min-w-0">
-              <div className="text-xs font-semibold text-theme-text truncate leading-tight group-hover:text-emerald-500 transition-colors">
+              <div className="text-xs font-semibold text-theme-text truncate leading-tight">
                 {user.name}
               </div>
-              <div className="text-[10px] text-theme-accent font-medium truncate leading-tight">
+              <div className="text-[10px] text-theme-text-muted truncate leading-tight">
                 @{user.chatId}
               </div>
             </div>

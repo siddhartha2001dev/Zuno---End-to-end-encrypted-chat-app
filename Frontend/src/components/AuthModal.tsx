@@ -244,64 +244,55 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
   if (pendingVerificationEmail) {
     return (
       <div className="min-h-screen w-screen flex flex-col bg-theme-bg text-theme-text select-none overflow-x-hidden relative">
-        {/* Ambient Liquid Glows */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full liquid-orb-emerald pointer-events-none" />
-        <div className="absolute bottom-10 right-1/4 w-[400px] h-[400px] rounded-full liquid-orb-mint pointer-events-none" />
-
         {/* Top Navbar */}
         {renderNavbar()}
 
-        {/* Centered Floating Verification Card */}
+        {/* Centered Verification Card */}
         <main className="flex-1 flex items-center justify-center p-4 sm:p-6 z-10">
-          <div className="w-full max-w-md liquid-glass-elevated border border-emerald-500/25 rounded-3xl p-6 sm:p-8 shadow-2xl relative animate-in zoom-in-95 duration-200">
-            {/* Animated Mail Icon */}
+          <div className="w-full max-w-md bg-theme-surface border border-theme-border rounded-2xl p-6 sm:p-8 shadow-modal relative">
+            {/* Mail Icon */}
             <div className="flex justify-center mb-5">
-              <div className="relative">
-                <div className="w-18 h-18 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/15 border border-emerald-500/30 flex items-center justify-center shadow-[0_8px_24px_-4px_rgba(16,185,129,0.3)]">
-                  <MailCheck className="w-9 h-9 text-emerald-500" />
-                </div>
-                <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-md animate-bounce">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                </div>
+              <div className="w-14 h-14 rounded-2xl bg-theme-accent/10 border border-theme-accent/20 flex items-center justify-center text-theme-accent">
+                <MailCheck className="w-7 h-7" />
               </div>
             </div>
 
             <div className="text-center mb-6">
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-theme-text mb-1.5">
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-theme-text mb-1.5">
                 Check your email
               </h2>
               <p className="text-xs sm:text-sm text-theme-text-secondary leading-relaxed">
                 We've sent a verification link to
               </p>
-              <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mt-1 break-all">
+              <p className="text-xs sm:text-sm font-semibold text-theme-accent mt-1 break-all">
                 {pendingVerificationEmail}
               </p>
             </div>
 
             {/* Step Instructions */}
             <div className="space-y-2.5 mb-5 text-left">
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-theme-surface/70 border border-theme-border">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-theme-bg/60 border border-theme-border">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-theme-accent/10 flex items-center justify-center text-xs font-semibold text-theme-accent">
                   1
                 </span>
                 <p className="text-xs text-theme-text-secondary leading-normal">
-                  Open the verification email sent by <strong className="text-theme-text font-semibold">Zuno Chat</strong>
+                  Open the verification email sent by <strong className="text-theme-text font-medium">Zuno Chat</strong>
                 </p>
               </div>
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-theme-surface/70 border border-theme-border">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-theme-bg/60 border border-theme-border">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-theme-accent/10 flex items-center justify-center text-xs font-semibold text-theme-accent">
                   2
                 </span>
                 <p className="text-xs text-theme-text-secondary leading-normal">
-                  Click <strong className="text-theme-text font-semibold">"Verify My Email"</strong> link inside
+                  Click <strong className="text-theme-text font-medium">"Verify My Email"</strong> link inside
                 </p>
               </div>
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-theme-surface/70 border border-theme-border">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-theme-bg/60 border border-theme-border">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-theme-accent/10 flex items-center justify-center text-xs font-semibold text-theme-accent">
                   ✓
                 </span>
                 <p className="text-xs text-theme-text-secondary leading-normal">
-                  You'll be <strong className="text-theme-text font-semibold">automatically logged in</strong> to your chats
+                  You'll be <strong className="text-theme-text font-medium">automatically logged in</strong> to your chats
                 </p>
               </div>
             </div>
@@ -320,22 +311,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
               </div>
             )}
 
-
             {/* Resend Email Button */}
             <button
               type="button"
               onClick={handleResend}
               disabled={resendCooldown > 0 || resending}
-              className="w-full py-2.5 px-4 rounded-xl bg-theme-surface/80 hover:bg-theme-surface border border-theme-border text-theme-text font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
+              className="w-full py-2.5 px-4 rounded-xl bg-theme-surface hover:bg-theme-bg border border-theme-border text-theme-text font-medium text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
             >
               {resending ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+                  <Loader2 className="w-4 h-4 animate-spin text-theme-accent" />
                   <span>Sending email...</span>
                 </>
               ) : (
                 <>
-                  <RefreshCw className={`w-3.5 h-3.5 text-emerald-500 ${resendCooldown > 0 ? "" : "group-hover:rotate-180 transition-transform"}`} />
+                  <RefreshCw className="w-3.5 h-3.5 text-theme-accent" />
                   <span>{resendCooldown > 0 ? `Resend email in ${resendCooldown}s` : "Resend Verification Email"}</span>
                 </>
               )}
@@ -351,7 +341,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                   setError(null);
                   setResendSuccess(null);
                 }}
-                className="text-xs text-theme-text-muted hover:text-emerald-500 font-semibold inline-flex items-center gap-1.5 transition-colors"
+                className="text-xs text-theme-text-muted hover:text-theme-accent font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 Back to Sign In
@@ -368,35 +358,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
   // ───────────────────────────────────────────
   return (
     <div className="min-h-screen w-screen flex flex-col bg-theme-bg text-theme-text select-none overflow-x-hidden relative">
-      {/* Ambient Liquid Glow Orbs */}
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[550px] h-[550px] rounded-full liquid-orb-emerald pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[450px] h-[450px] rounded-full liquid-orb-mint pointer-events-none" />
-
       {/* Top Navbar */}
       {renderNavbar()}
 
       {/* Centered Modern Chat App Card */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 z-10">
-        <div className="w-full max-w-[440px] liquid-glass-elevated border border-emerald-500/25 rounded-3xl p-6 sm:p-8 shadow-2xl relative transition-all duration-200">
+        <div className="w-full max-w-[420px] bg-theme-surface border border-theme-border rounded-2xl p-6 sm:p-8 shadow-modal relative">
           
           {/* Brand Icon Header */}
           <div className="flex flex-col items-center text-center mb-6">
-            <div className="relative mb-3">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/30 p-2.5 flex items-center justify-center shadow-[0_8px_20px_-4px_rgba(16,185,129,0.25)]">
-                <img src="/zuno-favicon.ico" alt="Zuno" className="w-10 h-10 object-contain" />
+            <div className="mb-3">
+              <div className="w-14 h-14 rounded-2xl bg-theme-accent/10 border border-theme-accent/20 p-2.5 flex items-center justify-center">
+                <img src="/zuno-favicon.ico" alt="Zuno" className="w-9 h-9 object-contain" />
               </div>
-              <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-theme-bg flex items-center justify-center shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-              </span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-theme-text">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-theme-text">
               {isLogin ? "Sign in to Zuno" : "Create your account"}
             </h1>
             <p className="text-xs sm:text-sm text-theme-text-secondary mt-1.5 leading-relaxed max-w-xs">
               {isLogin
-                ? "Welcome back! Enter your details to continue."
-                : "Connect with friends and start chatting securely."}
+                ? "Welcome back. Enter your details to continue."
+                : "Connect with friends and message securely."}
             </p>
           </div>
 
@@ -486,8 +469,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                   >
                     Full Name
                   </label>
-                  <div className="group relative flex items-center h-11 sm:h-12 w-full rounded-xl bg-white dark:bg-[#151d1b] border border-theme-border hover:border-emerald-500/50 dark:border-white/10 dark:hover:border-emerald-500/40 focus-within:border-emerald-500 dark:focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/15 dark:focus-within:ring-emerald-500/20 focus-within:hover:border-emerald-500 shadow-xs transition-all duration-150">
-                    <span className="pointer-events-none absolute left-3.5 flex items-center justify-center text-theme-text-muted group-focus-within:text-emerald-500 dark:group-focus-within:text-emerald-400 transition-colors">
+                  <div className="group relative flex items-center h-11 w-full rounded-xl bg-theme-bg/60 border border-theme-border focus-within:border-theme-accent focus-within:ring-1 focus-within:ring-theme-accent/20 transition-colors">
+                    <span className="pointer-events-none absolute left-3.5 flex items-center justify-center text-theme-text-muted group-focus-within:text-theme-accent transition-colors">
                       <UserIcon className="w-4 h-4" />
                     </span>
                     <input
@@ -500,7 +483,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                       placeholder="Your full name"
                       autoComplete="name"
                       disabled={submitting}
-                      className="w-full h-full bg-transparent pl-10 pr-3.5 text-base sm:text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
+                      className="w-full h-full bg-transparent pl-10 pr-3.5 text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
                     />
                   </div>
                 </div>
@@ -510,25 +493,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                   <div className="flex items-center justify-between">
                     <label
                       htmlFor="chatId"
-                      className="block text-xs font-semibold text-theme-text-secondary"
+                      className="block text-xs font-medium text-theme-text-secondary"
                     >
                       Chat ID
                     </label>
                     <span className="text-[11px] text-theme-text-muted">unique @username</span>
                   </div>
-                  <div className={`group relative flex items-center h-11 sm:h-12 w-full rounded-xl bg-white dark:bg-[#151d1b] border shadow-xs transition-all duration-150 ${
+                  <div className={`group relative flex items-center h-11 w-full rounded-xl bg-theme-bg/60 border transition-colors ${
                     chatIdStatus === "available"
-                      ? "border-emerald-400 dark:border-emerald-500 ring-2 ring-emerald-500/15"
+                      ? "border-emerald-500 ring-1 ring-emerald-500/20"
                       : chatIdStatus === "taken" || chatIdStatus === "invalid"
-                      ? "border-red-400 dark:border-red-500 ring-2 ring-red-500/15"
-                      : "border-theme-border hover:border-emerald-500/50 dark:border-white/10 dark:hover:border-emerald-500/40 focus-within:border-emerald-500 dark:focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/15 dark:focus-within:ring-emerald-500/20"
+                      ? "border-red-500 ring-1 ring-red-500/20"
+                      : "border-theme-border focus-within:border-theme-accent focus-within:ring-1 focus-within:ring-theme-accent/20"
                   }`}>
                     <span className={`pointer-events-none absolute left-3.5 flex items-center justify-center transition-colors ${
                       chatIdStatus === "available"
                         ? "text-emerald-500"
                         : chatIdStatus === "taken" || chatIdStatus === "invalid"
                         ? "text-red-500"
-                        : "text-theme-text-muted group-focus-within:text-emerald-500 dark:group-focus-within:text-emerald-400"
+                        : "text-theme-text-muted group-focus-within:text-theme-accent"
                     }`}>
                       <AtSign className="w-4 h-4" />
                     </span>
@@ -542,12 +525,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                       placeholder="username (e.g. alex)"
                       autoComplete="username"
                       disabled={submitting}
-                      className="w-full h-full bg-transparent pl-10 pr-10 text-base sm:text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
+                      className="w-full h-full bg-transparent pl-10 pr-10 text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
                     />
                     {/* Status indicator */}
                     <span className="absolute right-3.5 flex items-center justify-center">
                       {chatIdStatus === "checking" && (
-                        <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+                        <Loader2 className="w-4 h-4 animate-spin text-theme-accent" />
                       )}
                       {chatIdStatus === "available" && (
                         <CheckCircle2 className="w-4 h-4 text-emerald-500" />
@@ -562,7 +545,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                     <p className={`text-[11px] font-medium mt-1 ${
                       chatIdStatus === "available"
                         ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-red-500 dark:text-red-400"
+                        : "text-red-500"
                     }`}>
                       {chatIdMessage}
                     </p>
@@ -575,12 +558,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
             <div className="space-y-1">
               <label
                 htmlFor="email"
-                className="block text-xs font-semibold text-theme-text-secondary"
+                className="block text-xs font-medium text-theme-text-secondary"
               >
                 Email Address
               </label>
-              <div className="group relative flex items-center h-11 sm:h-12 w-full rounded-xl bg-white dark:bg-[#151d1b] border border-theme-border hover:border-emerald-500/50 dark:border-white/10 dark:hover:border-emerald-500/40 focus-within:border-emerald-500 dark:focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/15 dark:focus-within:ring-emerald-500/20 focus-within:hover:border-emerald-500 shadow-xs transition-all duration-150">
-                <span className="pointer-events-none absolute left-3.5 flex items-center justify-center text-theme-text-muted group-focus-within:text-emerald-500 dark:group-focus-within:text-emerald-400 transition-colors">
+              <div className="group relative flex items-center h-11 w-full rounded-xl bg-theme-bg/60 border border-theme-border focus-within:border-theme-accent focus-within:ring-1 focus-within:ring-theme-accent/20 transition-colors">
+                <span className="pointer-events-none absolute left-3.5 flex items-center justify-center text-theme-text-muted group-focus-within:text-theme-accent transition-colors">
                   <Mail className="w-4 h-4" />
                 </span>
                 <input
@@ -594,7 +577,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                   autoComplete="email"
                   spellCheck={false}
                   disabled={submitting}
-                  className="w-full h-full bg-transparent pl-10 pr-3.5 text-base sm:text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
+                  className="w-full h-full bg-transparent pl-10 pr-3.5 text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
                 />
               </div>
             </div>
@@ -604,7 +587,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
               <div className="flex items-center justify-between">
                 <label
                   htmlFor="password"
-                  className="block text-xs font-semibold text-theme-text-secondary"
+                  className="block text-xs font-medium text-theme-text-secondary"
                 >
                   Password
                 </label>
@@ -612,8 +595,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                   <span className="text-[11px] text-theme-text-muted">Min. 6 characters</span>
                 )}
               </div>
-              <div className="group relative flex items-center h-11 sm:h-12 w-full rounded-xl bg-white dark:bg-[#151d1b] border border-theme-border hover:border-emerald-500/50 dark:border-white/10 dark:hover:border-emerald-500/40 focus-within:border-emerald-500 dark:focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/15 dark:focus-within:ring-emerald-500/20 focus-within:hover:border-emerald-500 shadow-xs transition-all duration-150">
-                <span className="pointer-events-none absolute left-3.5 flex items-center justify-center text-theme-text-muted group-focus-within:text-emerald-500 dark:group-focus-within:text-emerald-400 transition-colors">
+              <div className="group relative flex items-center h-11 w-full rounded-xl bg-theme-bg/60 border border-theme-border focus-within:border-theme-accent focus-within:ring-1 focus-within:ring-theme-accent/20 transition-colors">
+                <span className="pointer-events-none absolute left-3.5 flex items-center justify-center text-theme-text-muted group-focus-within:text-theme-accent transition-colors">
                   <Lock className="w-4 h-4" />
                 </span>
                 <input
@@ -629,13 +612,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                   style={{
                     letterSpacing: showPassword || !password ? "normal" : "0.18em",
                   }}
-                  className="w-full h-full bg-transparent pl-10 pr-11 text-base sm:text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
+                  className="w-full h-full bg-transparent pl-10 pr-11 text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={submitting}
-                  className="absolute right-2 flex items-center justify-center w-8 h-8 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-bg active:scale-95 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30"
+                  className="absolute right-2 flex items-center justify-center w-7 h-7 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-bg transition-colors focus:outline-none"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   title={showPassword ? "Hide password" : "Show password"}
                 >
@@ -648,11 +631,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
               </div>
             </div>
 
-            {/* Primary Submit Button (Emerald CTA) */}
+            {/* Primary Submit Button */}
             <button
               type="submit"
               disabled={submitting}
-              className="w-full mt-4 h-11 sm:h-12 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm shadow-[0_4px_16px_-2px_rgba(16,185,129,0.35)] flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+              className="w-full mt-4 h-11 rounded-xl bg-theme-accent hover:opacity-90 text-white font-medium text-xs sm:text-sm shadow-subtle flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
             >
               {submitting ? (
                 <>
@@ -679,7 +662,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                     setIsLogin(false);
                     setError(null);
                   }}
-                  className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline transition-colors ml-0.5"
+                  className="text-theme-accent font-medium hover:underline transition-colors ml-0.5 cursor-pointer"
                 >
                   Create one
                 </button>
@@ -693,7 +676,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                     setIsLogin(true);
                     setError(null);
                   }}
-                  className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline transition-colors ml-0.5"
+                  className="text-theme-accent font-medium hover:underline transition-colors ml-0.5 cursor-pointer"
                 >
                   Sign in
                 </button>
@@ -701,10 +684,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
             )}
           </div>
 
-          {/* Security & Privacy Assurance (WhatsApp-Style Trust Badge) */}
+          {/* Security & Privacy Assurance */}
           <div className="mt-6 pt-4 border-t border-theme-border/60 flex flex-col items-center text-center">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-theme-accent">
+              <ShieldCheck className="w-3.5 h-3.5 text-theme-accent" />
               <span>End-to-End Encrypted</span>
             </div>
             <p className="text-[10px] text-theme-text-muted mt-0.5 max-w-xs leading-relaxed">

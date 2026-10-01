@@ -178,24 +178,24 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
   if (!isOpen || !imageSrc) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 select-none">
-      <div className="w-full max-w-md bg-[#141d1a] border border-emerald-500/25 rounded-3xl shadow-2xl text-white overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs select-none">
+      <div className="w-full max-w-md bg-theme-surface border border-theme-border rounded-2xl shadow-modal text-theme-text overflow-hidden flex flex-col">
         
         {/* Modal Header */}
-        <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+        <div className="px-5 py-4 border-b border-theme-border flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-theme-accent/10 border border-theme-accent/20 flex items-center justify-center text-theme-accent">
               <Crop className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">Crop Profile Picture</h3>
-              <p className="text-[11px] text-slate-400">Drag to reposition • Zoom to fit</p>
+              <h3 className="text-sm font-semibold text-theme-text">Crop Profile Picture</h3>
+              <p className="text-[11px] text-theme-text-muted">Drag to reposition • Zoom to fit</p>
             </div>
           </div>
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-theme-text-muted hover:text-theme-text hover:bg-theme-bg transition-colors disabled:opacity-50 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -240,7 +240,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
                   height: CROP_SIZE,
                   boxShadow: "0 0 0 9999px rgba(0, 0, 0, 0.65)",
                 }}
-                className="rounded-full border-2 border-emerald-400/90 relative"
+                className="rounded-full border border-theme-accent/80 relative"
               >
                 {/* 3x3 Grid overlay visible while dragging/adjusting */}
                 <div
@@ -265,8 +265,8 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
           </div>
 
           {/* Quick Guidance */}
-          <div className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-400">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+          <div className="mt-3 flex items-center gap-1.5 text-[11px] text-theme-text-muted">
+            <ShieldCheck className="w-3.5 h-3.5 text-theme-accent" />
             <span>Circular avatar preview matches your chat profile</span>
           </div>
 
@@ -277,7 +277,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
               <button
                 type="button"
                 onClick={() => setScale((prev) => Math.max(0.8, prev - 0.2))}
-                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-slate-300 hover:text-white transition-colors"
+                className="p-1.5 rounded-lg bg-theme-bg hover:bg-theme-border text-theme-text-secondary hover:text-theme-text transition-colors cursor-pointer"
                 title="Zoom Out"
               >
                 <ZoomOut className="w-4 h-4" />
@@ -289,12 +289,12 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
                 step="0.05"
                 value={scale}
                 onChange={(e) => setScale(parseFloat(e.target.value))}
-                className="flex-1 accent-emerald-500 h-1.5 bg-white/15 rounded-lg cursor-pointer"
+                className="flex-1 accent-theme-accent h-1.5 bg-theme-border rounded-lg cursor-pointer"
               />
               <button
                 type="button"
                 onClick={() => setScale((prev) => Math.min(3.5, prev + 0.2))}
-                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-slate-300 hover:text-white transition-colors"
+                className="p-1.5 rounded-lg bg-theme-bg hover:bg-theme-border text-theme-text-secondary hover:text-theme-text transition-colors cursor-pointer"
                 title="Zoom In"
               >
                 <ZoomIn className="w-4 h-4" />
@@ -306,18 +306,18 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
               <button
                 type="button"
                 onClick={handleRotate}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 hover:text-white transition-all active:scale-95"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-theme-bg hover:bg-theme-border text-theme-text-secondary hover:text-theme-text border border-theme-border transition-colors cursor-pointer"
               >
-                <RotateCw className="w-3.5 h-3.5 text-emerald-400" />
+                <RotateCw className="w-3.5 h-3.5 text-theme-accent" />
                 <span>Rotate 90°</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleReset}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 hover:text-white transition-all active:scale-95"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-theme-bg hover:bg-theme-border text-theme-text-muted hover:text-theme-text border border-theme-border transition-colors cursor-pointer"
               >
-                <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
+                <RefreshCw className="w-3.5 h-3.5" />
                 <span>Reset View</span>
               </button>
             </div>
@@ -325,19 +325,19 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
 
           {/* Error Message */}
           {error && (
-            <div className="w-full mt-3 p-2.5 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400 text-xs text-center">
+            <div className="w-full mt-3 p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs text-center font-medium">
               {error}
             </div>
           )}
         </div>
 
         {/* Modal Footer Actions */}
-        <div className="p-4 border-t border-white/10 bg-black/20 flex items-center justify-end gap-2.5">
+        <div className="p-4 border-t border-theme-border bg-theme-bg/40 flex items-center justify-end gap-2.5">
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50"
+            className="px-3.5 py-2 rounded-lg text-xs font-medium text-theme-text-secondary hover:text-theme-text hover:bg-theme-bg transition-colors disabled:opacity-50 cursor-pointer"
           >
             Cancel
           </button>
@@ -346,16 +346,16 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
             type="button"
             onClick={handleCropAndSave}
             disabled={isSubmitting || !imageLoaded}
-            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-[0_4px_14px_-2px_rgba(16,185,129,0.4)] active:scale-98 disabled:opacity-50 cursor-pointer"
+            className="px-4 py-2 rounded-lg bg-theme-accent hover:opacity-90 text-white font-medium text-xs flex items-center gap-1.5 shadow-subtle disabled:opacity-50 cursor-pointer transition-colors"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 <span>Saving...</span>
               </>
             ) : (
               <>
-                <Check className="w-4 h-4" />
+                <Check className="w-3.5 h-3.5" />
                 <span>Set Profile Picture</span>
               </>
             )}

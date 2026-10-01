@@ -63,11 +63,7 @@ export const VerifyEmailView: React.FC<VerifyEmailViewProps> = ({
 
   return (
     <div className="min-h-screen w-screen flex flex-col items-center justify-center bg-theme-bg p-4 sm:p-6 text-theme-text select-none relative overflow-hidden">
-      {/* Ambient liquid glow background */}
-      <div className="absolute top-1/4 left-1/3 w-[450px] h-[450px] rounded-full liquid-orb-emerald pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/3 w-[450px] h-[450px] rounded-full liquid-orb-mint pointer-events-none" />
-
-      <div className="w-full max-w-sm liquid-glass-elevated border border-emerald-500/20 rounded-3xl p-8 sm:p-10 shadow-2xl relative z-10 text-center animate-in zoom-in-95 duration-200">
+      <div className="w-full max-w-sm bg-theme-surface border border-theme-border rounded-2xl p-8 sm:p-10 shadow-modal relative z-10 text-center">
         
         {/* Header Logo */}
         <div className="flex justify-center mb-6">
@@ -77,10 +73,10 @@ export const VerifyEmailView: React.FC<VerifyEmailViewProps> = ({
         {/* ── Status 1: Verifying ── */}
         {status === "verifying" && (
           <div className="py-6 flex flex-col items-center">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4">
-              <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+            <div className="w-14 h-14 rounded-2xl bg-theme-accent/10 border border-theme-accent/20 flex items-center justify-center mb-4 text-theme-accent">
+              <Loader2 className="w-7 h-7 animate-spin" />
             </div>
-            <h2 className="text-xl font-bold tracking-tight text-theme-text mb-1">
+            <h2 className="text-lg font-semibold tracking-tight text-theme-text mb-1">
               Verifying Email...
             </h2>
             <p className="text-xs text-theme-text-muted">
@@ -91,22 +87,22 @@ export const VerifyEmailView: React.FC<VerifyEmailViewProps> = ({
 
         {/* ── Status 2: Success (Email Verified & Entering Chat) ── */}
         {status === "success" && (
-          <div className="py-2 flex flex-col items-center animate-in zoom-in-95 duration-300">
-            <div className="w-20 h-20 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mb-5 shadow-[0_0_35px_rgba(16,185,129,0.25)]">
-              <CheckCircle2 className="w-10 h-10 text-emerald-500 animate-in zoom-in-75 duration-300" />
+          <div className="py-2 flex flex-col items-center">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4 text-emerald-500">
+              <CheckCircle2 className="w-7 h-7" />
             </div>
 
-            <h1 className="text-2xl font-extrabold tracking-tight text-theme-text mb-1">
+            <h1 className="text-xl font-bold tracking-tight text-theme-text mb-1">
               Email Verified!
             </h1>
             <p className="text-xs text-theme-text-secondary mb-5">
-              Welcome to Zuno, <strong className="text-emerald-500">{verifiedUser?.name || "Friend"}</strong>! Entering your chat...
+              Welcome to Zuno, <strong className="text-theme-text font-medium">{verifiedUser?.name || "Friend"}</strong>! Entering your chat...
             </p>
 
             <button
               type="button"
               onClick={() => onComplete(verifiedUser?.email)}
-              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-[0_2px_10px_-2px_rgba(16,185,129,0.35)] active:scale-98"
+              className="w-full py-2.5 px-4 rounded-xl bg-theme-accent hover:opacity-90 text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors shadow-subtle cursor-pointer"
             >
               <span>Enter Chat Now</span>
               <ArrowRight className="w-4 h-4" />
@@ -117,21 +113,21 @@ export const VerifyEmailView: React.FC<VerifyEmailViewProps> = ({
         {/* ── Status 3: Error ── */}
         {status === "error" && (
           <div className="py-2 flex flex-col items-center">
-            <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4">
-              <XCircle className="w-8 h-8 text-red-500" />
+            <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 text-red-500">
+              <XCircle className="w-7 h-7" />
             </div>
 
-            <h2 className="text-xl font-bold tracking-tight text-theme-text mb-2">
+            <h2 className="text-lg font-semibold tracking-tight text-theme-text mb-2">
               Verification Failed
             </h2>
-            <p className="text-xs text-red-500 dark:text-red-400 leading-relaxed mb-6 bg-red-500/10 p-3 rounded-xl border border-red-500/20 max-w-xs">
+            <p className="text-xs text-red-500 leading-relaxed mb-6 bg-red-500/10 p-3 rounded-xl border border-red-500/20 max-w-xs">
               {errorMessage}
             </p>
 
             <button
               type="button"
               onClick={() => onComplete()}
-              className="text-xs text-emerald-500 hover:text-emerald-400 font-semibold underline transition-colors"
+              className="text-xs text-theme-accent hover:underline font-medium transition-colors cursor-pointer"
             >
               Back to Sign In
             </button>

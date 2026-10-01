@@ -302,30 +302,26 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
   // Empty State when no conversation is selected (hidden on mobile, visible on desktop)
   if (!activeConversation) {
     return (
-      <main className="hidden md:flex flex-1 h-full flex-col items-center justify-center bg-theme-bg p-8 text-center select-none relative overflow-hidden">
-        {/* Ambient Liquid Glass Orbs */}
-        <div className="absolute top-1/4 left-1/4 w-80 h-80 rounded-full liquid-orb-emerald" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full liquid-orb-mint" />
-
-        <div className="relative z-10 flex flex-col items-center max-w-sm">
-          <div className="mb-5 p-4 rounded-3xl liquid-glass shadow-card flex items-center justify-center">
-            <ZunoLogo size="xl" showWordmark={false} />
+      <main className="hidden md:flex flex-1 h-full flex-col items-center justify-center bg-theme-bg p-8 text-center select-none">
+        <div className="flex flex-col items-center max-w-sm">
+          <div className="mb-4 w-12 h-12 rounded-2xl bg-theme-surface border border-theme-border flex items-center justify-center text-theme-accent">
+            <ZunoLogo size="sm" showWordmark={false} />
           </div>
 
-          <h2 className="text-xl font-bold tracking-tight text-theme-text mb-1.5">
-            Zuno Chat
+          <h2 className="text-base font-semibold tracking-tight text-theme-text mb-1">
+            Your space is quiet
           </h2>
-          <p className="text-xs text-theme-text-secondary max-w-xs mb-6 leading-relaxed">
-            Select a conversation from the sidebar or start a new chat to begin messaging.
+          <p className="text-xs text-theme-text-muted max-w-xs mb-5">
+            Select a conversation to begin messaging.
           </p>
 
           {onOpenNewChat && (
             <button
               onClick={onOpenNewChat}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-semibold transition-all shadow-[0_4px_14px_-2px_rgba(16,185,129,0.35)] active:scale-97"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-theme-accent hover:bg-theme-accent-hover text-white text-xs font-semibold transition-colors active:scale-95"
             >
-              <Plus className="w-4 h-4" />
-              <span>Start New Conversation</span>
+              <Plus className="w-3.5 h-3.5" />
+              <span>Start a conversation</span>
             </button>
           )}
         </div>
@@ -341,8 +337,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
   const hasText = inputContent.trim().length > 0;
   const canSend = (hasText || Boolean(selectedFile)) && !sending;
 
-
-
   return (
     <main
       ref={containerRef}
@@ -353,33 +347,29 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
         maxHeight: '100dvh'
       }}
     >
-      {/* Ambient Liquid Orbs for Chat Area */}
-      <div className="absolute top-1/6 right-1/4 w-72 h-72 rounded-full liquid-orb-emerald" />
-      <div className="absolute bottom-1/4 left-1/5 w-80 h-80 rounded-full liquid-orb-mint" />
-
-      {/* Compact Genie-Style Chat Header */}
+      {/* Clean Chat Header */}
       <header
-        className="px-3.5 sm:px-6 border-b border-theme-border bg-theme-surface/95 backdrop-blur-xl flex items-center justify-between flex-shrink-0 z-20 transition-theme shadow-xs"
+        className="px-4 py-2.5 sm:px-6 border-b border-theme-border bg-theme-surface flex items-center justify-between flex-shrink-0 z-20"
         style={{
           paddingTop: 'max(10px, env(safe-area-inset-top, 0px))',
-          minHeight: 'calc(58px + env(safe-area-inset-top, 0px))',
+          minHeight: 'calc(56px + env(safe-area-inset-top, 0px))',
           boxSizing: 'border-box',
           position: 'sticky',
           top: 0
         }}
       >
-        <div className="flex items-center gap-2.5 min-w-0">
-          {/* Mobile Back Button: Standard mobile navigation, NO hamburger menu */}
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Mobile Back Button */}
           <button
             onClick={clearActiveConversation}
-            className="p-1.5 -ml-1 rounded-xl text-theme-text-muted hover:text-theme-text hover:bg-theme-bg md:hidden transition-theme flex-shrink-0 active:scale-95"
+            className="p-1 -ml-1 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-bg md:hidden transition-colors flex-shrink-0 active:scale-95"
             aria-label="Back to conversations"
             title="Back to conversations"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
 
-          {/* Contact / Group Avatar with Live Ring */}
+          {/* Avatar */}
           <div className="relative flex-shrink-0">
             <AnimatedAvatar
               src={activeConversation.avatar}
@@ -392,28 +382,28 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
             />
           </div>
 
-          {/* Contact / Group Information */}
+          {/* Contact / Group Info */}
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <h1 className="font-bold text-theme-text text-sm leading-tight truncate">
+              <h1 className="font-semibold text-theme-text text-[13.5px] leading-tight truncate">
                 {activeConversation.name}
               </h1>
               {!isGroup && otherMember?.user?.chatId && (
-                <span className="text-[11px] text-theme-accent font-medium flex-shrink-0">
+                <span className="text-[11px] text-theme-text-muted font-normal flex-shrink-0">
                   @{otherMember.user.chatId}
                 </span>
               )}
             </div>
             <div className="text-[11px] text-theme-text-muted flex items-center gap-1.5 leading-none mt-0.5">
               {isTyping ? (
-                <span className="text-theme-accent font-semibold animate-pulse">
+                <span className="text-theme-accent font-medium">
                   {typingUser.userName} is typing...
                 </span>
               ) : isGroup ? (
                 <span>{activeConversation.members.length} members</span>
               ) : isDirectOnline ? (
                 <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   Active now
                 </span>
               ) : (
@@ -424,7 +414,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
         </div>
 
         {/* Header Right Actions */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           {/* Audio Call Button for 1-to-1 Direct Chats */}
           {!isGroup && otherMember && (
             <button
@@ -438,14 +428,14 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
               }}
               title={`Call ${otherMember.user.name}`}
               aria-label={`Call ${otherMember.user.name}`}
-              className="p-2 rounded-xl text-theme-text-muted hover:text-emerald-500 hover:bg-emerald-500/10 active:scale-95 transition-all cursor-pointer"
+              className="p-1.5 rounded-lg text-theme-text-muted hover:text-theme-accent hover:bg-theme-bg active:scale-95 transition-colors cursor-pointer"
             >
               <Phone className="w-4 h-4" />
             </button>
           )}
 
-          <div className="hidden sm:flex items-center gap-1 text-[11px] font-semibold text-theme-text-muted bg-theme-bg px-2.5 py-1 rounded-full border border-theme-border">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+          <div className="hidden sm:flex items-center gap-1 text-[10px] text-theme-text-muted bg-theme-bg px-2 py-0.5 rounded-md border border-theme-border-subtle">
+            <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
             <span>Encrypted</span>
           </div>
 
@@ -455,7 +445,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
             onClick={() => setIsDeleteModalOpen(true)}
             title={isGroup ? "Leave & Delete Group" : "Delete Chat"}
             aria-label="Delete Chat"
-            className="p-2 rounded-xl text-theme-text-muted hover:text-red-500 hover:bg-red-500/10 active:scale-95 transition-all"
+            className="p-1.5 rounded-lg text-theme-text-muted hover:text-red-500 hover:bg-red-500/10 active:scale-95 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -465,47 +455,86 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
       {/* Messages Thread Container */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto px-4 py-3 md:px-8 space-y-1"
+        className="flex-1 overflow-y-auto px-4 py-3 md:px-8"
         style={{ overscrollBehavior: 'contain' }}
       >
         {loadingMessages ? (
-          <div className="flex flex-col items-center justify-center h-full text-theme-text-muted text-xs gap-2">
-            <Loader2 className="w-5 h-5 animate-spin text-theme-accent" />
-            <span>Loading conversation...</span>
+          /* Polished Skeleton Message State */
+          <div className="flex flex-col justify-end h-full px-2 py-4 space-y-3">
+            <div className="flex items-start gap-2 max-w-[65%]">
+              <div className="w-8 h-8 rounded-full bg-theme-surface animate-pulse" />
+              <div className="space-y-1.5 flex-1">
+                <div className="h-9 w-48 rounded-2xl bg-theme-surface border border-theme-border animate-pulse" />
+                <div className="h-7 w-32 rounded-2xl bg-theme-surface border border-theme-border animate-pulse" />
+              </div>
+            </div>
+            <div className="flex flex-col items-end space-y-1.5 self-end max-w-[65%]">
+              <div className="h-8 w-40 rounded-2xl bg-theme-accent/15 border border-theme-accent/20 animate-pulse" />
+              <div className="h-10 w-56 rounded-2xl bg-theme-accent/15 border border-theme-accent/20 animate-pulse" />
+            </div>
+            <div className="flex items-start gap-2 max-w-[65%]">
+              <div className="w-8 h-8 rounded-full bg-theme-surface animate-pulse" />
+              <div className="h-8 w-36 rounded-2xl bg-theme-surface border border-theme-border animate-pulse" />
+            </div>
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center text-theme-text-muted space-y-2.5 py-12 max-w-sm mx-auto select-none animate-in fade-in duration-200">
-            <div className="w-12 h-12 rounded-2xl bg-theme-surface border border-theme-border flex items-center justify-center text-theme-accent shadow-card">
-              <MessageCircle className="w-6 h-6" />
+          <div className="flex flex-col items-center justify-center h-full text-center text-theme-text-muted space-y-2 py-12 max-w-xs mx-auto select-none">
+            <div className="w-10 h-10 rounded-xl bg-theme-surface border border-theme-border flex items-center justify-center text-theme-accent">
+              <MessageCircle className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-sm font-bold text-theme-text mb-0.5">
+              <p className="text-xs font-semibold text-theme-text">
                 {activeConversation.name}
               </p>
-              <p className="text-xs text-theme-text-secondary leading-relaxed">
-                No messages yet. Send a message to start the conversation!
+              <p className="text-[11px] text-theme-text-muted mt-0.5">
+                No messages yet. Send a message to start the conversation.
               </p>
             </div>
           </div>
         ) : (
           messages.map((msg, index) => {
             const prevMsg = messages[index - 1];
+            const nextMsg = messages[index + 1];
+
             const showDateHeader =
               !prevMsg ||
               getMessageDateLabel(prevMsg.createdAt) !== getMessageDateLabel(msg.createdAt);
 
+            const isSameSenderAsPrev =
+              Boolean(prevMsg) &&
+              prevMsg.senderId === msg.senderId &&
+              !showDateHeader &&
+              Math.abs(new Date(msg.createdAt).getTime() - new Date(prevMsg.createdAt).getTime()) < 4 * 60 * 1000;
+
+            const nextHasDateHeader =
+              Boolean(nextMsg) &&
+              getMessageDateLabel(nextMsg.createdAt) !== getMessageDateLabel(msg.createdAt);
+
+            const isSameSenderAsNext =
+              Boolean(nextMsg) &&
+              nextMsg.senderId === msg.senderId &&
+              !nextHasDateHeader &&
+              Math.abs(new Date(nextMsg.createdAt).getTime() - new Date(msg.createdAt).getTime()) < 4 * 60 * 1000;
+
+            const isFirstInGroup = !isSameSenderAsPrev;
+            const isLastInGroup = !isSameSenderAsNext;
+
             return (
               <React.Fragment key={msg.id}>
                 {showDateHeader && (
-                  <div className="flex items-center justify-center my-4">
-                    <span className="text-[10px] font-semibold text-theme-text-muted bg-theme-surface/90 border border-theme-border px-3 py-0.5 rounded-full shadow-subtle select-none">
+                  <div className="flex items-center gap-3 my-4 px-2 select-none">
+                    <div className="flex-1 h-px bg-theme-border/50" />
+                    <span className="text-[10px] font-semibold text-theme-text-muted tracking-wider uppercase">
                       {getMessageDateLabel(msg.createdAt)}
                     </span>
+                    <div className="flex-1 h-px bg-theme-border/50" />
                   </div>
                 )}
                 <MessageBubble
                   message={msg}
                   isGroup={isGroup}
+                  isFirstInGroup={isFirstInGroup}
+                  isLastInGroup={isLastInGroup}
                 />
               </React.Fragment>
             );
@@ -514,12 +543,12 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
 
         {/* Typing Indicator Bubble */}
         {isTyping && (
-          <div className="flex items-center gap-2 text-theme-text-muted text-xs py-1 px-1">
+          <div className="flex items-center gap-2 text-theme-text-muted text-xs py-1.5 px-1 mt-1">
             <div className="flex items-center gap-1.5 bg-theme-surface px-3 py-1.5 rounded-full border border-theme-border shadow-subtle">
-              <span className="w-1.5 h-1.5 rounded-full bg-theme-accent animate-bounce" />
-              <span className="w-1.5 h-1.5 rounded-full bg-theme-accent animate-bounce [animation-delay:0.2s]" />
-              <span className="w-1.5 h-1.5 rounded-full bg-theme-accent animate-bounce [animation-delay:0.4s]" />
-              <span className="ml-1 text-[11px] text-theme-text-secondary font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-theme-accent animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-theme-accent animate-pulse [animation-delay:0.2s]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-theme-accent animate-pulse [animation-delay:0.4s]" />
+              <span className="ml-1 text-[11px] text-theme-text-muted font-normal">
                 {typingUser.userName} is typing
               </span>
             </div>
@@ -529,9 +558,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
         <div ref={messagesEndRef} className="h-1" />
       </div>
 
-      {/* Floating Modern Message Composer */}
+      {/* Message Composer */}
       <footer
-        className="px-3 pt-1.5 md:p-4 bg-transparent z-10 flex-shrink-0 transition-all duration-150 composer-footer-lift"
+        className="px-3 pt-1.5 md:p-4 bg-transparent z-10 flex-shrink-0 composer-footer-lift"
         style={isKeyboardOpen ? { paddingBottom: "8px" } : undefined}
       >
         <div className="max-w-3xl mx-auto relative">
@@ -544,8 +573,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
           />
 
           {sendError && (
-            <div className="mb-2 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400 flex items-center justify-between">
-              <span className="font-medium">{sendError}</span>
+            <div className="mb-2 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400 flex items-center justify-between">
+              <span className="font-normal">{sendError}</span>
               <button
                 type="button"
                 onClick={() => setSendError(null)}
@@ -556,19 +585,20 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
               </button>
             </div>
           )}
+
           {/* Attachment Preview Card */}
           {selectedFile && (
-            <div className="mb-2 p-2.5 rounded-xl bg-theme-surface/95 backdrop-blur-md border border-theme-border flex items-center justify-between shadow-subtle animate-in fade-in slide-in-from-bottom-2 duration-150">
-              <div className="flex items-center gap-3 min-w-0">
+            <div className="mb-2 p-2 rounded-lg bg-theme-surface border border-theme-border flex items-center justify-between shadow-subtle animate-in fade-in duration-100">
+              <div className="flex items-center gap-2.5 min-w-0">
                 {filePreviewUrl ? (
                   <img
                     src={filePreviewUrl}
                     alt="Preview"
-                    className="w-12 h-12 rounded-lg object-cover border border-theme-border flex-shrink-0"
+                    className="w-10 h-10 rounded-md object-cover border border-theme-border flex-shrink-0"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-lg bg-theme-bg flex items-center justify-center text-theme-accent border border-theme-border flex-shrink-0">
-                    <FileText className="w-5 h-5" />
+                  <div className="w-8 h-8 rounded-md bg-theme-bg flex items-center justify-center text-theme-accent border border-theme-border flex-shrink-0">
+                    <FileText className="w-4 h-4" />
                   </div>
                 )}
                 <div className="min-w-0">
@@ -576,11 +606,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
                     {selectedFile.name}
                   </p>
                   <p className="text-[10px] text-theme-text-muted">
-                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB •{" "}
-                    {selectedFile.type.startsWith("image/") ? "Image" : "Document"}
+                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                   {uploadProgress && (
-                    <span className="text-[10px] font-semibold text-theme-accent flex items-center gap-1 mt-0.5">
+                    <span className="text-[10px] font-medium text-theme-accent flex items-center gap-1 mt-0.5">
                       <Loader2 className="w-3 h-3 animate-spin" />
                       {uploadProgress}
                     </span>
@@ -591,7 +620,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
                 type="button"
                 onClick={removeSelectedFile}
                 disabled={sending}
-                className="p-1.5 rounded-lg text-theme-text-muted hover:text-red-500 hover:bg-theme-bg transition-colors disabled:opacity-50"
+                className="p-1 rounded text-theme-text-muted hover:text-red-500 hover:bg-theme-bg transition-colors disabled:opacity-50"
                 title="Remove attachment"
               >
                 <X className="w-4 h-4" />
@@ -599,26 +628,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
             </div>
           )}
 
-          <div className="flex items-end gap-2 liquid-glass rounded-2xl p-2 shadow-card focus-within:border-emerald-500/60 focus-within:ring-2 focus-within:ring-emerald-500/15 transition-theme">
+          {/* Writing surface */}
+          <div className="flex items-end gap-1.5 bg-theme-surface border border-theme-border rounded-xl p-1.5 focus-within:border-theme-accent focus-within:ring-1 focus-within:ring-theme-accent/20 transition-theme shadow-xs">
             {!isRecordingAudio && (
               <>
-                {/* Quick Emoji Trigger */}
-                <button
-                  ref={emojiButtonRef}
-                  type="button"
-                  onClick={() => setIsEmojiPickerOpen((prev) => !prev)}
-                  className={`p-2 rounded-xl transition-theme flex-shrink-0 ${
-                    isEmojiPickerOpen
-                      ? "text-emerald-500 bg-emerald-500/15"
-                      : "text-theme-text-muted hover:text-theme-text hover:bg-theme-bg"
-                  }`}
-                  title="Add emoji"
-                  aria-label="Add emoji"
-                  aria-expanded={isEmojiPickerOpen}
-                >
-                  <Smile className="w-5 h-5" />
-                </button>
-
                 {/* Media Attachment Button */}
                 <input
                   type="file"
@@ -630,20 +643,37 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={sending}
-                  className={`p-2 rounded-xl transition-theme flex-shrink-0 ${
+                  className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
                     selectedFile
-                      ? "text-emerald-500 bg-emerald-500/10"
+                      ? "text-theme-accent bg-theme-accent-subtle"
                       : "text-theme-text-muted hover:text-theme-text hover:bg-theme-bg"
                   }`}
-                  title="Attach photo or document (max 25MB)"
+                  title="Attach file"
                   aria-label="Attach file"
                 >
-                  <Paperclip className="w-5 h-5" />
+                  <Paperclip className="w-4 h-4" />
+                </button>
+
+                {/* Quick Emoji Trigger */}
+                <button
+                  ref={emojiButtonRef}
+                  type="button"
+                  onClick={() => setIsEmojiPickerOpen((prev) => !prev)}
+                  className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
+                    isEmojiPickerOpen
+                      ? "text-theme-accent bg-theme-accent-subtle"
+                      : "text-theme-text-muted hover:text-theme-text hover:bg-theme-bg"
+                  }`}
+                  title="Add emoji"
+                  aria-label="Add emoji"
+                  aria-expanded={isEmojiPickerOpen}
+                >
+                  <Smile className="w-4 h-4" />
                 </button>
               </>
             )}
 
-            {/* Voice Message Recorder (single persistent instance across recording states) */}
+            {/* Voice Message Recorder */}
             <VoiceRecorder
               onSendVoiceMessage={handleSendVoiceMessage}
               isSending={sending}
@@ -667,46 +697,40 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
                     setTimeout(() => {
                       messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
                     }, 120);
-                    setTimeout(() => {
-                      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-                    }, 320);
                   }}
                   placeholder={
                     selectedFile
-                      ? "Add a caption (optional)..."
-                      : `Message ${activeConversation.name || "..."}`
+                      ? "Add a caption..."
+                      : `Write a message...`
                   }
-                  className="flex-1 bg-transparent border-0 resize-none text-[16px] sm:text-[14px] text-theme-text placeholder-theme-text-muted px-2 py-1.5 focus:outline-none max-h-32 min-h-[28px] leading-relaxed"
+                  className="flex-1 bg-transparent border-0 resize-none text-[15px] sm:text-[13px] text-theme-text placeholder-theme-text-muted px-2 py-1.5 focus:outline-none max-h-32 min-h-[26px] leading-relaxed"
                 />
 
-                {/* Dynamic Send Button */}
+                {/* Send Button */}
                 <button
                   type="button"
                   disabled={!canSend}
                   onClick={handleSend}
                   aria-label="Send message"
-                  title="Send (Enter)"
-                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-theme flex-shrink-0 ${
+                  title="Send"
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all flex-shrink-0 ${
                     canSend
-                      ? "bg-gradient-to-tr from-emerald-500 to-teal-600 text-white shadow-[0_4px_14px_-2px_rgba(16,185,129,0.45)] hover:scale-105 active:scale-95"
-                      : "bg-theme-bg text-theme-text-muted border border-theme-border opacity-50 cursor-not-allowed"
+                      ? "bg-theme-accent text-white hover:bg-theme-accent-hover shadow-xs active:scale-95"
+                      : "text-theme-text-muted opacity-40 cursor-not-allowed"
                   }`}
                 >
                   {sending ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
-                    <Send className="w-4 h-4" />
+                    <Send className="w-3.5 h-3.5" />
                   )}
                 </button>
               </>
             )}
           </div>
-
-          <div className="hidden sm:flex items-center justify-between mt-1.5 px-2 text-[10px] text-theme-text-muted">
-            <span>Press <kbd className="px-1 py-0.2 bg-theme-surface border border-theme-border rounded font-mono">Enter</kbd> to send, <kbd className="px-1 py-0.2 bg-theme-surface border border-theme-border rounded font-mono">Shift+Enter</kbd> for new line</span>
-          </div>
         </div>
       </footer>
+
 
       {/* Delete Chat Confirmation Modal */}
       <DeleteChatModal
