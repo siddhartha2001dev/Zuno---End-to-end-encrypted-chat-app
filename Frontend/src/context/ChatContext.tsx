@@ -39,6 +39,7 @@ interface ChatContextType {
   toggleReaction: (messageId: string, reaction: string) => Promise<void>;
   createDirectChat: (participantId: string) => Promise<Conversation>;
   createGroupChat: (name: string, memberIds: string[]) => Promise<Conversation>;
+  updateGroup: (conversationId: string, input: { name?: string; avatar?: string }) => Promise<void>;
   deleteConversation: (conversationId: string) => Promise<void>;
   deleteAllConversations: () => Promise<void>;
   refreshConversations: () => Promise<void>;
@@ -656,6 +657,18 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
+    const handleConversationUpdated = (updated: Conversation) => {
+      if (!updated?.id) return;
+      const normalized = {
+        ...updated,
+        type: updated.type?.toUpperCase() === "GROUP" ? "GROUP" : "DIRECT",
+      } as Conversation;
+      setConversations((prev) => prev.map((c) => (c.id === normalized.id ? { ...c, ...normalized } : c)));
+      if (activeConversationRef.current?.id === normalized.id) {
+        setActiveConversation((prev) => (prev ? { ...prev, ...normalized } : prev));
+      }
+    };
+
     socketService.on("presence:list", handlePresenceList);
     socketService.on("presence:online", handlePresenceOnline);
     socketService.on("presence:offline", handlePresenceOffline);
@@ -665,6 +678,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     socketService.on("typing:stop", handleTypingStop);
     socketService.on("message:reaction:added", handleReactionAdded);
     socketService.on("message:reaction:removed", handleReactionRemoved);
+    socketService.on("conversation:updated", handleConversationUpdated);
 
     return () => {
       socketService.off("presence:list", handlePresenceList);
@@ -676,6 +690,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       socketService.off("typing:stop", handleTypingStop);
       socketService.off("message:reaction:added", handleReactionAdded);
       socketService.off("message:reaction:removed", handleReactionRemoved);
+      socketService.off("conversation:updated", handleConversationUpdated);
     };
   }, [user, decryptMessageItem]);
 
@@ -1064,6 +1079,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       type: created.type?.toUpperCase() === "GROUP" ? "GROUP" : "DIRECT",
       name: created.name || otherMember?.user?.name || otherMember?.name || "Direct Chat",
       avatar: created.avatar || otherMember?.user?.avatar || otherMember?.avatar || null,
+      createdBy: created.createdBy || null,
       members: created.members,
       latestMessage: null,
       isUnread: false,
@@ -1083,6 +1099,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       type: "GROUP",
       name: created.name,
       avatar: null,
+      createdBy: created.createdBy || null,
       members: created.members,
       latestMessage: null,
       isUnread: false,
@@ -1099,6 +1116,25 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setActiveConversation(null);
       setMessages([]);
       setIsMobileSidebarOpen(true);
+    }
+  };
+
+  const updateGroup = async (
+    conversationId: string,
+    input: { name?: string; avatar?: string }
+  ): Promise<void> => {
+    const data = await api.conversations.updateGroup(conversationId, input);
+    const updated = data.conversation as Conversation;
+    const normalized = {
+      ...(conversationsRef.current.find((c) => c.id === conversationId) || {}),
+      ...updated,
+      id: updated.id || conversationId,
+      type: updated.type?.toUpperCase() === "GROUP" ? "GROUP" : "DIRECT",
+      createdBy: updated.createdBy || null,
+    } as Conversation;
+    setConversations((prev) => prev.map((c) => (c.id === conversationId ? { ...c, ...normalized } : c)));
+    if (activeConversationRef.current?.id === conversationId) {
+      setActiveConversation((prev) => (prev ? { ...prev, ...normalized } : prev));
     }
   };
 
@@ -1132,6 +1168,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toggleReaction,
         createDirectChat,
         createGroupChat,
+        updateGroup,
         deleteConversation,
         deleteAllConversations,
         refreshConversations,

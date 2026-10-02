@@ -5,6 +5,7 @@ interface DeleteChatModalProps {
   isOpen: boolean;
   conversationName?: string | null;
   isGroup?: boolean;
+  groupAction?: "leave" | "delete";
   onClose: () => void;
   onConfirm: () => Promise<void>;
 }
@@ -13,6 +14,7 @@ export const DeleteChatModal: React.FC<DeleteChatModalProps> = ({
   isOpen,
   conversationName,
   isGroup = false,
+  groupAction,
   onClose,
   onConfirm,
 }) => {
@@ -58,14 +60,30 @@ export const DeleteChatModal: React.FC<DeleteChatModalProps> = ({
         {/* Title & Warning message */}
         <div className="text-center mb-5">
           <h3 className="text-sm font-semibold text-theme-text">
-            {isGroup ? "Delete & Leave Group?" : "Delete Chat?"}
+            {isGroup
+              ? groupAction === "leave"
+                ? "Leave Group?"
+                : groupAction === "delete"
+                ? "Delete Group?"
+                : "Delete & Leave Group?"
+              : "Delete Chat?"}
           </h3>
           <p className="text-xs text-theme-text-secondary mt-1.5 leading-relaxed">
-            Are you sure you want to delete your conversation with{" "}
-            <strong className="text-theme-text font-medium break-all">"{conversationName || "Chat"}"</strong>?
+            {isGroup && groupAction
+              ? groupAction === "leave"
+                ? "You will no longer receive messages from this group."
+                : "This will permanently delete the group and its messages."
+              : "Are you sure you want to delete your conversation with"}{" "}
+            {(!isGroup || !groupAction) && <strong className="text-theme-text font-medium break-all">"{conversationName || "Chat"}"</strong>}{(!isGroup || !groupAction) && "?"}
           </p>
           <p className="text-[11px] text-red-500/90 font-medium mt-1">
-            This action cannot be undone and will delete all messages.
+            {isGroup && groupAction === "leave"
+              ? "You can be added again by a group creator."
+              : isGroup && groupAction === "delete"
+              ? "This action cannot be undone and will delete all messages."
+              : isGroup
+              ? "The group creator can permanently delete this group."
+              : "This action cannot be undone and will delete all messages."}
           </p>
         </div>
 
@@ -101,7 +119,7 @@ export const DeleteChatModal: React.FC<DeleteChatModalProps> = ({
             ) : (
               <>
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Delete Chat</span>
+                <span>{isGroup ? (groupAction === "leave" ? "Leave Group" : groupAction === "delete" ? "Delete Group" : "Delete Chat") : "Delete Chat"}</span>
               </>
             )}
           </button>

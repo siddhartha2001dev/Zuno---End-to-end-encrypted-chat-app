@@ -20,6 +20,7 @@ export class ConversationRepository {
       avatar: isGroupConv
         ? conv.avatar || null
         : otherMembers[0]?.avatar || null,
+      createdBy: conv.createdBy?.toString() || null,
       members: membersList.map((m) => {
         const mId = (m._id || m.id || m).toString();
         const isPopulated = typeof m === "object" && m !== null && m.name !== undefined;
@@ -140,6 +141,7 @@ export class ConversationRepository {
             isGroupConv
               ? conv.avatar || null
               : otherMembers[0]?.avatar || null,
+          createdBy: conv.createdBy?.toString() || null,
           members: (conv.members as any[]).map((m) => ({
             id: m._id.toString(),
             userId: m._id.toString(),
@@ -210,6 +212,17 @@ export class ConversationRepository {
       { $pull: { members: new mongoose.Types.ObjectId(userId) } },
       { new: true }
     ).populate("members", "name chatId email avatar");
+  }
+
+  async updateGroupFields(
+    conversationId: string,
+    fields: { name?: string; avatar?: string }
+  ): Promise<IConversation | null> {
+    return ConversationModel.findByIdAndUpdate(
+      conversationId,
+      { $set: fields },
+      { new: true, runValidators: true }
+    ).populate("members", "name chatId email avatar publicKey devices");
   }
 
   async findRawByUserId(userId: string): Promise<IConversation[]> {

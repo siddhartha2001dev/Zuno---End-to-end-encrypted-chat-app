@@ -5,6 +5,7 @@ import { MessageBubble } from "./MessageBubble";
 import { ZunoLogo } from "./ZunoLogo";
 import { AnimatedAvatar } from "./AnimatedAvatar";
 import { DeleteChatModal } from "./DeleteChatModal";
+import { ImageCropModal } from "./ImageCropModal";
 import { EmojiPicker } from "./EmojiPicker";
 import { api } from "../services/api";
 import {
@@ -20,6 +21,10 @@ import {
   X,
   Trash2,
   Phone,
+  MoreVertical,
+  Edit3,
+  ImagePlus,
+  LogOut,
 } from "lucide-react";
 import { useCall } from "../context/CallContext";
 import { VoiceRecorder } from "./VoiceRecorder";
@@ -41,6 +46,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
     onlineUsers,
     clearActiveConversation,
     deleteConversation,
+    updateGroup,
   } = useChat();
   const { startCall } = useCall();
 
@@ -54,11 +60,19 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState<boolean>(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState<boolean>(false);
   const [isRecordingAudio, setIsRecordingAudio] = useState<boolean>(false);
+  const [isGroupMenuOpen, setIsGroupMenuOpen] = useState<boolean>(false);
+  const [isGroupNameModalOpen, setIsGroupNameModalOpen] = useState<boolean>(false);
+  const [groupName, setGroupName] = useState<string>("");
+  const [groupAction, setGroupAction] = useState<"leave" | "delete">("delete");
+  const [groupActionError, setGroupActionError] = useState<string | null>(null);
+  const [isUpdatingGroup, setIsUpdatingGroup] = useState<boolean>(false);
+  const [groupImageSrc, setGroupImageSrc] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const groupAvatarInputRef = useRef<HTMLInputElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -140,6 +154,22 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
       setFilePreviewUrl(URL.createObjectURL(file));
     }
     setSendError(null);
+  };
+
+  const handleGroupAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setGroupActionError("Please choose an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setGroupActionError("Group photo must be under 5MB.");
+      return;
+    }
+    setGroupActionError(null);
+    setGroupImageSrc(URL.createObjectURL(file));
   };
 
   const removeSelectedFile = () => {
@@ -299,6 +329,42 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
     }
   };
 
+  const isGroup = activeConversation?.type?.toUpperCase() === "GROUP";
+  const isGroupCreator = Boolean(activeConversation && user?.id && activeConversation.createdBy === user.id);
+
+  const submitGroupName = async () => {
+    const nextName = groupName.trim();
+    if (nextName.length < 2 || nextName.length > 50) {
+      setGroupActionError("Group name must be between 2 and 50 characters.");
+      return;
+    }
+    try {
+      setIsUpdatingGroup(true);
+      setGroupActionError(null);
+      await updateGroup(activeConversation!.id, { name: nextName });
+      setIsGroupNameModalOpen(false);
+    } catch (err: any) {
+      setGroupActionError(err?.message || "Failed to update group name.");
+    } finally {
+      setIsUpdatingGroup(false);
+    }
+  };
+
+  const uploadGroupAvatar = async (file: File) => {
+    try {
+      setIsUpdatingGroup(true);
+      setGroupActionError(null);
+      const upload = await api.upload.media(file);
+      if (!upload.success || !upload.mediaUrl) throw new Error("Failed to upload group photo.");
+      await updateGroup(activeConversation!.id, { avatar: upload.mediaUrl });
+    } catch (err: any) {
+      setGroupActionError(err?.message || "Failed to update group photo.");
+      throw err;
+    } finally {
+      setIsUpdatingGroup(false);
+    }
+  };
+
   // Empty State when no conversation is selected (hidden on mobile, visible on desktop)
   if (!activeConversation) {
     return (
@@ -332,7 +398,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
   // Determine presence for direct chat
   const otherMember = activeConversation.members.find((m) => m.userId !== user?.id);
   const isDirectOnline = otherMember ? onlineUsers.has(otherMember.userId) : false;
-  const isGroup = activeConversation.type?.toUpperCase() === "GROUP";
   const isTyping = typingUser && typingUser.conversationId === activeConversation.id;
   const hasText = inputContent.trim().length > 0;
   const canSend = (hasText || Boolean(selectedFile)) && !sending;
@@ -414,7 +479,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
         </div>
 
         {/* Header Right Actions */}
-        <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1">
           {/* Audio Call Button for 1-to-1 Direct Chats */}
           {!isGroup && otherMember && (
             <button
@@ -439,18 +504,93 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
             <span>Encrypted</span>
           </div>
 
+          {isGroup && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsGroupMenuOpen((open) => !open)}
+                title="Group actions"
+                aria-label="Group actions"
+                className="p-1.5 rounded-lg text-theme-text-muted hover:text-theme-text hover:bg-theme-bg active:scale-95 transition-colors"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </button>
+              {isGroupMenuOpen && (
+                <div className="absolute right-0 top-full mt-1 w-52 rounded-xl border border-theme-border bg-theme-surface shadow-modal p-1.5 z-40">
+                  {isGroupCreator && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setGroupName(activeConversation.name || "");
+                          setGroupActionError(null);
+                          setIsGroupMenuOpen(false);
+                          setIsGroupNameModalOpen(true);
+                        }}
+                        className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-theme-text hover:bg-theme-bg"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" /> Edit Group Name
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setGroupActionError(null);
+                          setIsGroupMenuOpen(false);
+                          groupAvatarInputRef.current?.click();
+                        }}
+                        className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-theme-text hover:bg-theme-bg"
+                      >
+                        <ImagePlus className="w-3.5 h-3.5" /> Change Group Photo
+                      </button>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setGroupAction("leave");
+                      setGroupActionError(null);
+                      setIsGroupMenuOpen(false);
+                      setIsDeleteModalOpen(true);
+                    }}
+                    className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-theme-text hover:bg-theme-bg"
+                  >
+                    <LogOut className="w-3.5 h-3.5" /> Leave Group
+                  </button>
+                  {isGroupCreator && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGroupAction("delete");
+                        setGroupActionError(null);
+                        setIsGroupMenuOpen(false);
+                        setIsDeleteModalOpen(true);
+                      }}
+                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-red-500 hover:bg-red-500/10"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Delete Group
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Delete Conversation Button */}
-          <button
-            type="button"
-            onClick={() => setIsDeleteModalOpen(true)}
-            title={isGroup ? "Leave & Delete Group" : "Delete Chat"}
-            aria-label="Delete Chat"
-            className="p-1.5 rounded-lg text-theme-text-muted hover:text-red-500 hover:bg-red-500/10 active:scale-95 transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {!isGroup && (
+            <button
+              type="button"
+              onClick={() => setIsDeleteModalOpen(true)}
+              title="Delete Chat"
+              aria-label="Delete Chat"
+              className="p-1.5 rounded-lg text-theme-text-muted hover:text-red-500 hover:bg-red-500/10 active:scale-95 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </header>
+
+      <input ref={groupAvatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleGroupAvatarSelect} />
 
       {/* Messages Thread Container */}
       <div
@@ -737,10 +877,46 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
         isOpen={isDeleteModalOpen}
         conversationName={activeConversation.name}
         isGroup={isGroup}
+        groupAction={isGroup ? groupAction : undefined}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={async () => {
           await deleteConversation(activeConversation.id);
         }}
+      />
+
+      {isGroupNameModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-sm rounded-2xl border border-theme-border bg-theme-surface p-5 shadow-modal">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-theme-text">Edit Group Name</h3>
+              <button type="button" onClick={() => setIsGroupNameModalOpen(false)} className="p-1.5 rounded-lg text-theme-text-muted hover:bg-theme-bg"><X className="w-4 h-4" /></button>
+            </div>
+            <input
+              autoFocus
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") submitGroupName(); }}
+              maxLength={50}
+              className="w-full rounded-lg border border-theme-border bg-theme-bg px-3 py-2 text-sm text-theme-text outline-none focus:border-theme-accent"
+              placeholder="Group name"
+            />
+            {groupActionError && <p className="mt-2 text-xs text-red-500">{groupActionError}</p>}
+            <div className="flex gap-2 mt-5">
+              <button type="button" onClick={() => setIsGroupNameModalOpen(false)} className="flex-1 rounded-lg border border-theme-border px-3 py-2 text-xs text-theme-text">Cancel</button>
+              <button type="button" disabled={isUpdatingGroup} onClick={submitGroupName} className="flex-1 rounded-lg bg-theme-accent px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{isUpdatingGroup ? "Saving..." : "Save"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ImageCropModal
+        imageSrc={groupImageSrc}
+        isOpen={Boolean(groupImageSrc)}
+        onClose={() => {
+          if (groupImageSrc) URL.revokeObjectURL(groupImageSrc);
+          setGroupImageSrc(null);
+        }}
+        onCropComplete={uploadGroupAvatar}
       />
     </main>
   );

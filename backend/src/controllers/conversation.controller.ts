@@ -4,6 +4,7 @@ import {
   createDirectConversationSchema,
   createGroupConversationSchema,
   addMemberSchema,
+  updateGroupConversationSchema,
 } from "../validators/conversation.validator.js";
 
 export class ConversationController {
@@ -106,6 +107,31 @@ export class ConversationController {
         req.params.userId
       );
       res.status(200).json({ message: "Member removed successfully" });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updateGroup = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const validated = updateGroupConversationSchema.parse(req.body);
+      const conversation = await this.service.updateGroup(
+        req.params.id,
+        req.user!.id,
+        validated
+      );
+      const io = req.app.get("io");
+      if (io) {
+        for (const member of conversation.members || []) {
+          const memberId = (member as any).userId || (member as any).id;
+          if (memberId) io.to(`user:${memberId.toString()}`).emit("conversation:updated", conversation);
+        }
+      }
+      res.status(200).json({ conversation });
     } catch (error) {
       next(error);
     }

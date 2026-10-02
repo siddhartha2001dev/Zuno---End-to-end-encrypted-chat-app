@@ -67,6 +67,7 @@ export interface Conversation {
   type: "DIRECT" | "GROUP" | "direct" | "group";
   name: string | null;
   avatar: string | null;
+  createdBy?: string | null;
   members: ConversationMember[];
   latestMessage: {
     id: string;

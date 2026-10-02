@@ -6,6 +6,7 @@ import {
   CreateDirectConversationInput,
   CreateGroupConversationInput,
   AddMemberInput,
+  UpdateGroupConversationInput,
 } from "../validators/conversation.validator.js";
 import { AppError } from "../middleware/error.middleware.js";
 
@@ -104,6 +105,23 @@ export class ConversationService {
     }
 
     return this.repo.removeMember(conversationId, targetUserId);
+  }
+
+  async updateGroup(
+    conversationId: string,
+    userId: string,
+    input: UpdateGroupConversationInput
+  ) {
+    const conv = await this.repo.findById(conversationId);
+    if (!conv) throw new AppError("Conversation not found", 404);
+    if (conv.type !== "group") throw new AppError("Only group conversations can be updated", 400);
+    if (conv.createdBy?.toString() !== userId) {
+      throw new AppError("Only the group creator can update the group", 403);
+    }
+
+    const updated = await this.repo.updateGroupFields(conversationId, input);
+    if (!updated) throw new AppError("Conversation not found", 404);
+    return this.repo.formatConversation(updated, userId);
   }
 
   async deleteConversation(conversationId: string, userId: string) {

@@ -260,6 +260,14 @@ export const api = {
       });
       return handleResponse<{ conversation: any }>(res);
     },
+    updateGroup: async (id: string, input: { name?: string; avatar?: string }) => {
+      const res = await apiFetch(`${BASE_URL}/conversations/${id}`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(input),
+      });
+      return handleResponse<{ conversation: any }>(res);
+    },
     delete: async (id: string) => {
       const res = await apiFetch(`${BASE_URL}/conversations/${id}`, {
         method: "DELETE",
