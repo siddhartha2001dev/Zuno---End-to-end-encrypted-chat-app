@@ -25,6 +25,7 @@ import {
   Edit3,
   ImagePlus,
   LogOut,
+  Users,
 } from "lucide-react";
 import { useCall } from "../context/CallContext";
 import { VoiceRecorder } from "./VoiceRecorder";
@@ -62,6 +63,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
   const [isRecordingAudio, setIsRecordingAudio] = useState<boolean>(false);
   const [isGroupMenuOpen, setIsGroupMenuOpen] = useState<boolean>(false);
   const [isGroupNameModalOpen, setIsGroupNameModalOpen] = useState<boolean>(false);
+  const [isGroupMembersOpen, setIsGroupMembersOpen] = useState<boolean>(false);
   const [groupName, setGroupName] = useState<string>("");
   const [groupAction, setGroupAction] = useState<"leave" | "delete">("delete");
   const [groupActionError, setGroupActionError] = useState<string | null>(null);
@@ -517,6 +519,16 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
               </button>
               {isGroupMenuOpen && (
                 <div className="absolute right-0 top-full mt-1 w-52 rounded-xl border border-theme-border bg-theme-surface shadow-modal p-1.5 z-40">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsGroupMenuOpen(false);
+                      setIsGroupMembersOpen(true);
+                    }}
+                    className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-theme-text hover:bg-theme-bg"
+                  >
+                    <Users className="w-3.5 h-3.5" /> Group Members
+                  </button>
                   {isGroupCreator && (
                     <>
                       <button
@@ -904,6 +916,59 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
             <div className="flex gap-2 mt-5">
               <button type="button" onClick={() => setIsGroupNameModalOpen(false)} className="flex-1 rounded-lg border border-theme-border px-3 py-2 text-xs text-theme-text">Cancel</button>
               <button type="button" disabled={isUpdatingGroup} onClick={submitGroupName} className="flex-1 rounded-lg bg-theme-accent px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{isUpdatingGroup ? "Saving..." : "Save"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isGroupMembersOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-sm rounded-2xl border border-theme-border bg-theme-surface shadow-modal text-theme-text overflow-hidden">
+            <div className="px-5 py-4 border-b border-theme-border flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold">Group Members</h3>
+                <p className="text-[11px] text-theme-text-muted mt-0.5">
+                  {activeConversation.members.length} {activeConversation.members.length === 1 ? "member" : "members"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsGroupMembersOpen(false)}
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-theme-text-muted hover:text-theme-text hover:bg-theme-bg"
+                aria-label="Close group members"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="max-h-[min(60vh,28rem)] overflow-y-auto p-2.5">
+              {activeConversation.members.map((member) => {
+                const memberId = member.userId || member.id;
+                const memberName = member.user?.name || "Unknown member";
+                const isCurrentUser = memberId === user?.id;
+                const isCreator = memberId === activeConversation.createdBy;
+                return (
+                  <div key={memberId} className="flex items-center gap-3 px-2.5 py-2 rounded-xl hover:bg-theme-bg">
+                    <AnimatedAvatar
+                      src={member.user?.avatar || null}
+                      name={memberName}
+                      id={memberId}
+                      size="sm"
+                      isGroup={false}
+                      showOnline={false}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-xs font-medium text-theme-text truncate">{memberName}</span>
+                        {isCurrentUser && <span className="text-[10px] text-theme-accent font-medium">You</span>}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[10px] text-theme-text-muted mt-0.5">
+                        <span>{isCreator ? "Group Creator" : member.role || "MEMBER"}</span>
+                        {isCreator && member.role && <span>· {member.role}</span>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
