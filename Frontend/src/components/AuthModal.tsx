@@ -26,6 +26,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanner }) => {
+  const authScrollRef = React.useRef<HTMLElement | null>(null);
   const {
     login,
     register,
@@ -63,6 +64,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
   const [resendCooldown, setResendCooldown] = useState<number>(0);
   const [resendSuccess, setResendSuccess] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState<string | null>(null);
+
+  // When an error expands the form, reveal the submit button inside the
+  // fixed-height auth scroll area instead of leaving it below the viewport.
+  React.useEffect(() => {
+    if (!error || !authScrollRef.current) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      const scrollArea = authScrollRef.current;
+      if (scrollArea) {
+        scrollArea.scrollTo({ top: scrollArea.scrollHeight, behavior: "smooth" });
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [error]);
 
   // Debounced Chat ID availability check
   // Debounced Chat ID availability check
@@ -381,7 +397,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
       {renderNavbar()}
 
       {/* Centered Modern Chat App Card */}
-      <main className="flex-1 min-h-0 overflow-y-auto flex items-start justify-center p-4 sm:p-6 z-10">
+      <main ref={authScrollRef} className="flex-1 min-h-0 overflow-y-auto flex items-start justify-center p-4 sm:p-6 z-10">
         <div className="w-full max-w-[420px] bg-theme-surface border border-theme-border rounded-2xl p-6 sm:p-8 shadow-modal relative">
           
           {/* Brand Icon Header */}
