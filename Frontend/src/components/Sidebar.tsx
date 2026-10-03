@@ -413,12 +413,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
 
   return (
     <aside
-      className={`h-full flex flex-col min-w-0 overflow-hidden box-border liquid-glass-sidebar border-r border-theme-border select-none transition-theme duration-200 ${
+      className={`h-full flex flex-col min-w-0 box-border liquid-glass-sidebar border-r border-theme-border select-none transition-theme duration-200 ${
         activeConversation ? "hidden md:flex md:flex-[0_0_320px] md:w-[320px] md:min-w-[320px] md:max-w-[320px]" : "flex w-full md:flex-[0_0_320px] md:w-[320px] md:min-w-[320px] md:max-w-[320px]"
       }`}
     >
       {/* Chats Header & Search */}
-      <div className="chats-header-glass w-full max-w-full min-w-0 box-border mx-0 mt-2 p-3 sm:p-4 flex-shrink-0">
+      <div className="chats-header-glass relative z-30 w-full max-w-full min-w-0 box-border mx-0 mt-2 p-3 sm:p-4 flex-shrink-0">
         <div
           className="flex items-center justify-between gap-2 w-full min-w-0"
           style={{

@@ -70,7 +70,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
         <Palette className="w-3.5 h-3.5" />
       </button>
       {showAccentPicker && (
-        <div className="absolute right-0 top-full mt-2 z-50 w-36 rounded-xl border border-theme-border bg-theme-surface p-1.5 shadow-modal">
+        <div className="absolute right-0 top-full mt-2 z-50 w-36 max-w-[calc(100vw-24px)] max-h-[calc(100dvh-24px)] overflow-y-auto box-border rounded-xl border border-theme-border bg-theme-surface p-1.5 shadow-modal">
           <p className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-theme-text-muted">Accent</p>
           {ACCENTS.map((item) => (
             <button
