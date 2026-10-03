@@ -543,13 +543,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
       {/* User Profile Footer */}
       {user && (
         <div
-          className="chats-profile-card mx-2 mb-2 p-2.5 px-3 flex items-center justify-between flex-shrink-0"
-          style={{
-            paddingBottom: 'max(10px, calc(env(safe-area-inset-bottom, 0px) + 8px))'
-          }}
+          className="chats-profile-card mx-2 mb-2 w-auto max-w-full min-w-0 box-border p-2.5 px-3 flex items-center justify-between gap-2 flex-shrink-0"
         >
           <div
-            className="flex items-center gap-2.5 min-w-0 cursor-pointer p-1 -m-1 rounded-lg hover:bg-theme-bg/60 transition-colors"
+            className="flex flex-1 items-center gap-2.5 min-w-0 overflow-hidden cursor-pointer p-1 -m-1 rounded-lg hover:bg-theme-bg/60 transition-colors"
             onClick={() => setIsSettingsOpen(true)}
             title="Open Profile & Settings"
           >
@@ -571,7 +568,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
                 )}
               </div>
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1 overflow-hidden">
               <div className="text-xs font-semibold text-theme-text truncate leading-tight">
                 {user.name}
               </div>
@@ -590,7 +587,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
             className="hidden"
           />
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-shrink-0">
             <button
               onClick={() => logout()}
               title="Sign Out"
