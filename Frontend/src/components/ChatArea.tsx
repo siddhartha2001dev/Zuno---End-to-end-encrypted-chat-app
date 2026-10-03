@@ -776,7 +776,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
           )}
 
           {/* Writing surface */}
-          <div className="flex items-end gap-1.5 bg-theme-surface border border-theme-border rounded-xl p-1.5 focus-within:border-theme-accent focus-within:ring-1 focus-within:ring-theme-accent/20 transition-theme shadow-xs">
+          <div className="message-writing-surface flex items-end gap-1.5 bg-theme-surface border border-theme-border rounded-xl p-1.5 focus-within:border-theme-accent focus-within:ring-1 focus-within:ring-theme-accent/20 transition-theme shadow-xs">
             {!isRecordingAudio && (
               <>
                 {/* Media Attachment Button */}

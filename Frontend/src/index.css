@@ -458,6 +458,29 @@
   }
 }
 
+@media (max-width: 767px) {
+  .message-writing-surface {
+    gap: 2px;
+    padding: 3px;
+    border-radius: 10px;
+  }
+
+  .message-writing-surface textarea {
+    min-height: 22px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  .message-writing-surface > button {
+    padding: 6px;
+  }
+
+  .message-writing-surface button[aria-label="Send message"] {
+    width: 30px;
+    height: 30px;
+  }
+}
+
 /* Micro transitions for theme & hover */
 .transition-theme {
   transition-property: background-color, border-color, color, fill, stroke, box-shadow, transform;
