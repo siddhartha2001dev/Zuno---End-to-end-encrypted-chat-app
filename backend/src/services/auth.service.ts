@@ -77,13 +77,15 @@ export class AuthService {
       verificationTokenExpiry,
     });
 
-    // Send verification email via Brevo in background (non-blocking)
+    // Send the verification email before reporting registration as complete.
+    // The previous fire-and-forget implementation always returned emailSent: true,
+    // even when Brevo rejected the request, leaving the user with no useful error.
+    let emailSent = false;
     try {
-      sendVerificationEmail(user.email, user.name, verificationToken).catch((emailErr) => {
-        console.warn("⚠️ Background verification email notice:", emailErr?.message || emailErr);
-      });
+      await sendVerificationEmail(user.email, user.name, verificationToken);
+      emailSent = true;
     } catch (emailErr) {
-      console.warn("⚠️ Background verification email notice:", emailErr);
+      console.error("⚠️ Verification email failed:", emailErr);
     }
 
     // Registration does not auto-login. User must verify email.
@@ -98,9 +100,11 @@ export class AuthService {
         isVerified: false,
         createdAt: user.createdAt,
       },
-      message: "Registration successful! Please check your email to verify your account.",
+      message: emailSent
+        ? "Registration successful! Please check your email to verify your account."
+        : "Account created, but the verification email could not be sent. Please use Resend Verification Email.",
       requiresVerification: true,
-      emailSent: true,
+      emailSent,
     };
   }
 

@@ -114,7 +114,7 @@ Make sure you have [Docker](https://www.docker.com/) installed and running.
 4. **Access the application:**
    - **Frontend UI**: [http://localhost:5173](http://localhost:5173)
    - **Backend API**: [http://localhost:4000](http://localhost:4000)
-   - **API Health Check**: [http://localhost:4000/api/health](http://localhost:4000/api/health)
+   - **API Health Check**: [http://localhost:4000/health](http://localhost:4000/health)
 
 ---
 

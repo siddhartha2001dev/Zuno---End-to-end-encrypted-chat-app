@@ -397,7 +397,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
       {renderNavbar()}
 
       {/* Centered Modern Chat App Card */}
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 z-10">
+      <main className="flex-1 min-h-0 overflow-y-auto flex items-start justify-center p-4 sm:p-6 z-10">
         <div className="w-full max-w-[420px] bg-theme-surface border border-theme-border rounded-2xl p-6 sm:p-8 shadow-modal relative">
           
           {/* Brand Icon Header */}

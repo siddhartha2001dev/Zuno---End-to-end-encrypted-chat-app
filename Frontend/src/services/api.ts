@@ -1,6 +1,6 @@
 import { getStoredToken } from "../utils/token";
 
-const API_HOST = import.meta.env.VITE_API_URL || "https://zuno-jvv6.onrender.com";
+const API_HOST = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const BASE_URL = `${API_HOST.replace(/\/+$/, "")}/api`;
 
 export { getStoredToken };
