@@ -1,6 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { authService, AuthService } from "../services/auth.service.js";
-import { registerSchema, loginSchema } from "../validators/auth.validator.js";
+import {
+  registerSchema,
+  loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from "../validators/auth.validator.js";
 import { z } from "zod";
 
 const verifyEmailSchema = z.object({
@@ -28,6 +33,26 @@ export class AuthController {
     try {
       const validated = loginSchema.parse(req.body);
       const result = await this.service.login(validated);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const validated = forgotPasswordSchema.parse(req.body);
+      const result = await this.service.forgotPassword(validated);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const validated = resetPasswordSchema.parse(req.body);
+      const result = await this.service.resetPassword(validated);
       res.status(200).json(result);
     } catch (error) {
       next(error);

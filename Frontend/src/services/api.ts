@@ -100,6 +100,22 @@ export const api = {
       });
       return handleResponse<{ user: any; token: string; accessToken?: string }>(res);
     },
+    forgotPassword: async (email: string) => {
+      const res = await apiFetch(`${BASE_URL}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      return handleResponse<{ message: string }>(res);
+    },
+    resetPassword: async (token: string, password: string) => {
+      const res = await apiFetch(`${BASE_URL}/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password }),
+      });
+      return handleResponse<{ message: string }>(res);
+    },
     verifyEmail: async (token: string) => {
       const res = await apiFetch(`${BASE_URL}/auth/verify-email`, {
         method: "POST",

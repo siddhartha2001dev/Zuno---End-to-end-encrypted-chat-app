@@ -154,3 +154,44 @@ export async function sendVerificationEmail(
 
   return { verificationUrl };
 }
+
+export async function sendPasswordResetEmail(
+  recipientEmail: string,
+  recipientName: string,
+  resetToken: string
+): Promise<{ resetUrl: string }> {
+  const frontendBase =
+    env.FRONTEND_URL ||
+    (env.CORS_ORIGIN && !env.CORS_ORIGIN.includes("localhost") ? env.CORS_ORIGIN : null) ||
+    "https://zuno-liart-chi.vercel.app";
+  const resetUrl = `${frontendBase.replace(/\/+$/, "")}/?resetToken=${encodeURIComponent(resetToken)}`;
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#0d1110;font-family:Arial,sans-serif;color:#f5f7f6;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;background:#0d1110;">
+    <tr><td align="center">
+      <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width:100%;background:#151b19;border:1px solid rgba(255,255,255,.1);border-radius:16px;">
+        <tr><td style="padding:36px 36px 20px;text-align:center;">
+          <div style="font-size:24px;font-weight:800;letter-spacing:-.5px;">Zuno</div>
+          <h1 style="font-size:24px;margin:22px 0 10px;">Reset your password</h1>
+          <p style="font-size:14px;line-height:1.6;color:#a4afab;margin:0;">Hi ${recipientName}, use the button below to choose a new password for your Zuno account.</p>
+        </td></tr>
+        <tr><td style="padding:12px 36px 24px;text-align:center;"><a href="${resetUrl}" target="_blank" style="display:inline-block;background:#6956d8;color:#fff;text-decoration:none;font-size:15px;font-weight:700;padding:13px 32px;border-radius:10px;">Reset password</a></td></tr>
+        <tr><td style="padding:0 36px 28px;text-align:center;"><p style="font-size:12px;line-height:1.5;color:#77817d;margin:0;">This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p></td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await sendTransactionalEmail({
+    to: { email: recipientEmail, name: recipientName },
+    subject: "Reset your Zuno password",
+    htmlContent,
+  });
+
+  return { resetUrl };
+}

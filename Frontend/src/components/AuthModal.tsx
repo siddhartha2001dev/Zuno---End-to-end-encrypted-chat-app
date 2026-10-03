@@ -47,18 +47,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
     }
     return true;
   });
+  const [forgotMode, setForgotMode] = useState<boolean>(false);
+  const [resetToken, setResetToken] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return new URLSearchParams(window.location.search).get("resetToken");
+  });
   const [name, setName] = useState<string>("");
   const [chatId, setChatId] = useState<string>("");
   const [chatIdStatus, setChatIdStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
   const [chatIdMessage, setChatIdMessage] = useState<string>("");
   const [email, setEmail] = useState<string>(() => initialEmail || "");
   const [password, setPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [resending, setResending] = useState<boolean>(false);
   const [resendCooldown, setResendCooldown] = useState<number>(0);
   const [resendSuccess, setResendSuccess] = useState<string | null>(null);
+  const [resetSuccess, setResetSuccess] = useState<string | null>(null);
 
   // Debounced Chat ID availability check
   // Debounced Chat ID availability check
@@ -117,6 +124,34 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
     setSubmitting(true);
 
     try {
+      if (forgotMode) {
+        if (!email.trim()) {
+          setError("Email address is required");
+          return;
+        }
+        const result = await api.auth.forgotPassword(email.trim());
+        setResetSuccess(result.message);
+        return;
+      }
+
+      if (resetToken) {
+        if (password.length < 6) {
+          setError("Password must be at least 6 characters long");
+          return;
+        }
+        if (password !== confirmPassword) {
+          setError("Passwords do not match");
+          return;
+        }
+        const result = await api.auth.resetPassword(resetToken, password);
+        setResetSuccess(result.message);
+        setResetToken(null);
+        setPassword("");
+        setConfirmPassword("");
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return;
+      }
+
       if (isLogin) {
         await login(email.trim(), password);
       } else {
@@ -374,10 +409,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
             </div>
 
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-theme-text">
-              {isLogin ? "Sign in to Zuno" : "Create your account"}
+              {forgotMode ? "Forgot your password?" : resetToken ? "Choose a new password" : isLogin ? "Sign in to Zuno" : "Create your account"}
             </h1>
             <p className="text-xs sm:text-sm text-theme-text-secondary mt-1.5 leading-relaxed max-w-xs">
-              {isLogin
+              {forgotMode
+                ? "Enter your email and we'll send you a secure reset link."
+                : resetToken
+                ? "Choose a new password for your Zuno account."
+                : isLogin
                 ? "Welcome back. Enter your details to continue."
                 : "Connect with friends and message securely."}
             </p>
@@ -454,6 +493,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                   Resend verification email to {email}
                 </button>
               )}
+            </div>
+          )}
+
+          {resetSuccess && (
+            <div className="mb-4 p-3 rounded-xl bg-theme-accent/10 border border-theme-accent/20 text-theme-accent text-xs font-medium flex items-start gap-2">
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+              <span>{resetSuccess}</span>
             </div>
           )}
 
@@ -555,7 +601,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
             )}
 
             {/* Email Address Field */}
-            <div className="space-y-1">
+            {!resetToken && <div className="space-y-1">
               <label
                 htmlFor="email"
                 className="block text-xs font-medium text-theme-text-secondary"
@@ -580,18 +626,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                   className="w-full h-full bg-transparent pl-10 pr-3.5 text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
                 />
               </div>
-            </div>
+            </div>}
 
             {/* Password Field */}
-            <div className="space-y-1">
+            {!forgotMode && <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <label
                   htmlFor="password"
                   className="block text-xs font-medium text-theme-text-secondary"
                 >
-                  Password
+                  {resetToken ? "New password" : "Password"}
                 </label>
-                {!isLogin && (
+                {!isLogin && !resetToken && (
                   <span className="text-[11px] text-theme-text-muted">Min. 6 characters</span>
                 )}
               </div>
@@ -629,7 +675,44 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
                   )}
                 </button>
               </div>
-            </div>
+            </div>}
+
+            {resetToken && (
+              <div className="space-y-1">
+                <label htmlFor="confirm-password" className="block text-xs font-medium text-theme-text-secondary">
+                  Confirm new password
+                </label>
+                <div className="group relative flex items-center h-11 w-full rounded-xl bg-theme-bg/60 border border-theme-border focus-within:border-theme-accent focus-within:ring-1 focus-within:ring-theme-accent/20 transition-colors">
+                  <Lock className="absolute left-3.5 w-4 h-4 text-theme-text-muted group-focus-within:text-theme-accent" />
+                  <input
+                    id="confirm-password"
+                    type={showPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                    disabled={submitting}
+                    className="w-full h-full bg-transparent pl-10 pr-3.5 text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none disabled:opacity-50 rounded-xl"
+                  />
+                </div>
+              </div>
+            )}
+
+            {isLogin && !forgotMode && !resetToken && (
+              <div className="flex justify-end -mt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForgotMode(true);
+                    setError(null);
+                    setResetSuccess(null);
+                  }}
+                  className="text-xs text-theme-accent hover:underline font-medium cursor-pointer"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
 
             {/* Primary Submit Button */}
             <button
@@ -640,20 +723,34 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
               {submitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-white" />
-                  <span>{isLogin ? "Signing in..." : "Creating account..."}</span>
+                  <span>{forgotMode ? "Sending reset link..." : resetToken ? "Resetting password..." : isLogin ? "Signing in..." : "Creating account..."}</span>
                 </>
               ) : (
                 <>
-                  <span>{isLogin ? "Sign In" : "Create Account"}</span>
+                  <span>{forgotMode ? "Send reset link" : resetToken ? "Reset password" : isLogin ? "Sign In" : "Create Account"}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
 
-          {/* Quick Switch Between Login and Signup */}
+          {/* Quick Switch Between Login and Signup / Password Recovery */}
           <div className="mt-5 text-center text-xs text-theme-text-secondary">
-            {isLogin ? (
+            {forgotMode || resetToken ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setForgotMode(false);
+                  setResetToken(null);
+                  setError(null);
+                  setResetSuccess(null);
+                  window.history.replaceState({}, document.title, window.location.pathname);
+                }}
+                className="text-theme-accent font-medium hover:underline transition-colors cursor-pointer"
+              >
+                Back to Sign in
+              </button>
+            ) : isLogin ? (
               <span>
                 Don't have an account?{" "}
                 <button

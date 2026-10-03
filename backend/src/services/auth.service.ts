@@ -1,10 +1,15 @@
 import crypto from "crypto";
 import { UserRepository, userRepository } from "../repositories/user.repository.js";
-import { RegisterInput, LoginInput } from "../validators/auth.validator.js";
+import {
+  RegisterInput,
+  LoginInput,
+  ForgotPasswordInput,
+  ResetPasswordInput,
+} from "../validators/auth.validator.js";
 import { hashPassword, comparePassword } from "../utils/password.js";
 import { generateToken } from "../utils/jwt.js";
 import { AppError } from "../middleware/error.middleware.js";
-import { sendVerificationEmail } from "../config/brevo.js";
+import { sendVerificationEmail, sendPasswordResetEmail } from "../config/brevo.js";
 
 /** Generate a secure random hex token for email verification */
 function generateVerificationToken(): string {
@@ -13,6 +18,7 @@ function generateVerificationToken(): string {
 
 /** Verification token is valid for 24 hours */
 const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
+const PASSWORD_RESET_TOKEN_EXPIRY_HOURS = 1;
 
 export class AuthService {
   constructor(private readonly userRepo: UserRepository = userRepository) {}
@@ -206,6 +212,45 @@ export class AuthService {
       message: "Verification email sent successfully! Please check your inbox and spam folder.",
       emailSent: true,
     };
+  }
+
+  async forgotPassword(input: ForgotPasswordInput) {
+    const user = await this.userRepo.findByEmail(input.email);
+    const message = "If an account exists for this email, a password reset link has been sent.";
+    if (!user) return { message };
+
+    const resetToken = generateVerificationToken();
+    const resetTokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
+    const resetTokenExpiry = new Date(
+      Date.now() + PASSWORD_RESET_TOKEN_EXPIRY_HOURS * 60 * 60 * 1000
+    );
+
+    await this.userRepo.setPasswordResetToken(
+      user._id.toString(),
+      resetTokenHash,
+      resetTokenExpiry
+    );
+
+    try {
+      await sendPasswordResetEmail(user.email, user.name, resetToken);
+    } catch (emailErr: any) {
+      console.error("⚠️ Failed to send password reset email:", emailErr?.message || emailErr);
+      throw new AppError("Failed to send password reset email. Please try again later.", 500);
+    }
+
+    return { message };
+  }
+
+  async resetPassword(input: ResetPasswordInput) {
+    const resetTokenHash = crypto.createHash("sha256").update(input.token).digest("hex");
+    const user = await this.userRepo.findByPasswordResetToken(resetTokenHash);
+    if (!user) {
+      throw new AppError("This password reset link is invalid or expired. Please request a new one.", 400);
+    }
+
+    const passwordHash = await hashPassword(input.password);
+    await this.userRepo.updatePassword(user._id.toString(), passwordHash);
+    return { message: "Password reset successfully. You can now sign in." };
   }
 
   async getCurrentUser(userId: string) {

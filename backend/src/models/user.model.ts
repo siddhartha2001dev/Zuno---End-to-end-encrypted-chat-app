@@ -21,6 +21,8 @@ export interface IUser extends Document {
   deactivatedAt?: Date;
   verificationToken?: string;
   verificationTokenExpiry?: Date;
+  passwordResetToken?: string;
+  passwordResetTokenExpiry?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -61,6 +63,8 @@ const UserSchema = new Schema<IUser>(
     deactivatedAt: { type: Date, default: null },
     verificationToken: { type: String, default: null },
     verificationTokenExpiry: { type: Date, default: null },
+    passwordResetToken: { type: String, default: null },
+    passwordResetTokenExpiry: { type: Date, default: null },
   },
   {
     timestamps: true,
@@ -79,6 +83,8 @@ const UserSchema = new Schema<IUser>(
         delete ret.passwordHash;
         delete ret.verificationToken;
         delete ret.verificationTokenExpiry;
+        delete ret.passwordResetToken;
+        delete ret.passwordResetTokenExpiry;
         return ret;
       },
     },
@@ -94,6 +100,8 @@ const UserSchema = new Schema<IUser>(
         }));
         delete ret._id;
         delete ret.__v;
+        delete ret.passwordResetToken;
+        delete ret.passwordResetTokenExpiry;
         return ret;
       },
     },
@@ -101,4 +109,3 @@ const UserSchema = new Schema<IUser>(
 );
 
 export const UserModel = mongoose.model<IUser>("User", UserSchema);
-
