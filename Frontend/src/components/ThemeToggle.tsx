@@ -15,6 +15,7 @@ const ACCENTS: { id: AccentTheme; label: string; color: string }[] = [
   { id: "ocean", label: "Ocean", color: "#2878c8" },
   { id: "rose", label: "Rose", color: "#c04b78" },
   { id: "slate", label: "Slate", color: "#53657a" },
+  { id: "green", label: "Green", color: "#0f766e" },
 ];
 
 export const ThemeToggle: React.FC<ThemeToggleProps> = ({

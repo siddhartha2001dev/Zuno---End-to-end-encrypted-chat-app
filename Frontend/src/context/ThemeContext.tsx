@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
-export type AccentTheme = "violet" | "ocean" | "rose" | "slate";
+export type AccentTheme = "violet" | "ocean" | "rose" | "slate" | "green";
 
 interface ThemeContextType {
   theme: Theme;
@@ -28,7 +28,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [accent, setAccentState] = useState<AccentTheme>(() => {
     try {
       const stored = localStorage.getItem("accent-theme");
-      return stored === "ocean" || stored === "rose" || stored === "slate" || stored === "violet"
+      return stored === "ocean" || stored === "rose" || stored === "slate" || stored === "green" || stored === "violet"
         ? stored
         : "violet";
     } catch {
