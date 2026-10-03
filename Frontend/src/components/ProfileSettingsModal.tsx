@@ -151,31 +151,31 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-120 select-none">
-      <div className="w-full max-w-md bg-theme-surface border border-theme-border rounded-2xl shadow-modal overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="profile-settings-overlay fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-xs animate-in fade-in duration-120 select-none">
+      <div className="profile-settings-panel w-full overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header */}
-        <div className="px-5 py-3.5 border-b border-theme-border flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-theme-text">Profile & Settings</h2>
+        <div className="profile-settings-header px-5 sm:px-7 py-5 border-b border-theme-border flex items-center justify-between">
+          <h2 className="text-xl sm:text-2xl font-semibold text-theme-text tracking-tight">Profile & Settings</h2>
           <button
             onClick={() => {
               setShowDeactivateModal(false);
               setShowDeleteAllModal(false);
               onClose();
             }}
-            className="w-7 h-7 rounded-md flex items-center justify-center text-theme-text-muted hover:text-theme-text hover:bg-theme-bg transition-colors"
+            className="w-8 h-8 rounded-xl border border-theme-border flex items-center justify-center text-theme-text-muted hover:text-theme-text hover:bg-theme-bg transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Scrollable Body */}
-        <div className="p-5 overflow-y-auto space-y-5">
+        <div className="profile-settings-body p-5 sm:p-7 overflow-y-auto">
           
           {/* Avatar & Photo Actions */}
-          <div className="flex flex-col items-center text-center">
-            <div className="relative mb-3 inline-flex items-center justify-center group cursor-pointer" onClick={() => setIsAvatarModalOpen(true)}>
-              <div className="rounded-full border border-theme-border shadow-xs">
+          <div className="profile-settings-hero flex flex-col items-center text-center">
+            <div className="profile-settings-avatar relative mb-4 inline-flex items-center justify-center group cursor-pointer" onClick={() => setIsAvatarModalOpen(true)}>
+              <div className="rounded-full border border-theme-border">
                 <AnimatedAvatar
                   src={user.avatar}
                   name={user.name}
@@ -192,7 +192,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                   setIsAvatarModalOpen(true);
                 }}
                 title="Customize Avatar"
-                className="absolute bottom-0 right-0 p-2 rounded-full bg-theme-accent hover:bg-theme-accent-hover text-white shadow-xs border-2 border-theme-surface active:scale-95 transition-all z-10 cursor-pointer"
+                className="profile-settings-avatar-edit absolute bottom-0 right-0 p-2.5 rounded-full bg-theme-accent hover:bg-theme-accent-hover text-white shadow-xs border-2 border-theme-surface active:scale-95 transition-all z-10 cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5" />
               </button>
@@ -250,11 +250,11 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               </form>
             ) : (
               <div className="flex items-center justify-center gap-1.5 group">
-                <h3 className="text-base font-semibold text-theme-text leading-tight">{user.name}</h3>
+                <h3 className="profile-settings-name text-[26px] font-semibold text-theme-text leading-tight">{user.name}</h3>
                 <button
                   type="button"
                   onClick={handleStartEditName}
-                  className="p-1 rounded-md text-theme-text-muted hover:text-theme-text hover:bg-theme-bg transition-colors cursor-pointer"
+                  className="p-1 rounded-md text-theme-accent hover:text-theme-accent hover:bg-theme-accent/10 transition-colors cursor-pointer"
                   title="Edit Account Name"
                 >
                   <Pencil className="w-3.5 h-3.5" />
@@ -264,24 +264,24 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
 
             {nameSuccess && (
-              <p className="text-[11px] text-emerald-500 font-medium flex items-center justify-center gap-1 mt-1 animate-in fade-in">
+              <p className="text-[11px] text-theme-accent font-medium flex items-center justify-center gap-1 mt-1 animate-in fade-in">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>{nameSuccess}</span>
               </p>
             )}
 
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+              <span className="profile-settings-chat-id text-base font-medium text-theme-text-muted">
                 @{user.chatId}
               </span>
               <button
                 type="button"
                 onClick={handleCopyChatId}
-                className="p-1 rounded text-theme-text-muted hover:text-theme-text hover:bg-theme-bg transition-colors"
+                className="p-1 rounded text-theme-text-muted hover:text-theme-accent hover:bg-theme-accent/10 transition-colors"
                 title="Copy Chat ID"
               >
                 {copiedChatId ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                  <Check className="w-3.5 h-3.5 text-theme-accent" />
                 ) : (
                   <Copy className="w-3.5 h-3.5" />
                 )}
@@ -289,11 +289,11 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
             </div>
 
             {/* Avatar Buttons */}
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
               <button
                 type="button"
                 onClick={() => setIsAvatarModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-theme-accent hover:opacity-90 text-white text-xs font-medium shadow-subtle transition-all active:scale-[0.98] cursor-pointer"
+                className="profile-settings-action-button inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-theme-accent hover:opacity-90 text-white text-xs font-medium shadow-subtle transition-all active:scale-[0.98] cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Choose Avatar</span>
@@ -302,7 +302,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               <button
                 type="button"
                 onClick={onOpenCropPicker}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-theme-accent/10 hover:bg-theme-accent/15 text-theme-accent text-xs font-medium border border-theme-accent/20 transition-all active:scale-[0.98] cursor-pointer"
+                className="profile-settings-action-button inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-theme-accent/10 hover:bg-theme-accent/15 text-theme-accent text-xs font-medium border border-theme-accent/20 transition-all active:scale-[0.98] cursor-pointer"
               >
                 <Camera className="w-3.5 h-3.5" />
                 <span>Upload Photo</span>
@@ -313,7 +313,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                   type="button"
                   onClick={handleRemoveAvatar}
                   disabled={isRemovingAvatar}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-theme-surface hover:bg-theme-bg text-theme-text-secondary text-xs font-medium border border-theme-border transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                  className="profile-settings-action-button inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-theme-surface hover:bg-theme-bg text-theme-text-secondary text-xs font-medium border border-theme-border transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                   title="Switch to default algorithmic character avatar"
                 >
                   {isRemovingAvatar ? (
@@ -328,7 +328,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
           </div>
 
           {/* Account Details */}
-          <div className="p-3.5 rounded-xl bg-theme-bg/60 border border-theme-border space-y-2.5">
+          <div className="profile-info-card p-4 rounded-2xl space-y-2.5">
             <div className="flex items-center justify-between text-xs">
               <span className="flex items-center gap-2 text-theme-text-muted">
                 <User className="w-3.5 h-3.5" />
@@ -337,10 +337,10 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               <div className="flex items-center gap-2">
                 <span className="font-medium text-theme-text">{user.name}</span>
                 {!isEditingName && (
-                  <button
+                    <button
                     type="button"
                     onClick={handleStartEditName}
-                    className="inline-flex items-center gap-1 text-[11px] text-theme-accent hover:underline font-medium cursor-pointer"
+                      className="inline-flex items-center gap-1 text-[11px] text-theme-accent hover:underline font-medium cursor-pointer"
                   >
                     <Pencil className="w-3 h-3" />
                     <span>Edit</span>
@@ -367,24 +367,24 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
             <div className="flex items-center justify-between text-xs pt-2 border-t border-theme-border/60">
               <span className="flex items-center gap-2 text-theme-text-muted">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                <ShieldCheck className="w-3.5 h-3.5 text-theme-accent" />
                 <span>Account Status</span>
               </span>
-              <span className="inline-flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="w-3 h-3" />
+              <span className="inline-flex items-center gap-1 font-medium text-theme-accent">
+                <CheckCircle2 className="w-3 h-3 text-theme-accent" />
                 <span>Verified</span>
               </span>
             </div>
           </div>
 
           {/* Account Actions & Danger Zone */}
-          <div className="space-y-3 pt-2 border-t border-theme-border/60">
+          <div className="profile-management space-y-3 pt-2 border-t border-theme-border/60">
             <h4 className="text-[11px] font-semibold text-theme-text-muted uppercase tracking-wider px-0.5">
               Account Management
             </h4>
 
             {deleteAllSuccess && (
-              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-2">
+              <div className="p-3 rounded-xl bg-theme-accent/10 border border-theme-accent/20 text-xs text-theme-accent font-medium flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                 <span>{deleteAllSuccess}</span>
               </div>

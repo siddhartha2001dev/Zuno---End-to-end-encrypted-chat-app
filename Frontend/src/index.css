@@ -337,6 +337,108 @@
   -webkit-backdrop-filter: blur(16px) saturate(130%);
 }
 
+/* Profile & Settings: neutral dark glass panel with the existing dynamic accent. */
+.profile-settings-overlay {
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.profile-settings-panel {
+  --bg-app: #0b0e0d;
+  --bg-sidebar: #0f1211;
+  --bg-surface: #111615;
+  --bg-elevated: #161b19;
+  --input-bg: #0d1110;
+  --border-theme: rgba(255, 255, 255, 0.1);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --text-primary: #f2f5f4;
+  --text-secondary: #a4afab;
+  --text-muted: #77817d;
+  width: min(92vw, 900px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  background: rgba(15, 18, 18, 0.95);
+  color: var(--text-primary);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(24px) saturate(125%);
+  -webkit-backdrop-filter: blur(24px) saturate(125%);
+}
+
+.profile-settings-header {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.profile-settings-body {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.85fr) minmax(0, 1.15fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.profile-settings-hero {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  padding-top: 12px;
+}
+
+.profile-settings-avatar {
+  width: 132px !important;
+  height: 132px !important;
+}
+
+.profile-settings-avatar-edit {
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-info-card {
+  grid-column: 2;
+  grid-row: 1;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-management {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.profile-settings-action-button {
+  min-height: 38px;
+}
+
+@media (max-width: 700px) {
+  .profile-settings-panel {
+    width: min(94vw, 560px);
+    border-radius: 20px;
+  }
+
+  .profile-settings-body {
+    display: block;
+    padding: 20px;
+  }
+
+  .profile-settings-hero {
+    padding-top: 0;
+    margin-bottom: 24px;
+  }
+
+  .profile-settings-avatar {
+    width: 112px !important;
+    height: 112px !important;
+  }
+
+  .profile-settings-name {
+    font-size: 22px !important;
+  }
+
+  .profile-settings-action-button {
+    flex: 1 1 auto;
+  }
+}
+
 @media (max-width: 640px) {
   .chats-header-glass {
     border-radius: 0;
