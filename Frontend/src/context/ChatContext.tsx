@@ -482,6 +482,34 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     };
 
+    const notifyIncomingMessage = (message: Message, body: string) => {
+      if (message.senderId === user.id) return;
+      const isActiveConversation = activeConversationRef.current?.id === message.conversationId;
+      if (isActiveConversation && !document.hidden) return;
+      if (!("Notification" in window)) return;
+
+      const showNotification = () => {
+        if (Notification.permission !== "granted") return;
+        const conversation = conversationsRef.current.find((c) => c.id === message.conversationId);
+        const senderName = message.sender?.name || "New message";
+        const notification = new Notification(senderName, {
+          body: body || `New message in ${conversation?.name || "Zuno"}`,
+          tag: `zuno-${message.conversationId}`,
+          icon: "/zuno-favicon.ico",
+        });
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+      };
+
+      if (Notification.permission === "default") {
+        Notification.requestPermission().then(showNotification).catch(() => undefined);
+      } else {
+        showNotification();
+      }
+    };
+
     // Real-time new message
     const handleNewMessage = async (newMessage: Message) => {
       let processedMessage = newMessage;
@@ -520,6 +548,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       }
+
+      notifyIncomingMessage(newMessage, displayContent);
 
       // Update conversation list item
       setConversations((prev) => {

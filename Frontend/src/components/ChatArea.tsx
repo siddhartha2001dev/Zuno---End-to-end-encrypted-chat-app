@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { useChat } from "../context/ChatContext";
 import { useAuth } from "../context/AuthContext";
 import { MessageBubble } from "./MessageBubble";
-import { ZunoLogo } from "./ZunoLogo";
 import { AnimatedAvatar } from "./AnimatedAvatar";
 import { DeleteChatModal } from "./DeleteChatModal";
 import { ImageCropModal } from "./ImageCropModal";
@@ -372,10 +371,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
     return (
       <main className="hidden md:flex flex-1 h-full flex-col items-center justify-center bg-theme-bg p-8 text-center select-none">
         <div className="flex flex-col items-center max-w-sm">
-          <div className="mb-4 w-12 h-12 rounded-2xl bg-theme-surface border border-theme-border flex items-center justify-center text-theme-accent">
-            <ZunoLogo size="sm" showWordmark={false} />
-          </div>
-
           <h2 className="text-base font-semibold tracking-tight text-theme-text mb-1">
             Your space is quiet
           </h2>
@@ -416,7 +411,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
     >
       {/* Clean Chat Header */}
       <header
-        className="px-4 py-2.5 sm:px-6 border-b border-theme-border bg-theme-surface flex items-center justify-between flex-shrink-0 z-20"
+        className="px-3 py-2.5 sm:px-6 border-b border-theme-border bg-theme-surface flex items-center justify-between flex-shrink-0 z-20"
         style={{
           paddingTop: 'max(10px, env(safe-area-inset-top, 0px))',
           minHeight: 'calc(56px + env(safe-area-inset-top, 0px))',
@@ -481,7 +476,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
         </div>
 
         {/* Header Right Actions */}
-          <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
           {/* Audio Call Button for 1-to-1 Direct Chats */}
           {!isGroup && otherMember && (
             <button
@@ -607,7 +602,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
       {/* Messages Thread Container */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto px-4 py-3 md:px-8"
+        className="flex-1 overflow-y-auto px-3 py-3 sm:px-4 md:px-8"
         style={{ overscrollBehavior: 'contain' }}
       >
         {loadingMessages ? (
@@ -712,7 +707,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
 
       {/* Message Composer */}
       <footer
-        className="px-3 pt-1.5 md:p-4 bg-transparent z-10 flex-shrink-0 composer-footer-lift"
+        className="px-2.5 pt-1.5 sm:px-3 md:p-4 bg-transparent z-10 flex-shrink-0 composer-footer-lift message-composer-shell"
         style={isKeyboardOpen ? { paddingBottom: "8px" } : undefined}
       >
         <div className="max-w-3xl mx-auto relative">

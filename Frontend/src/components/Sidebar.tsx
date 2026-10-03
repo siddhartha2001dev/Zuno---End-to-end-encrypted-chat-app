@@ -419,7 +419,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
     >
       {/* Top Header */}
       <div
-        className="px-4 py-3.5 border-b border-theme-border flex items-center justify-between flex-shrink-0"
+        className="px-3 sm:px-4 py-3.5 border-b border-theme-border flex items-center justify-between flex-shrink-0"
         style={{
           paddingTop: 'max(12px, env(safe-area-inset-top, 0px))',
           boxSizing: 'border-box'

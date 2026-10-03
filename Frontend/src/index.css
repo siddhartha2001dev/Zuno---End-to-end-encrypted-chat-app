@@ -4,7 +4,7 @@
 
 :root {
   color-scheme: light;
-  /* Light Mode: Warm white, soft gray surfaces, subtle borders, dark charcoal typography, muted emerald accents */
+  /* Light Mode: Warm white, soft gray surfaces, dark charcoal typography, violet accents */
   --bg-app: #f7f9f7;
   --bg-sidebar: #ffffff;
   --bg-surface: #ffffff;
@@ -14,14 +14,14 @@
   --text-primary: #121915;
   --text-secondary: #475b50;
   --text-muted: #768a7f;
-  --accent: #0f766e;
-  --accent-hover: #0d655e;
-  --accent-subtle: rgba(15, 118, 110, 0.08);
-  --active-item-bg: rgba(15, 118, 110, 0.07);
+  --accent: #6956d8;
+  --accent-hover: #5845c4;
+  --accent-subtle: rgba(105, 86, 216, 0.09);
+  --active-item-bg: rgba(105, 86, 216, 0.08);
   --msg-incoming-bg: #ffffff;
   --msg-incoming-border: rgba(0, 0, 0, 0.07);
   --msg-incoming-text: #121915;
-  --msg-outgoing-bg: #0f766e;
+  --msg-outgoing-bg: #6956d8;
   --msg-outgoing-text: #ffffff;
   --input-bg: #f3f6f4;
   --scrollbar-thumb: rgba(0, 0, 0, 0.16);
@@ -30,7 +30,7 @@
 
 .dark, [data-theme="dark"] {
   color-scheme: dark;
-  /* Dark Mode: Deep charcoal, soft black, slightly tinted surfaces, muted borders, warm white typography, restrained emerald accents */
+  /* Dark Mode: Deep charcoal surfaces with restrained violet accents */
   --bg-app: #0d1210;
   --bg-sidebar: #121815;
   --bg-surface: #17201c;
@@ -40,14 +40,14 @@
   --text-primary: #edf2ee;
   --text-secondary: #95a79d;
   --text-muted: #5e7367;
-  --accent: #10b981;
-  --accent-hover: #34d399;
-  --accent-subtle: rgba(16, 185, 129, 0.12);
-  --active-item-bg: rgba(16, 185, 129, 0.10);
+  --accent: #9b8af2;
+  --accent-hover: #b2a5ff;
+  --accent-subtle: rgba(155, 138, 242, 0.14);
+  --active-item-bg: rgba(155, 138, 242, 0.12);
   --msg-incoming-bg: #1a231f;
   --msg-incoming-border: rgba(255, 255, 255, 0.07);
   --msg-incoming-text: #edf2ee;
-  --msg-outgoing-bg: #065f46;
+  --msg-outgoing-bg: #5141a8;
   --msg-outgoing-text: #ffffff;
   --input-bg: #131916;
   --scrollbar-thumb: rgba(255, 255, 255, 0.14);
@@ -149,7 +149,7 @@
   transition-duration: 160ms;
 }
 
-/* Message Micro-Animations: Calm and subtle fade-up, 140ms */
+/* Message Micro-Animations: subtle lift for incoming, soft pop for sent bubbles */
 @keyframes bubble-appear {
   0% {
     opacity: 0;
@@ -158,6 +158,21 @@
   100% {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes bubble-send {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.92);
+  }
+  65% {
+    opacity: 1;
+    transform: translateY(-1px) scale(1.015);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -172,9 +187,14 @@
   }
 }
 
-.animate-bubble-outgoing,
 .animate-bubble-incoming {
   animation: bubble-appear 0.16s cubic-bezier(0.2, 0, 0, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-bubble-outgoing {
+  animation: bubble-send 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  transform-origin: bottom right;
   will-change: transform, opacity;
 }
 
@@ -199,6 +219,11 @@
   select {
     font-size: 16px !important;
   }
+
+  .message-composer-shell {
+    padding-left: 2px;
+    padding-right: 2px;
+  }
 }
 
 input,
@@ -217,4 +242,3 @@ select {
     padding-bottom: 16px;
   }
 }
-
