@@ -36,11 +36,11 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
       title={`Switch to ${isDark ? "light" : "dark"} mode`}
       className={
         variant === "header"
-          ? `relative inline-flex items-center w-[58px] h-7 rounded-full border border-theme-border bg-theme-bg p-0.5 text-theme-text-muted shadow-subtle hover:border-theme-accent/40 transition-all active:scale-95 ${className}`
+          ? `relative inline-flex items-center w-[52px] h-6 rounded-full border border-theme-border bg-theme-bg p-0.5 text-theme-text-muted shadow-subtle hover:border-theme-accent/40 transition-all active:scale-95 ${className}`
           : `relative inline-flex items-center gap-2 p-1.5 rounded-lg text-theme-text-secondary hover:text-theme-text hover:bg-theme-surface transition-theme ${className}`
       }
     >
-      <div className={variant === "header" ? `relative z-10 w-6 h-6 rounded-full bg-theme-surface border border-theme-border-subtle text-theme-accent flex items-center justify-center shadow-xs transition-transform duration-200 ${isDark ? "translate-x-[29px]" : "translate-x-0"}` : "relative w-4 h-4 flex items-center justify-center"}>
+      <div className={variant === "header" ? `relative z-10 w-5 h-5 rounded-full bg-theme-surface border border-theme-border-subtle text-theme-accent flex items-center justify-center shadow-xs transition-transform duration-200 ${isDark ? "translate-x-[26px]" : "translate-x-0"}` : "relative w-4 h-4 flex items-center justify-center"}>
         {isDark ? (
           <Moon className="w-3.5 h-3.5 transition-transform duration-300" />
         ) : (
@@ -65,7 +65,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
         onClick={() => setShowAccentPicker((open) => !open)}
         aria-label="Choose accent color"
         title="Choose accent color"
-        className="w-7 h-7 rounded-full border border-theme-border bg-theme-bg text-theme-accent flex items-center justify-center hover:bg-theme-surface hover:border-theme-accent/40 transition-all active:scale-95"
+        className="w-6 h-6 rounded-full border border-theme-border bg-theme-bg text-theme-accent flex items-center justify-center hover:bg-theme-surface hover:border-theme-accent/40 transition-all active:scale-95"
       >
         <Palette className="w-3.5 h-3.5" />
       </button>

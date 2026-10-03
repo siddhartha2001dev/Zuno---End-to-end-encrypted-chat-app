@@ -437,7 +437,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
               onClick={onOpenNewChat}
               aria-label="New chat"
               title="New chat"
-              className="chats-new-chat-button inline-flex items-center justify-center rounded-2xl bg-theme-accent text-white"
+              className="chats-new-chat-button inline-flex items-center justify-center rounded-2xl"
             >
               <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
