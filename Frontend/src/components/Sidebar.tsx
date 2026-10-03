@@ -222,12 +222,12 @@ const SwipeableConversationItem: React.FC<SwipeableConversationItemProps> = ({
               }
             : undefined
         }
-        className={`group relative z-10 flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer select-none transition-colors duration-150 ${
+        className={`chats-conversation-card group relative z-10 flex items-center gap-3 px-3 py-2 rounded-[18px] cursor-pointer select-none transition-all duration-150 ${
           isSelected
-            ? "bg-theme-active-item text-theme-text font-medium"
+            ? "chats-conversation-card-selected text-theme-text font-medium"
             : isDragging && swipeOffset > 10
             ? "bg-theme-surface border border-red-500/30"
-            : "hover:bg-theme-surface/70 text-theme-text-secondary"
+            : "text-theme-text-secondary"
         }`}
       >
         {/* Avatar with Status */}
@@ -467,13 +467,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
       </div>
 
       {/* Filter Tabs (Segmented control) */}
-      <div className="px-3 pb-2 border-b border-theme-border-subtle">
-        <div className="grid grid-cols-3 p-0.5 rounded-lg bg-theme-bg border border-theme-border-subtle">
+      <div className="px-3 pt-3 pb-2 border-b border-theme-border-subtle">
+        <div className="chats-filter-tabs grid grid-cols-3 p-1 rounded-xl">
           <button
             onClick={() => setActiveTab("all")}
             className={`py-1 rounded-md text-[11px] font-medium transition-colors text-center ${
               activeTab === "all"
-                ? "bg-theme-surface text-theme-text shadow-subtle font-semibold"
+                ? "bg-theme-active-item text-theme-accent border border-theme-accent/20 shadow-subtle font-semibold"
                 : "text-theme-text-muted hover:text-theme-text"
             }`}
           >
@@ -483,7 +483,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
             onClick={() => setActiveTab("direct")}
             className={`py-1 rounded-md text-[11px] font-medium transition-colors text-center ${
               activeTab === "direct"
-                ? "bg-theme-surface text-theme-text shadow-subtle font-semibold"
+                ? "bg-theme-active-item text-theme-accent border border-theme-accent/20 shadow-subtle font-semibold"
                 : "text-theme-text-muted hover:text-theme-text"
             }`}
           >
@@ -493,7 +493,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
             onClick={() => setActiveTab("groups")}
             className={`py-1 rounded-md text-[11px] font-medium transition-colors text-center ${
               activeTab === "groups"
-                ? "bg-theme-surface text-theme-text shadow-subtle font-semibold"
+                ? "bg-theme-active-item text-theme-accent border border-theme-accent/20 shadow-subtle font-semibold"
                 : "text-theme-text-muted hover:text-theme-text"
             }`}
           >
@@ -503,7 +503,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
       </div>
 
       {/* Conversation List */}
-      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
+      <div className="flex-1 overflow-y-auto px-2 py-2.5 space-y-1">
         {filteredConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-center p-4">
             <p className="text-xs text-theme-text font-medium">No conversations found</p>
@@ -543,7 +543,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
       {/* User Profile Footer */}
       {user && (
         <div
-          className="p-2.5 px-3 border-t border-theme-border bg-theme-surface/80 flex items-center justify-between flex-shrink-0"
+          className="chats-profile-card mx-2 mb-2 p-2.5 px-3 flex items-center justify-between flex-shrink-0"
           style={{
             paddingBottom: 'max(10px, calc(env(safe-area-inset-bottom, 0px) + 8px))'
           }}
