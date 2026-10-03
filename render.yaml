@@ -17,6 +17,8 @@ services:
         sync: false
       - key: CORS_ORIGIN
         sync: false
+      - key: FRONTEND_URL
+        value: https://zuno-liart-chi.vercel.app
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY

@@ -1,6 +1,8 @@
 import { io, Socket } from "socket.io-client";
 
-const SOCKET_URL = (import.meta.env.VITE_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+const SOCKET_URL = (
+  import.meta.env.VITE_API_URL || "https://zuno-end-to-end-encrypted-chat-app.onrender.com"
+).replace(/\/+$/, "");
 
 class SocketService {
   private socket: Socket | null = null;

@@ -1,6 +1,7 @@
 import { getStoredToken } from "../utils/token";
 
-const API_HOST = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const API_HOST =
+  import.meta.env.VITE_API_URL || "https://zuno-end-to-end-encrypted-chat-app.onrender.com";
 const BASE_URL = `${API_HOST.replace(/\/+$/, "")}/api`;
 
 export { getStoredToken };
