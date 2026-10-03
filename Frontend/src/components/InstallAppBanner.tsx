@@ -34,7 +34,7 @@ export const InstallAppBanner: React.FC = () => {
           <div className="flex items-center gap-2.5 min-w-0">
             {/* App Icon */}
             <img
-              src="/zuno-favicon.ico"
+              src="/messages.png"
               alt="Zuno"
               className="w-6 h-6 rounded-md object-contain flex-shrink-0"
             />
@@ -83,7 +83,7 @@ export const InstallAppBanner: React.FC = () => {
 
             <div className="flex items-center gap-3 mb-4">
               <img
-                src="/zuno-favicon.ico"
+                src="/messages.png"
                 alt="Zuno"
                 className="w-8 h-8 rounded-lg object-contain"
               />

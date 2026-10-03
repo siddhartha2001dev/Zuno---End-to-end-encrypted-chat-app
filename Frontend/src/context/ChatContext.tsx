@@ -495,7 +495,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const notification = new Notification(senderName, {
           body: body || `New message in ${conversation?.name || "Zuno"}`,
           tag: `zuno-${message.conversationId}`,
-          icon: "/zuno-favicon.ico",
+          icon: "/messages.png",
         });
         notification.onclick = () => {
           window.focus();

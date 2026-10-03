@@ -22,9 +22,9 @@ export const ZunoLogo: React.FC<ZunoLogoProps> = ({
 
   return (
     <div className={`inline-flex items-center ${gap} select-none ${className}`}>
-      {/* Brand Icon using zuno-favicon.ico */}
+      {/* Brand Icon */}
       <img
-        src="/zuno-favicon.ico"
+        src="/messages.png"
         alt="Zuno"
         width={box}
         height={box}

@@ -1,9 +1,9 @@
-const CACHE_NAME = "zuno-pwa-v2";
+const CACHE_NAME = "zuno-pwa-v3";
 const STATIC_ASSETS = [
   "/",
   "/index.html",
   "/manifest.json",
-  "/favicon.svg"
+  "/messages.png"
 ];
 
 // Install: Cache essential shell and activate immediately

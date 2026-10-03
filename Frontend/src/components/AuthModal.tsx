@@ -264,7 +264,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
             type="button"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold border border-emerald-500/20 transition-all active:scale-95 shadow-xs"
           >
-            <img src="/zuno-favicon.ico" alt="" className="w-3.5 h-3.5 object-contain" />
+            <img src="/messages.png" alt="" className="w-3.5 h-3.5 object-contain" />
             <span>Install App</span>
           </button>
         )}
@@ -404,7 +404,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
           <div className="flex flex-col items-center text-center mb-6">
             <div className="mb-3">
               <div className="w-14 h-14 rounded-2xl bg-theme-accent/10 border border-theme-accent/20 p-2.5 flex items-center justify-center">
-                <img src="/zuno-favicon.ico" alt="Zuno" className="w-9 h-9 object-contain" />
+                <img src="/messages.png" alt="Zuno" className="w-9 h-9 object-contain" />
               </div>
             </div>
 
