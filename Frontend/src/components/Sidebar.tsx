@@ -417,50 +417,50 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
         activeConversation ? "hidden md:flex md:w-80 lg:w-92" : "flex w-full md:w-80 lg:w-92"
       }`}
     >
-      {/* Top Header */}
-      <div
-        className="px-3 sm:px-4 py-3.5 border-b border-theme-border flex items-center justify-between flex-shrink-0"
-        style={{
-          paddingTop: 'max(12px, env(safe-area-inset-top, 0px))',
-          boxSizing: 'border-box'
-        }}
-      >
-        <h1 className="text-base font-bold tracking-tight text-theme-text">
-          Chats
-        </h1>
+      {/* Chats Header & Search */}
+      <div className="chats-header-glass mx-2 mt-2 sm:mx-3 sm:mt-3 p-3 sm:p-5 flex-shrink-0">
+        <div
+          className="flex items-center justify-between gap-3"
+          style={{
+            paddingTop: 'max(2px, env(safe-area-inset-top, 0px))',
+            boxSizing: 'border-box'
+          }}
+        >
+          <h1 className="chats-header-title text-theme-text">
+            Chats
+          </h1>
 
-        <div className="flex items-center gap-1.5">
-          <ThemeToggle variant="header" />
-          <button
-            onClick={onOpenNewChat}
-            aria-label="New Conversation"
-            title="New Conversation"
-            className="w-9 h-9 inline-flex items-center justify-center rounded-xl bg-theme-accent hover:bg-theme-accent-hover text-white shadow-subtle transition-all active:scale-95"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <ThemeToggle variant="header" />
+            <span className="chats-header-divider" aria-hidden="true" />
+            <button
+              onClick={onOpenNewChat}
+              aria-label="New chat"
+              title="New chat"
+              className="chats-new-chat-button inline-flex items-center justify-center rounded-2xl bg-theme-accent text-white"
+            >
+              <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Search Bar */}
-      <div className="px-3 pt-2.5 pb-2">
-        <div className="relative flex items-center bg-theme-bg border border-theme-border rounded-lg focus-within:border-theme-accent focus-within:ring-1 focus-within:ring-theme-accent/20 transition-theme">
-          <Search className="w-3.5 h-3.5 text-theme-text-muted ml-3 flex-shrink-0" />
+        <div className="chats-search-glass relative flex items-center mt-4 sm:mt-5">
+          <Search className="w-4 h-4 sm:w-[18px] sm:h-[18px] text-theme-text-muted ml-3.5 sm:ml-4 flex-shrink-0" />
           <input
             type="text"
             placeholder="Search conversations..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-transparent px-2.5 py-1.5 text-xs text-theme-text placeholder-theme-text-muted focus:outline-none"
+            className="w-full bg-transparent px-2.5 sm:px-3 py-2.5 text-sm text-theme-text placeholder-theme-text-muted focus:outline-none"
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch("")}
-              className="mr-2 text-theme-text-muted hover:text-theme-text p-0.5 rounded"
+              className="mr-3 text-theme-text-muted hover:text-theme-text p-1 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent/40"
               aria-label="Clear search"
             >
-              <X className="w-3 h-3" />
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
