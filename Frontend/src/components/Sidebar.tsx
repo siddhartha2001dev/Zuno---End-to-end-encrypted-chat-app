@@ -413,12 +413,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
 
   return (
     <aside
-      className={`h-full flex flex-col liquid-glass-sidebar border-r border-theme-border select-none transition-theme duration-200 ${
-        activeConversation ? "hidden md:flex md:w-80 lg:w-92" : "flex w-full md:w-80 lg:w-92"
+      className={`h-full flex flex-col min-w-0 box-border liquid-glass-sidebar border-r border-theme-border select-none transition-theme duration-200 ${
+        activeConversation ? "hidden md:flex md:flex-[0_0_320px] md:w-[320px] md:min-w-[280px] md:max-w-[320px]" : "flex w-full md:flex-[0_0_320px] md:w-[320px] md:min-w-[280px] md:max-w-[320px]"
       }`}
     >
       {/* Chats Header & Search */}
-      <div className="chats-header-glass mx-2 mt-2 sm:mx-3 sm:mt-3 p-3 sm:p-5 flex-shrink-0">
+      <div className="chats-header-glass w-auto max-w-full min-w-0 box-border mx-2 mt-2 sm:mx-3 sm:mt-3 p-3 sm:p-5 flex-shrink-0">
         <div
           className="flex items-center justify-between gap-3"
           style={{
@@ -444,14 +444,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
           </div>
         </div>
 
-        <div className="chats-search-glass relative flex items-center mt-4 sm:mt-5">
+        <div className="chats-search-glass relative flex items-center w-full max-w-full min-w-0 mt-4 sm:mt-5">
           <Search className="w-4 h-4 sm:w-[18px] sm:h-[18px] text-theme-text-muted ml-3.5 sm:ml-4 flex-shrink-0" />
           <input
             type="text"
             placeholder="Search conversations..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-transparent px-2.5 sm:px-3 py-2.5 text-sm text-theme-text placeholder-theme-text-muted focus:outline-none"
+            className="w-full min-w-0 box-border bg-transparent px-2.5 sm:px-3 py-2.5 text-sm text-theme-text placeholder-theme-text-muted focus:outline-none"
           />
           {search && (
             <button

@@ -402,7 +402,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onOpenNewChat }) => {
   return (
     <main
       ref={containerRef}
-      className="flex-1 flex flex-col bg-theme-bg overflow-hidden relative"
+      className="flex-1 min-w-0 flex flex-col bg-theme-bg overflow-hidden relative"
       style={{
         position: 'relative',
         height: '100%',

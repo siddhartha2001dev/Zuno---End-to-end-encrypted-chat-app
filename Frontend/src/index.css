@@ -211,6 +211,10 @@
 .chats-header-glass {
   position: relative;
   isolation: isolate;
+  box-sizing: border-box;
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
   border: 1px solid color-mix(in srgb, var(--border-theme) 72%, white 28%);
   border-radius: 26px;
   background:
@@ -248,7 +252,10 @@
 
 .chats-new-chat-button {
   width: 58px;
-  height: 48px;
+  height: 58px;
+  min-width: 0;
+  flex-shrink: 0;
+  box-sizing: border-box;
   border: 1px solid color-mix(in srgb, white 22%, var(--accent) 78%);
   box-shadow:
     0 7px 16px color-mix(in srgb, var(--accent) 20%, transparent),
@@ -274,6 +281,10 @@
 }
 
 .chats-search-glass {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 52px;
   border: 1px solid color-mix(in srgb, var(--border-theme) 72%, white 28%);
   border-radius: 19px;
@@ -339,7 +350,7 @@
 
   .chats-new-chat-button {
     width: 50px;
-    height: 44px;
+    height: 50px;
   }
 
   .chats-header-divider {

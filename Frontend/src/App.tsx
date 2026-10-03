@@ -67,7 +67,7 @@ const MainLayout: React.FC = () => {
     >
       <CallProvider>
         <ChatProvider>
-          <div className="h-full w-full flex bg-theme-bg text-theme-text overflow-hidden relative">
+          <div className="h-full w-full min-w-0 flex bg-theme-bg text-theme-text overflow-hidden relative">
             <Sidebar onOpenNewChat={() => setIsNewChatOpen(true)} />
             <ChatArea onOpenNewChat={() => setIsNewChatOpen(true)} />
             <NewChatModal isOpen={isNewChatOpen} onClose={() => setIsNewChatOpen(false)} />
@@ -95,4 +95,3 @@ export default function App() {
     </ThemeProvider>
   );
 }
-
