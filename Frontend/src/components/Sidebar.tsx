@@ -429,16 +429,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
           Chats
         </h1>
 
-        {/* New Chat Button */}
-        <button
-          onClick={onOpenNewChat}
-          aria-label="New Conversation"
-          title="New Conversation"
-          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-theme-accent hover:bg-theme-accent-hover text-white text-xs font-semibold shadow-xs transition-colors active:scale-95"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>New Chat</span>
-        </button>
+        <div className="flex items-center gap-1.5">
+          <ThemeToggle variant="header" />
+          <button
+            onClick={onOpenNewChat}
+            aria-label="New Conversation"
+            title="New Conversation"
+            className="w-9 h-9 inline-flex items-center justify-center rounded-xl bg-theme-accent hover:bg-theme-accent-hover text-white shadow-subtle transition-all active:scale-95"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Search Bar */}
@@ -590,8 +591,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
           />
 
           <div className="flex items-center gap-1">
-            <ThemeToggle />
-
             <button
               onClick={() => logout()}
               title="Sign Out"

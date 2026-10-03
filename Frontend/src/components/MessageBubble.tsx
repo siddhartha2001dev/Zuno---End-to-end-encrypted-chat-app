@@ -339,16 +339,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             </button>
           ))}
 
-          {/* Quick add emoji button next to existing reactions */}
-          <button
-            type="button"
-            onClick={() => setShowEmojiPicker((prev) => !prev)}
-            title="Add reaction"
-            aria-label="Add reaction"
-            className="w-5 h-5 rounded-full bg-theme-surface/80 border border-theme-border/80 text-theme-text-muted hover:text-theme-text flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer"
-          >
-            <SmilePlus className="w-3 h-3" />
-          </button>
         </div>
       )}
     </div>
