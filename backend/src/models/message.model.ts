@@ -53,9 +53,9 @@ const MessageSchema = new Schema<IMessage>(
           if (sId.name !== undefined) {
             ret.sender = {
               id: actualId,
-              name: sId.name,
+              name: sId.isDeactivated ? "Deactivated Account" : sId.name,
               email: sId.email,
-              avatar: sId.avatar,
+              avatar: sId.isDeactivated ? null : sId.avatar,
               publicKey: sId.publicKey || null,
             };
             ret.senderId = actualId;
@@ -84,9 +84,9 @@ const MessageSchema = new Schema<IMessage>(
           if (sId.name !== undefined) {
             ret.sender = {
               id: actualId,
-              name: sId.name,
+              name: sId.isDeactivated ? "Deactivated Account" : sId.name,
               email: sId.email,
-              avatar: sId.avatar,
+              avatar: sId.isDeactivated ? null : sId.avatar,
               publicKey: sId.publicKey || null,
             };
             ret.senderId = actualId;

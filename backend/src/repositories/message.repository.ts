@@ -39,7 +39,7 @@ export class MessageRepository {
       updatedAt: new Date(),
     });
 
-    const populated = await doc.populate("senderId", "name chatId email avatar publicKey devices");
+    const populated = await doc.populate("senderId", "name chatId email avatar publicKey devices isDeactivated");
     const json = populated.toJSON() as any;
 
     return {
@@ -66,7 +66,7 @@ export class MessageRepository {
     const messages = await MessageModel.find(query)
       .sort({ createdAt: 1 })
       .limit(limit)
-      .populate("senderId", "name chatId email avatar publicKey devices");
+      .populate("senderId", "name chatId email avatar publicKey devices isDeactivated");
 
     const messageIds = messages.map((m) => m._id);
 
@@ -112,7 +112,7 @@ export class MessageRepository {
       messageId,
       { content },
       { new: true }
-    ).populate("senderId", "name chatId email avatar");
+    ).populate("senderId", "name chatId email avatar isDeactivated");
 
     if (!doc) return null;
     const json = doc.toJSON() as any;

@@ -10,16 +10,18 @@ export class ConversationRepository {
       const mId = (m._id || m.id || m).toString();
       return mId !== currentUserId;
     });
+    const displayMemberName = (member: any) =>
+      member?.isDeactivated ? "Deactivated Account" : member?.name;
 
     return {
       id: (conv._id || conv.id).toString(),
       type: (isGroupConv ? "GROUP" : "DIRECT") as "DIRECT" | "GROUP",
       name: isGroupConv
         ? conv.name
-        : otherMembers[0]?.name || "Direct Chat",
+        : displayMemberName(otherMembers[0]) || "Direct Chat",
       avatar: isGroupConv
         ? conv.avatar || null
-        : otherMembers[0]?.avatar || null,
+        : otherMembers[0]?.isDeactivated ? null : otherMembers[0]?.avatar || null,
       createdBy: conv.createdBy?.toString() || null,
       members: membersList.map((m) => {
         const mId = (m._id || m.id || m).toString();
@@ -31,10 +33,10 @@ export class ConversationRepository {
           user: isPopulated
             ? {
                 id: mId,
-                name: m.name,
+                name: displayMemberName(m),
                 chatId: m.chatId,
                 email: m.email,
-                avatar: m.avatar || null,
+                avatar: m.isDeactivated ? null : m.avatar || null,
                 publicKey: m.publicKey || null,
                 devices: m.devices || [],
               }
@@ -57,7 +59,7 @@ export class ConversationRepository {
     return ConversationModel.findOne({
       type: "direct",
       members: { $all: [u1, u2], $size: 2 },
-    }).populate("members", "name chatId email avatar publicKey devices");
+    }).populate("members", "name chatId email avatar publicKey devices isDeactivated");
   }
 
   async createDirectConversation(user1: string, user2: string): Promise<IConversation> {
@@ -70,7 +72,7 @@ export class ConversationRepository {
       createdBy: u1,
     });
 
-    return (await doc.populate("members", "name chatId email avatar publicKey devices"));
+    return (await doc.populate("members", "name chatId email avatar publicKey devices isDeactivated"));
   }
 
   async createGroupConversation(
@@ -89,14 +91,14 @@ export class ConversationRepository {
       createdBy: new mongoose.Types.ObjectId(creatorId),
     });
 
-    return (await doc.populate("members", "name chatId email avatar publicKey devices"));
+    return (await doc.populate("members", "name chatId email avatar publicKey devices isDeactivated"));
   }
 
   async getUserConversations(userId: string) {
     const uId = new mongoose.Types.ObjectId(userId);
     const conversations = await ConversationModel.find({ members: uId })
       .sort({ updatedAt: -1 })
-      .populate("members", "name chatId email avatar publicKey devices");
+      .populate("members", "name chatId email avatar publicKey devices isDeactivated");
 
     // Enhance each conversation with latest message and unread indicator
     const results = await Promise.all(
@@ -106,7 +108,7 @@ export class ConversationRepository {
           deletedAt: null,
         })
           .sort({ createdAt: -1 })
-          .populate("senderId", "name");
+          .populate("senderId", "name isDeactivated");
 
         let isUnread = false;
         if (latestMessage && latestMessage.senderId) {
@@ -136,10 +138,14 @@ export class ConversationRepository {
           name:
             isGroupConv
               ? conv.name
+              : otherMembers[0]?.isDeactivated
+              ? "Deactivated Account"
               : otherMembers[0]?.name || "Direct Chat",
           avatar:
             isGroupConv
               ? conv.avatar || null
+              : otherMembers[0]?.isDeactivated
+              ? null
               : otherMembers[0]?.avatar || null,
           createdBy: conv.createdBy?.toString() || null,
           members: (conv.members as any[]).map((m) => ({
@@ -148,9 +154,9 @@ export class ConversationRepository {
             role: conv.createdBy?.toString() === m._id.toString() ? "ADMIN" : "MEMBER",
             user: {
               id: m._id.toString(),
-              name: m.name,
+              name: m.isDeactivated ? "Deactivated Account" : m.name,
               email: m.email,
-              avatar: m.avatar,
+              avatar: m.isDeactivated ? null : m.avatar,
               publicKey: m.publicKey || null,
               devices: m.devices || [],
             },
@@ -170,7 +176,9 @@ export class ConversationRepository {
                   (latestMessage.senderId as any)?.id ||
                   latestMessage.senderId
                 )?.toString() || "",
-                senderName: (latestMessage.senderId as any)?.name || "",
+              senderName: (latestMessage.senderId as any)?.isDeactivated
+                ? "Deactivated Account"
+                : (latestMessage.senderId as any)?.name || "",
               }
             : null,
           isUnread,
@@ -184,7 +192,7 @@ export class ConversationRepository {
 
   async findById(conversationId: string): Promise<IConversation | null> {
     if (!mongoose.Types.ObjectId.isValid(conversationId)) return null;
-    return ConversationModel.findById(conversationId).populate("members", "name chatId email avatar publicKey devices");
+    return ConversationModel.findById(conversationId).populate("members", "name chatId email avatar publicKey devices isDeactivated");
   }
 
   async isUserMember(conversationId: string, userId: string): Promise<boolean> {
@@ -203,7 +211,7 @@ export class ConversationRepository {
       conversationId,
       { $addToSet: { members: new mongoose.Types.ObjectId(userId) } },
       { new: true }
-    ).populate("members", "name chatId email avatar");
+    ).populate("members", "name chatId email avatar isDeactivated");
   }
 
   async removeMember(conversationId: string, userId: string): Promise<IConversation | null> {
@@ -211,7 +219,7 @@ export class ConversationRepository {
       conversationId,
       { $pull: { members: new mongoose.Types.ObjectId(userId) } },
       { new: true }
-    ).populate("members", "name chatId email avatar");
+    ).populate("members", "name chatId email avatar isDeactivated");
   }
 
   async updateGroupFields(
@@ -222,7 +230,7 @@ export class ConversationRepository {
       conversationId,
       { $set: fields },
       { new: true, runValidators: true }
-    ).populate("members", "name chatId email avatar publicKey devices");
+    ).populate("members", "name chatId email avatar publicKey devices isDeactivated");
   }
 
   async findRawByUserId(userId: string): Promise<IConversation[]> {

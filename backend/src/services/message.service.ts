@@ -3,12 +3,14 @@ import {
   ConversationRepository,
   conversationRepository,
 } from "../repositories/conversation.repository.js";
+import { UserRepository, userRepository } from "../repositories/user.repository.js";
 import { AppError } from "../middleware/error.middleware.js";
 
 export class MessageService {
   constructor(
     private readonly messageRepo: MessageRepository = messageRepository,
-    private readonly conversationRepo: ConversationRepository = conversationRepository
+    private readonly conversationRepo: ConversationRepository = conversationRepository,
+    private readonly userRepo: UserRepository = userRepository
   ) {}
 
   async createMessage(input: {
@@ -25,6 +27,12 @@ export class MessageService {
     fileSize?: number | null;
     messageType?: "text" | "image" | "file" | "audio";
   }) {
+    const sender = await this.userRepo.findById(input.senderId);
+    if (!sender) throw new AppError("User not found", 404);
+    if (sender.isDeactivated) {
+      throw new AppError("Deactivated accounts cannot send messages", 403);
+    }
+
     const isMember = await this.conversationRepo.isUserMember(
       input.conversationId,
       input.senderId

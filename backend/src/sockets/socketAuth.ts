@@ -39,6 +39,10 @@ export async function socketAuthMiddleware(
       return next(new Error("Authentication error: Email not verified. Please verify your email first."));
     }
 
+    if (user.isDeactivated) {
+      return next(new Error("Authentication error: Account is deactivated"));
+    }
+
     // Attach authenticated identity to socket
     socket.user = {
       id: user._id.toString(),

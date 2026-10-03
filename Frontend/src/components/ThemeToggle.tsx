@@ -2,7 +2,7 @@ import React from "react";
 import { useTheme } from "../context/ThemeContext";
 import type { AccentTheme } from "../context/ThemeContext";
 import { Sun, Moon, Palette } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface ThemeToggleProps {
   className?: string;
@@ -26,7 +26,33 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
   const { theme, toggleTheme } = useTheme();
   const { accent, setAccent } = useTheme();
   const [showAccentPicker, setShowAccentPicker] = useState(false);
+  const accentPickerRef = useRef<HTMLDivElement>(null);
   const isDark = theme === "dark";
+
+  useEffect(() => {
+    if (!showAccentPicker) return;
+
+    const handleOutsideClick = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (accentPickerRef.current && !accentPickerRef.current.contains(target)) {
+        setShowAccentPicker(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShowAccentPicker(false);
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("touchstart", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [showAccentPicker]);
 
   const toggle = (
     <button
@@ -58,7 +84,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
   if (variant !== "header") return toggle;
 
   return (
-    <div className="relative inline-flex items-center gap-1">
+    <div ref={accentPickerRef} className="relative inline-flex items-center gap-1">
       {toggle}
       <button
         type="button"

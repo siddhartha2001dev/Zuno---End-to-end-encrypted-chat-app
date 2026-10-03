@@ -43,6 +43,11 @@ export async function authenticateToken(
       return;
     }
 
+    if (user.isDeactivated) {
+      res.status(403).json({ error: "Account is deactivated. Please sign in again to reactivate it." });
+      return;
+    }
+
     req.user = {
       id: user._id.toString(),
       email: user.email,

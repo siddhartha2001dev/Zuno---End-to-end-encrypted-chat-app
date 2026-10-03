@@ -112,6 +112,10 @@ export class UserController {
   deactivate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this.service.deactivateAccount(req.user!.id);
+      const io = req.app.get("io");
+      if (io) {
+        io.in(`user:${req.user!.id}`).disconnectSockets(true);
+      }
       res.status(200).json(result);
     } catch (error) {
       next(error);
