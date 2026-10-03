@@ -18,9 +18,7 @@ import {
   XCircle,
   AlertCircle,
 } from "lucide-react";
-import { ZunoLogo } from "./ZunoLogo";
 import { ThemeToggle } from "./ThemeToggle";
-import { usePWA } from "../context/PWAContext";
 
 interface AuthModalProps {
   initialEmail?: string;
@@ -28,7 +26,6 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanner }) => {
-  const { isInstalled, promptInstall } = usePWA();
   const {
     login,
     register,
@@ -250,24 +247,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
   };
 
   // ───────────────────────────────────────────
-  // Shared Top Navigation Bar (Logo + ThemeToggle + PWA)
+  // Shared top navigation bar
   // ───────────────────────────────────────────
   const renderNavbar = () => (
-    <header className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between z-20 relative">
+    <header className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-end z-20 relative">
       <div className="flex items-center gap-2">
-        <ZunoLogo size="sm" showWordmark={true} />
-      </div>
-      <div className="flex items-center gap-2">
-        {!isInstalled && (
-          <button
-            onClick={promptInstall}
-            type="button"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold border border-emerald-500/20 transition-all active:scale-95 shadow-xs"
-          >
-            <img src="/messages.png" alt="" className="w-3.5 h-3.5 object-contain" />
-            <span>Install App</span>
-          </button>
-        )}
         <ThemeToggle className="bg-theme-surface/80 border border-theme-border rounded-full hover:scale-105 transition-all shadow-xs" />
       </div>
     </header>
