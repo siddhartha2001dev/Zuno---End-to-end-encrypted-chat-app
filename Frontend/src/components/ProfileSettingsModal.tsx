@@ -155,22 +155,22 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
       <div className="profile-settings-panel w-full overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header */}
-        <div className="profile-settings-header px-5 sm:px-7 py-5 border-b border-theme-border flex items-center justify-between">
-          <h2 className="text-xl sm:text-2xl font-semibold text-theme-text tracking-tight">Profile & Settings</h2>
+        <div className="profile-settings-header px-4 sm:px-7 py-3.5 sm:py-5 border-b border-theme-border flex items-center justify-between gap-3">
+          <h2 className="text-lg sm:text-2xl font-semibold text-theme-text tracking-tight">Profile & Settings</h2>
           <button
             onClick={() => {
               setShowDeactivateModal(false);
               setShowDeleteAllModal(false);
               onClose();
             }}
-            className="w-8 h-8 rounded-xl border border-theme-border flex items-center justify-center text-theme-text-muted hover:text-theme-text hover:bg-theme-bg transition-colors"
+            className="w-10 h-10 sm:w-8 sm:h-8 rounded-xl border border-theme-border flex-shrink-0 flex items-center justify-center text-theme-text-muted hover:text-theme-text hover:bg-theme-bg transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Scrollable Body */}
-        <div className="profile-settings-body p-5 sm:p-7 overflow-y-auto">
+        <div className="profile-settings-body p-4 sm:p-7 overflow-y-auto">
           
           {/* Avatar & Photo Actions */}
           <div className="profile-settings-hero flex flex-col items-center text-center">

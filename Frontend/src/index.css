@@ -354,6 +354,8 @@
   --text-secondary: #a4afab;
   --text-muted: #77817d;
   width: min(92vw, 900px);
+  min-height: 0;
+  max-height: min(90vh, calc(100dvh - 24px));
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
   background: rgba(15, 18, 18, 0.95);
@@ -368,6 +370,11 @@
 }
 
 .profile-settings-body {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   display: grid;
   grid-template-columns: minmax(250px, 0.85fr) minmax(0, 1.15fr);
   gap: 28px;
@@ -410,8 +417,16 @@
 }
 
 @media (max-width: 700px) {
+  .profile-settings-overlay {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding-top: max(12px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  }
+
   .profile-settings-panel {
     width: min(94vw, 560px);
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px);
     border-radius: 20px;
   }
 
@@ -422,12 +437,12 @@
 
   .profile-settings-hero {
     padding-top: 0;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
   }
 
   .profile-settings-avatar {
-    width: 112px !important;
-    height: 112px !important;
+    width: 96px !important;
+    height: 96px !important;
   }
 
   .profile-settings-name {

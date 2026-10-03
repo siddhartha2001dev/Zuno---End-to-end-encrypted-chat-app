@@ -278,7 +278,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
   // ───────────────────────────────────────────
   if (pendingVerificationEmail) {
     return (
-      <div className="min-h-screen w-screen flex flex-col bg-theme-bg text-theme-text select-none overflow-x-hidden relative">
+      <div className="h-[100dvh] min-h-0 w-screen flex flex-col bg-theme-bg text-theme-text select-none overflow-hidden relative">
         {/* Top Navbar */}
         {renderNavbar()}
 
@@ -392,16 +392,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
   // Main Authentication Portal (Login / Register)
   // ───────────────────────────────────────────
   return (
-    <div className="min-h-screen w-screen flex flex-col bg-theme-bg text-theme-text select-none overflow-x-hidden relative">
+      <div className="h-[100dvh] min-h-0 w-screen flex flex-col bg-theme-bg text-theme-text select-none overflow-hidden relative">
       {/* Top Navbar */}
       {renderNavbar()}
 
       {/* Centered Modern Chat App Card */}
-      <main ref={authScrollRef} className="flex-1 min-h-0 overflow-y-auto flex items-start justify-center p-4 sm:p-6 z-10">
-        <div className="w-full max-w-[420px] bg-theme-surface border border-theme-border rounded-2xl p-6 sm:p-8 shadow-modal relative">
+      <main ref={authScrollRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y flex items-start justify-center px-4 pt-3 pb-20 sm:p-6 z-10">
+        <div className="w-full max-w-[420px] bg-theme-surface border border-theme-border rounded-2xl p-4 sm:p-8 shadow-modal relative">
           
           {/* Brand Icon Header */}
-          <div className="flex flex-col items-center text-center mb-6">
+          <div className="flex flex-col items-center text-center mb-4 sm:mb-6">
             <div className="mb-3">
               <div className="w-14 h-14 rounded-2xl bg-theme-accent/10 border border-theme-accent/20 p-2.5 flex items-center justify-center">
                 <img src="/messages.png" alt="Zuno" className="w-9 h-9 object-contain" />
@@ -504,7 +504,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-3.5">
+          <form onSubmit={handleSubmit} className="space-y-3">
             {!isLogin && (
               <>
                 {/* Full Name */}
@@ -735,7 +735,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialEmail, successBanne
           </form>
 
           {/* Quick Switch Between Login and Signup / Password Recovery */}
-          <div className="mt-5 text-center text-xs text-theme-text-secondary">
+          <div className="mt-4 pb-2 text-center text-xs text-theme-text-secondary">
             {forgotMode || resetToken ? (
               <button
                 type="button"
