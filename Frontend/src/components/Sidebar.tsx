@@ -413,24 +413,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
 
   return (
     <aside
-      className={`h-full flex flex-col min-w-0 box-border liquid-glass-sidebar border-r border-theme-border select-none transition-theme duration-200 ${
-        activeConversation ? "hidden md:flex md:flex-[0_0_320px] md:w-[320px] md:min-w-[280px] md:max-w-[320px]" : "flex w-full md:flex-[0_0_320px] md:w-[320px] md:min-w-[280px] md:max-w-[320px]"
+      className={`h-full flex flex-col min-w-0 overflow-hidden box-border liquid-glass-sidebar border-r border-theme-border select-none transition-theme duration-200 ${
+        activeConversation ? "hidden md:flex md:flex-[0_0_320px] md:w-[320px] md:min-w-[320px] md:max-w-[320px]" : "flex w-full md:flex-[0_0_320px] md:w-[320px] md:min-w-[320px] md:max-w-[320px]"
       }`}
     >
       {/* Chats Header & Search */}
-      <div className="chats-header-glass w-auto max-w-full min-w-0 box-border mx-2 mt-2 sm:mx-3 sm:mt-3 p-3 sm:p-5 flex-shrink-0">
+      <div className="chats-header-glass w-full max-w-full min-w-0 box-border mx-0 mt-2 p-3 sm:p-4 flex-shrink-0">
         <div
-          className="flex items-center justify-between gap-3"
+          className="flex items-center justify-between gap-2 w-full min-w-0"
           style={{
             paddingTop: 'max(2px, env(safe-area-inset-top, 0px))',
             boxSizing: 'border-box'
           }}
         >
-          <h1 className="chats-header-title text-theme-text">
+          <h1 className="chats-header-title min-w-0 flex-1 text-theme-text">
             Chats
           </h1>
 
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             <ThemeToggle variant="header" />
             <span className="chats-header-divider" aria-hidden="true" />
             <button
@@ -467,8 +467,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
       </div>
 
       {/* Filter Tabs (Segmented control) */}
-      <div className="px-3 pt-3 pb-2 border-b border-theme-border-subtle">
-        <div className="chats-filter-tabs grid grid-cols-3 p-1 rounded-xl">
+      <div className="w-full min-w-0 box-border px-3 pt-3 pb-2 border-b border-theme-border-subtle">
+        <div className="chats-filter-tabs w-full max-w-full box-border grid grid-cols-3 p-1 rounded-xl">
           <button
             onClick={() => setActiveTab("all")}
             className={`py-1 rounded-md text-[11px] font-medium transition-colors text-center ${
@@ -503,7 +503,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenNewChat }) => {
       </div>
 
       {/* Conversation List */}
-      <div className="flex-1 overflow-y-auto px-2 py-2.5 space-y-1">
+      <div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto px-2 py-2.5 space-y-1">
         {filteredConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-center p-4">
             <p className="text-xs text-theme-text font-medium">No conversations found</p>
